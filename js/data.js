@@ -1,244 +1,610 @@
-// SellerFlow — Data Module
-// Manages all app data: initial seed data + localStorage persistence
+// SellerFlow — Data Module (Supabase Edition)
+// Async database service layer. Replaces localStorage with Supabase Postgres.
+//
+// DESIGN PRINCIPLES
+//   • Every public method is async and returns plain JS objects —
+//     callers never touch Supabase types directly.
+//   • Column naming: DB uses snake_case; JS uses camelCase.
+//     _toJS() / _toDB() helpers handle the mapping at the boundary.
+//   • The SF.* interface is preserved so pages.js / modals.js need
+//     minimal changes — they just need to await calls.
+//   • user_id is injected automatically from Auth.getUserId();
+//     callers never pass it.
 // ================================================================
 
 const SF = (() => {
 
-  // ─── Initial Seed Data ────────────────────────────
-  const SEED = {
-    user: {
-      name: 'Priya Sharma',
-      email: 'priya@sellerflow.in',
-      store: 'Priya Boutique',
-      instagram: '@priyaboutique',
-      phone: '+91 98765 43210',
-      upiId: 'priya@upi',
-    },
-    products: [
-      { id: 'P001', name: 'Silk Saree - Red', sku: 'SAR-RED-001', category: 'Sarees', price: 2499, stock: 12, lowStockThreshold: 5, emoji: '🧣' },
-      { id: 'P002', name: 'Cotton Kurti Set', sku: 'KUR-COT-002', category: 'Kurtis', price: 899, stock: 3, lowStockThreshold: 5, emoji: '👗' },
-      { id: 'P003', name: 'Lehenga Choli - Blue', sku: 'LEH-BLU-003', category: 'Lehengas', price: 4999, stock: 7, lowStockThreshold: 3, emoji: '👘' },
-      { id: 'P004', name: 'Palazzo Pants - Black', sku: 'PAL-BLK-004', category: 'Bottoms', price: 599, stock: 2, lowStockThreshold: 5, emoji: '👖' },
-      { id: 'P005', name: 'Embroidered Dupatta', sku: 'DUP-EMB-005', category: 'Accessories', price: 349, stock: 18, lowStockThreshold: 5, emoji: '🪡' },
-      { id: 'P006', name: 'Anarkali Suit - Pink', sku: 'ANK-PNK-006', category: 'Suits', price: 1799, stock: 6, lowStockThreshold: 4, emoji: '👗' },
-      { id: 'P007', name: 'Banarasi Silk Saree', sku: 'SAR-BAN-007', category: 'Sarees', price: 6999, stock: 4, lowStockThreshold: 3, emoji: '🧣' },
-      { id: 'P008', name: 'Crop Top + Skirt Set', sku: 'SET-CRP-008', category: 'Sets', price: 1299, stock: 9, lowStockThreshold: 4, emoji: '👙' },
-    ],
-    customers: [
-      { id: 'C001', name: 'Anjali Mehta',   instagram: '@anjali_m',   phone: '+91 99001 12345', email: 'anjali@email.com',   city: 'Mumbai',    totalOrders: 4, totalSpent: 12340, firstOrder: '2024-08-10', lastOrder: '2025-02-15' },
-      { id: 'C002', name: 'Ritu Agarwal',   instagram: '@ritu_ag',    phone: '+91 98112 54321', email: 'ritu@email.com',     city: 'Delhi',     totalOrders: 7, totalSpent: 28900, firstOrder: '2024-06-05', lastOrder: '2025-03-01' },
-      { id: 'C003', name: 'Sneha Patel',    instagram: '@snehap',     phone: '+91 97223 67890', email: 'sneha@email.com',    city: 'Ahmedabad', totalOrders: 2, totalSpent: 6499,  firstOrder: '2024-11-20', lastOrder: '2025-01-08' },
-      { id: 'C004', name: 'Kavita Joshi',   instagram: '@kavita.j',   phone: '+91 96334 98765', email: 'kavita@email.com',   city: 'Jaipur',    totalOrders: 5, totalSpent: 18750, firstOrder: '2024-07-15', lastOrder: '2025-03-10' },
-      { id: 'C005', name: 'Meera Singh',    instagram: '@meerasingh', phone: '+91 95445 11111', email: 'meera@email.com',    city: 'Bangalore', totalOrders: 1, totalSpent: 4999,  firstOrder: '2025-01-05', lastOrder: '2025-01-05' },
-      { id: 'C006', name: 'Pooja Verma',    instagram: '@pooja_v',    phone: '+91 94556 22222', email: 'pooja@email.com',    city: 'Pune',      totalOrders: 3, totalSpent: 9870,  firstOrder: '2024-09-20', lastOrder: '2025-02-20' },
-      { id: 'C007', name: 'Divya Nair',     instagram: '@divyanair',  phone: '+91 93667 33333', email: 'divya@email.com',    city: 'Chennai',   totalOrders: 6, totalSpent: 22400, firstOrder: '2024-05-10', lastOrder: '2025-03-05' },
-      { id: 'C008', name: 'Shalini Gupta',  instagram: '@shalini_g',  phone: '+91 92778 44444', email: 'shalini@email.com',  city: 'Lucknow',   totalOrders: 2, totalSpent: 7800,  firstOrder: '2024-12-01', lastOrder: '2025-02-28' },
-    ],
-    orders: [
-      { id: 'ORD-001', customerId: 'C002', customerName: 'Ritu Agarwal', items: [{productId:'P007', name:'Banarasi Silk Saree', qty:1, price:6999}], total:6999, status:'delivered', payment:'paid', date:'2025-03-01', notes:'Express delivery requested' },
-      { id: 'ORD-002', customerId: 'C004', customerName: 'Kavita Joshi',  items: [{productId:'P001', name:'Silk Saree - Red', qty:2, price:2499}], total:4998, status:'shipped', payment:'paid', date:'2025-03-05', notes:'' },
-      { id: 'ORD-003', customerId: 'C001', customerName: 'Anjali Mehta',  items: [{productId:'P006', name:'Anarkali Suit - Pink', qty:1, price:1799},{productId:'P005', name:'Embroidered Dupatta', qty:1, price:349}], total:2148, status:'processing', payment:'pending', date:'2025-03-08', notes:'Gift wrap please' },
-      { id: 'ORD-004', customerId: 'C007', customerName: 'Divya Nair',    items: [{productId:'P003', name:'Lehenga Choli - Blue', qty:1, price:4999}], total:4999, status:'delivered', payment:'paid', date:'2025-03-02', notes:'' },
-      { id: 'ORD-005', customerId: 'C003', customerName: 'Sneha Patel',   items: [{productId:'P002', name:'Cotton Kurti Set', qty:2, price:899}], total:1798, status:'processing', payment:'pending', date:'2025-03-10', notes:'Size L' },
-      { id: 'ORD-006', customerId: 'C006', customerName: 'Pooja Verma',   items: [{productId:'P008', name:'Crop Top + Skirt Set', qty:1, price:1299}], total:1299, status:'shipped', payment:'paid', date:'2025-03-07', notes:'' },
-      { id: 'ORD-007', customerId: 'C005', customerName: 'Meera Singh',   items: [{productId:'P003', name:'Lehenga Choli - Blue', qty:1, price:4999}], total:4999, status:'cancelled', payment:'refunded', date:'2025-02-28', notes:'Wrong size ordered' },
-      { id: 'ORD-008', customerId: 'C008', customerName: 'Shalini Gupta', items: [{productId:'P004', name:'Palazzo Pants - Black', qty:1, price:599},{productId:'P002', name:'Cotton Kurti Set', qty:1, price:899}], total:1498, status:'processing', payment:'pending', date:'2025-03-09', notes:'' },
-      { id: 'ORD-009', customerId: 'C002', customerName: 'Ritu Agarwal',  items: [{productId:'P001', name:'Silk Saree - Red', qty:1, price:2499}], total:2499, status:'delivered', payment:'paid', date:'2025-02-15', notes:'' },
-      { id: 'ORD-010', customerId: 'C007', customerName: 'Divya Nair',    items: [{productId:'P006', name:'Anarkali Suit - Pink', qty:2, price:1799}], total:3598, status:'shipped', payment:'paid', date:'2025-03-04', notes:'Two different sizes' },
-    ],
-    analytics: {
-      monthlyRevenue: [42000, 38000, 51000, 47000, 62000, 58000, 71000, 65000, 80000, 74000, 91000, 88000],
-      monthlyOrders:  [22, 18, 25, 21, 31, 28, 34, 30, 38, 35, 44, 42],
-      months: ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'],
-      topCategories: {
-        labels: ['Sarees', 'Lehengas', 'Kurtis', 'Suits', 'Accessories', 'Sets'],
-        data:   [38, 22, 17, 12, 7, 4],
-      }
-    }
-  };
-
-  // ─── Storage Keys ─────────────────────────────────
-  const KEYS = {
-    user:      'sf_user',
-    products:  'sf_products',
-    customers: 'sf_customers',
-    orders:    'sf_orders',
-    analytics: 'sf_analytics',
-    seeded:    'sf_seeded',
-  };
-
-  // ─── Init: Seed if first run ──────────────────────
-  function init() {
-    if (!localStorage.getItem(KEYS.seeded)) {
-      Object.entries(SEED).forEach(([key, val]) => {
-        localStorage.setItem(KEYS[key], JSON.stringify(val));
-      });
-      localStorage.setItem(KEYS.seeded, '1');
-    }
-  }
-
-  // ─── Generic get/set/save ─────────────────────────
-  function get(key) {
-    try {
-      return JSON.parse(localStorage.getItem(KEYS[key]));
-    } catch { return null; }
-  }
-  function save(key, data) {
-    localStorage.setItem(KEYS[key], JSON.stringify(data));
-  }
-
-  // ─── User ─────────────────────────────────────────
-  function getUser()       { return get('user') || SEED.user; }
-  function saveUser(data)  { save('user', data); }
-
-  // ─── Products ─────────────────────────────────────
-  function getProducts()   { return get('products') || []; }
-  function saveProducts(d) { save('products', d); }
-
-  function addProduct(p) {
-    const list = getProducts();
-    p.id = 'P' + String(Date.now()).slice(-5);
-    list.push(p);
-    saveProducts(list);
-    return p;
-  }
-  function updateProduct(id, updates) {
-    const list = getProducts().map(p => p.id === id ? {...p, ...updates} : p);
-    saveProducts(list);
-  }
-  function deleteProduct(id) {
-    saveProducts(getProducts().filter(p => p.id !== id));
-  }
-  function decreaseStock(productId, qty) {
-    const list = getProducts().map(p => {
-      if (p.id === productId) {
-        return {...p, stock: Math.max(0, p.stock - qty)};
-      }
-      return p;
-    });
-    saveProducts(list);
-  }
-
-  // ─── Orders ──────────────────────────────────────
-  function getOrders()   { return get('orders') || []; }
-  function saveOrders(d) { save('orders', d); }
-
-  function addOrder(o) {
-    const list = getOrders();
-    o.id = 'ORD-' + String(list.length + 1).padStart(3, '0');
-    o.date = new Date().toISOString().slice(0, 10);
-    list.unshift(o);
-    saveOrders(list);
-    // Decrease stock
-    o.items.forEach(item => decreaseStock(item.productId, item.qty));
-    // Update customer
-    updateCustomerAfterOrder(o);
-    return o;
-  }
-  function updateOrder(id, updates) {
-    const list = getOrders().map(o => o.id === id ? {...o, ...updates} : o);
-    saveOrders(list);
-  }
-  function deleteOrder(id) {
-    saveOrders(getOrders().filter(o => o.id !== id));
-  }
-
-  // ─── Customers ───────────────────────────────────
-  function getCustomers()   { return get('customers') || []; }
-  function saveCustomers(d) { save('customers', d); }
-
-  function addCustomer(c) {
-    const list = getCustomers();
-    c.id = 'C' + String(Date.now()).slice(-5);
-    c.totalOrders = 0;
-    c.totalSpent = 0;
-    c.firstOrder = null;
-    c.lastOrder = null;
-    list.push(c);
-    saveCustomers(list);
-    return c;
-  }
-  function updateCustomer(id, updates) {
-    const list = getCustomers().map(c => c.id === id ? {...c, ...updates} : c);
-    saveCustomers(list);
-  }
-  function findOrCreateCustomer(name, instagram) {
-    const list = getCustomers();
-    const existing = list.find(c => c.instagram === instagram || c.name === name);
-    if (existing) return existing;
-    const nc = { name, instagram, phone: '', email: '', city: '', firstOrder: null, lastOrder: null };
-    return addCustomer(nc);
-  }
-  function updateCustomerAfterOrder(order) {
-    const cust = getCustomers().find(c => c.id === order.customerId);
-    if (!cust) return;
-    const today = new Date().toISOString().slice(0,10);
-    updateCustomer(order.customerId, {
-      totalOrders: (cust.totalOrders || 0) + 1,
-      totalSpent:  (cust.totalSpent  || 0) + order.total,
-      lastOrder:   today,
-      firstOrder:  cust.firstOrder || today,
-    });
-  }
-
-  // ─── Analytics ────────────────────────────────────
-  function getAnalytics() { return get('analytics') || SEED.analytics; }
-
-  // ─── Dashboard Stats ──────────────────────────────
-  function getDashStats() {
-    const orders    = getOrders();
-    const products  = getProducts();
-    const customers = getCustomers();
-    const today     = new Date().toISOString().slice(0,10);
-    const month     = today.slice(0,7);
-
-    const monthOrders = orders.filter(o => o.date && o.date.startsWith(month));
-    const revenue     = monthOrders.filter(o => o.payment === 'paid').reduce((s,o) => s + o.total, 0);
-    const pending     = orders.filter(o => o.payment === 'pending').length;
-    const lowStock    = products.filter(p => p.stock <= p.lowStockThreshold).length;
-    const repeatCusts = customers.filter(c => c.totalOrders >= 2).length;
-
+  // ─── Column mappers ──────────────────────────────────────────
+  // Products: DB → JS
+  function _productToJS(row) {
+    if (!row) return null;
     return {
-      totalRevenue: revenue,
-      totalOrders:  monthOrders.length,
-      pendingPayments: pending,
-      lowStockCount: lowStock,
-      repeatCustomers: repeatCusts,
-      totalCustomers: customers.length,
-      allRevenue: orders.filter(o => o.payment === 'paid').reduce((s,o) => s + o.total, 0),
+      id:                row.id,
+      name:              row.name,
+      sku:               row.sku               || '',
+      category:          row.category          || '',
+      price:             Number(row.price)     || 0,
+      stock:             row.stock             || 0,
+      lowStockThreshold: row.low_stock_threshold || 5,
+      emoji:             row.emoji             || '📦',
+      image:             row.image             || null,
+      variant:           row.variant           || null,
     };
   }
 
-  // ─── Utils ───────────────────────────────────────
+  // Products: JS → DB (omit id/user_id — handled separately)
+  function _productToDB(p) {
+    return {
+      name:                p.name,
+      sku:                 p.sku                 || '',
+      category:            p.category            || '',
+      price:               p.price               || 0,
+      stock:               p.stock               || 0,
+      low_stock_threshold: p.lowStockThreshold   || 5,
+      emoji:               p.emoji               || '📦',
+      image:               p.image               || null,
+      variant:             p.variant             || null,
+    };
+  }
+
+  // Customers: DB → JS
+  function _customerToJS(row) {
+    if (!row) return null;
+    return {
+      id:           row.id,
+      name:         row.name,
+      instagram:    row.instagram    || '',
+      phone:        row.phone        || '',
+      email:        row.email        || '',
+      city:         row.city         || '',
+      state:        row.state        || '',
+      address:      row.address      || '',
+      landmark:     row.landmark     || '',
+      pincode:      row.pincode      || '',
+      whatsapp:     row.whatsapp     || '',
+      notes:        row.notes        || '',
+      repeatScore:  row.repeat_score || null,
+      totalOrders:  row.total_orders || 0,
+      totalSpent:   Number(row.total_spent) || 0,
+      firstOrder:   row.first_order  || null,
+      lastOrder:    row.last_order   || null,
+    };
+  }
+
+  // Customers: JS → DB
+  function _customerToDB(c) {
+    return {
+      name:         c.name,
+      instagram:    c.instagram    || '',
+      phone:        c.phone        || '',
+      email:        c.email        || '',
+      city:         c.city         || '',
+      state:        c.state        || '',
+      address:      c.address      || '',
+      landmark:     c.landmark     || '',
+      pincode:      c.pincode      || '',
+      whatsapp:     c.whatsapp     || '',
+      notes:        c.notes        || '',
+      repeat_score: c.repeatScore  || null,
+      total_orders: c.totalOrders  || 0,
+      total_spent:  c.totalSpent   || 0,
+      first_order:  c.firstOrder   || null,
+      last_order:   c.lastOrder    || null,
+    };
+  }
+
+  // Orders: DB → JS
+  function _orderToJS(row) {
+    if (!row) return null;
+    return {
+      id:              row.id,
+      customerId:      row.customer_id      || null,
+      customerName:    row.customer_name    || '',
+      items:           Array.isArray(row.items) ? row.items : [],
+      total:           Number(row.total)    || 0,
+      discount:        Number(row.discount) || 0,
+      coupon:          row.coupon           || '',
+      status:          row.status           || 'processing',
+      payment:         row.payment          || 'pending',
+      shippingAddress: row.shipping_address || '',
+      trackingId:      row.tracking_id      || '',
+      deliveryPartner: row.delivery_partner || '',
+      source:          row.source           || '',
+      notes:           row.notes            || '',
+      date:            row.order_date       || row.created_at?.slice(0, 10) || '',
+    };
+  }
+
+  // Orders: JS → DB
+  function _orderToDB(o) {
+    return {
+      id:               o.id,
+      customer_id:      o.customerId      || null,
+      customer_name:    o.customerName    || '',
+      items:            o.items           || [],
+      total:            o.total           || 0,
+      discount:         o.discount        || 0,
+      coupon:           o.coupon          || '',
+      status:           o.status          || 'processing',
+      payment:          o.payment         || 'pending',
+      shipping_address: o.shippingAddress || '',
+      tracking_id:      o.trackingId      || '',
+      delivery_partner: o.deliveryPartner || '',
+      source:           o.source          || '',
+      notes:            o.notes           || '',
+      order_date:       o.date            || new Date().toISOString().slice(0, 10),
+    };
+  }
+
+  // Profiles: DB → JS
+  function _profileToJS(row) {
+    if (!row) return null;
+    return {
+      name:      row.name      || '',
+      store:     row.store     || '',
+      instagram: row.instagram || '',
+      phone:     row.phone     || '',
+      email:     row.email     || '',
+      upiId:     row.upi_id    || '',
+      autoEmail: row.auto_email || false,
+    };
+  }
+
+  // ─── Error helper ─────────────────────────────────────────────
+  function _throw(error, context) {
+    console.error(`[SF:${context}]`, error?.message || error);
+    throw new Error(error?.message || `Database error in ${context}`);
+  }
+
+  // ─── User / Profile ───────────────────────────────────────────
+
+  async function getUser() {
+    const uid = Auth.getUserId();
+    if (!uid) return null;
+    const { data, error } = await _supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', uid)
+      .single();
+    if (error) _throw(error, 'getUser');
+    return _profileToJS(data);
+  }
+
+  async function saveUser(updates) {
+    const uid = Auth.getUserId();
+    if (!uid) return;
+    const dbRow = {
+      name:       updates.name      || '',
+      store:      updates.store     || '',
+      instagram:  updates.instagram || '',
+      phone:      updates.phone     || '',
+      email:      updates.email     || '',
+      upi_id:     updates.upiId     || '',
+      auto_email: updates.autoEmail || false,
+    };
+    const { error } = await _supabase
+      .from('profiles')
+      .update(dbRow)
+      .eq('id', uid);
+    if (error) _throw(error, 'saveUser');
+  }
+
+  // ─── Products ─────────────────────────────────────────────────
+
+  async function getProducts() {
+    const uid = Auth.getUserId();
+    const { data, error } = await _supabase
+      .from('products')
+      .select('*')
+      .eq('user_id', uid)
+      .order('created_at', { ascending: true });
+    if (error) _throw(error, 'getProducts');
+    return (data || []).map(_productToJS);
+  }
+
+  async function addProduct(p) {
+    const uid = Auth.getUserId();
+    const row = { ..._productToDB(p), user_id: uid };
+    const { data, error } = await _supabase
+      .from('products')
+      .insert(row)
+      .select()
+      .single();
+    if (error) _throw(error, 'addProduct');
+    return _productToJS(data);
+  }
+
+  async function updateProduct(id, updates) {
+    const uid = Auth.getUserId();
+    const { error } = await _supabase
+      .from('products')
+      .update(_productToDB(updates))
+      .eq('id', id)
+      .eq('user_id', uid);      // RLS belt-and-suspenders
+    if (error) _throw(error, 'updateProduct');
+  }
+
+  async function deleteProduct(id) {
+    const uid = Auth.getUserId();
+    const { error } = await _supabase
+      .from('products')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', uid);
+    if (error) _throw(error, 'deleteProduct');
+  }
+
+  // Decrease stock by qty (used after order creation)
+  async function decreaseStock(productId, qty) {
+    const uid = Auth.getUserId();
+    // Use Supabase RPC or fetch-then-update
+    const { data: current, error: fetchErr } = await _supabase
+      .from('products')
+      .select('stock')
+      .eq('id', productId)
+      .eq('user_id', uid)
+      .single();
+    if (fetchErr) _throw(fetchErr, 'decreaseStock:fetch');
+
+    const newStock = Math.max(0, (current.stock || 0) - qty);
+    const { error: updateErr } = await _supabase
+      .from('products')
+      .update({ stock: newStock })
+      .eq('id', productId)
+      .eq('user_id', uid);
+    if (updateErr) _throw(updateErr, 'decreaseStock:update');
+  }
+
+  // ─── Orders ───────────────────────────────────────────────────
+
+  async function getOrders() {
+    const uid = Auth.getUserId();
+    const { data, error } = await _supabase
+      .from('orders')
+      .select('*')
+      .eq('user_id', uid)
+      .order('order_date', { ascending: false });
+    if (error) _throw(error, 'getOrders');
+    return (data || []).map(_orderToJS);
+  }
+
+  // Generates sequential ID like ORD-042 scoped per seller
+  async function _nextOrderId() {
+    const uid = Auth.getUserId();
+    const { count, error } = await _supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', uid);
+    if (error) _throw(error, '_nextOrderId');
+    return 'ORD-' + String((count || 0) + 1).padStart(3, '0');
+  }
+
+  async function addOrder(o) {
+    const uid  = Auth.getUserId();
+    const id   = await _nextOrderId();
+    const date = new Date().toISOString().slice(0, 10);
+
+    const row = {
+      ..._orderToDB({ ...o, id, date }),
+      user_id: uid,
+    };
+
+    const { data, error } = await _supabase
+      .from('orders')
+      .insert(row)
+      .select()
+      .single();
+    if (error) _throw(error, 'addOrder');
+
+    // Decrease stock for each item (fire-and-forget in parallel)
+    await Promise.all(
+      (o.items || []).map(item => decreaseStock(item.productId, item.qty))
+    );
+
+    // Update customer stats
+    await _updateCustomerAfterOrder({ ...o, id, date });
+
+    return _orderToJS(data);
+  }
+
+  async function updateOrder(id, updates) {
+    const uid = Auth.getUserId();
+    // Build a partial DB object — only pass what's changed
+    const partial = {};
+    if (updates.status  !== undefined) partial.status  = updates.status;
+    if (updates.payment !== undefined) partial.payment = updates.payment;
+    if (updates.trackingId      !== undefined) partial.tracking_id      = updates.trackingId;
+    if (updates.deliveryPartner !== undefined) partial.delivery_partner = updates.deliveryPartner;
+    if (updates.notes   !== undefined) partial.notes   = updates.notes;
+
+    const { error } = await _supabase
+      .from('orders')
+      .update(partial)
+      .eq('id', id)
+      .eq('user_id', uid);
+    if (error) _throw(error, 'updateOrder');
+  }
+
+  async function deleteOrder(id) {
+    const uid = Auth.getUserId();
+    const { error } = await _supabase
+      .from('orders')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', uid);
+    if (error) _throw(error, 'deleteOrder');
+  }
+
+  // ─── Customers ────────────────────────────────────────────────
+
+  async function getCustomers() {
+    const uid = Auth.getUserId();
+    const { data, error } = await _supabase
+      .from('customers')
+      .select('*')
+      .eq('user_id', uid)
+      .order('created_at', { ascending: true });
+    if (error) _throw(error, 'getCustomers');
+    return (data || []).map(_customerToJS);
+  }
+
+  async function addCustomer(c) {
+    const uid = Auth.getUserId();
+    const row = {
+      ..._customerToDB(c),
+      user_id:      uid,
+      total_orders: 0,
+      total_spent:  0,
+      first_order:  null,
+      last_order:   null,
+    };
+    const { data, error } = await _supabase
+      .from('customers')
+      .insert(row)
+      .select()
+      .single();
+    if (error) _throw(error, 'addCustomer');
+    return _customerToJS(data);
+  }
+
+  async function updateCustomer(id, updates) {
+    const uid = Auth.getUserId();
+    const { error } = await _supabase
+      .from('customers')
+      .update(_customerToDB(updates))
+      .eq('id', id)
+      .eq('user_id', uid);
+    if (error) _throw(error, 'updateCustomer');
+  }
+
+  // Find existing by instagram handle or name, or create new
+  async function findOrCreateCustomer(name, instagram) {
+    const uid = Auth.getUserId();
+    // Try to find by instagram first, then by name
+    let query = _supabase
+      .from('customers')
+      .select('*')
+      .eq('user_id', uid);
+
+    if (instagram) {
+      query = query.eq('instagram', instagram);
+    } else {
+      query = query.eq('name', name);
+    }
+
+    const { data, error } = await query.maybeSingle();
+    if (error) _throw(error, 'findOrCreateCustomer:find');
+    if (data) return _customerToJS(data);
+
+    // Not found — create
+    return await addCustomer({ name, instagram: instagram || '', phone: '', email: '', city: '' });
+  }
+
+  // Called internally after addOrder
+  async function _updateCustomerAfterOrder(order) {
+    const uid = Auth.getUserId();
+    if (!order.customerId) return;
+
+    // Fetch current customer stats
+    const { data: cust, error } = await _supabase
+      .from('customers')
+      .select('total_orders, total_spent, first_order')
+      .eq('id', order.customerId)
+      .eq('user_id', uid)
+      .single();
+    if (error) { console.warn('[SF] _updateCustomerAfterOrder fetch failed', error); return; }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const { error: updateErr } = await _supabase
+      .from('customers')
+      .update({
+        total_orders: (cust.total_orders || 0) + 1,
+        total_spent:  Number(cust.total_spent || 0) + Number(order.total || 0),
+        last_order:   today,
+        first_order:  cust.first_order || today,
+      })
+      .eq('id', order.customerId)
+      .eq('user_id', uid);
+    if (updateErr) console.warn('[SF] _updateCustomerAfterOrder update failed', updateErr);
+  }
+
+  // ─── Analytics ────────────────────────────────────────────────
+  // Computed from live order data — no separate table needed.
+
+  async function getAnalytics() {
+    const orders = await getOrders();
+
+    // Build monthly revenue for last 12 months
+    const now       = new Date();
+    const months    = [];
+    const revByMonth = {};
+    const ordByMonth = {};
+
+    for (let i = 11; i >= 0; i--) {
+      const d  = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleString('default', { month: 'short' });
+      months.push(label);
+      revByMonth[key] = 0;
+      ordByMonth[key] = 0;
+    }
+
+    orders.forEach(o => {
+      const key = (o.date || '').slice(0, 7);
+      if (revByMonth[key] !== undefined) {
+        if (o.payment === 'paid') revByMonth[key] += o.total;
+        ordByMonth[key]++;
+      }
+    });
+
+    // Category distribution from products
+    const products  = await getProducts();
+    const catTotals = {};
+    products.forEach(p => {
+      catTotals[p.category] = (catTotals[p.category] || 0) + 1;
+    });
+    const total = Object.values(catTotals).reduce((s, v) => s + v, 0) || 1;
+    const catLabels = Object.keys(catTotals);
+    const catData   = catLabels.map(k => Math.round((catTotals[k] / total) * 100));
+
+    return {
+      months,
+      monthlyRevenue: Object.values(revByMonth),
+      monthlyOrders:  Object.values(ordByMonth),
+      topCategories: {
+        labels: catLabels.length ? catLabels : ['No data'],
+        data:   catData.length  ? catData   : [100],
+      },
+    };
+  }
+
+  // ─── Dashboard Stats ──────────────────────────────────────────
+  // Returns a plain object — pages.js can call this once and render
+
+  async function getDashStats() {
+    const [orders, products, customers] = await Promise.all([
+      getOrders(), getProducts(), getCustomers()
+    ]);
+
+    const month       = new Date().toISOString().slice(0, 7);
+    const monthOrders = orders.filter(o => (o.date || '').startsWith(month));
+    const revenue     = monthOrders.filter(o => o.payment === 'paid').reduce((s, o) => s + o.total, 0);
+    const pending     = orders.filter(o => o.payment === 'pending').length;
+    const lowStock    = products.filter(p => p.stock <= p.lowStockThreshold).length;
+    const repeatCusts = customers.filter(c => c.totalOrders >= 2).length;
+    const allRevenue  = orders.filter(o => o.payment === 'paid').reduce((s, o) => s + o.total, 0);
+
+    return {
+      totalRevenue:    revenue,
+      totalOrders:     monthOrders.length,
+      pendingPayments: pending,
+      lowStockCount:   lowStock,
+      repeatCustomers: repeatCusts,
+      totalCustomers:  customers.length,
+      allRevenue,
+      // Pass through raw lists so callers don't re-fetch
+      _orders:    orders,
+      _products:  products,
+      _customers: customers,
+    };
+  }
+
+  // ─── Utilities (sync — no DB needed) ─────────────────────────
+
+  // ─── Reset Account ────────────────────────────────────────────────────────
+  // Deletes all orders, customers, and products belonging to this user from
+  // Supabase. The user's profile (name, store, settings) is preserved.
+  // Runs each table delete sequentially so if one fails the error surfaces
+  // clearly. Safe to retry — repeated calls just delete zero rows.
+  //
+  async function resetAccount() {
+    const uid = Auth.getUserId();
+    if (!uid) throw new Error('Not authenticated');
+
+    // Delete in dependency order: orders first, then customers, then products
+    // (orders reference customers; deleting customers first could cause FK issues
+    //  depending on your Supabase cascade config)
+    const tables = ['orders', 'customers', 'products'];
+    for (const table of tables) {
+      const { error } = await _supabase
+        .from(table)
+        .delete()
+        .eq('user_id', uid);
+      if (error) _throw(error, `resetAccount:${table}`);
+    }
+  }
+
+  // ─── Delete Account ───────────────────────────────────────────────────────
+  // 1. Wipes all user data (calls resetAccount)
+  // 2. Deletes the profile row
+  // 3. Calls Supabase's auth.admin.deleteUser via an RPC function
+  //    (requires a Postgres function `delete_own_account()` — see note below)
+  //
+  // ── Supabase setup required ───────────────────────────────────────────────
+  // Run this once in your Supabase SQL editor:
+  //
+  //   create or replace function delete_own_account()
+  //   returns void language plpgsql security definer as $$
+  //   begin
+  //     delete from auth.users where id = auth.uid();
+  //   end;
+  //   $$;
+  //
+  // This is necessary because the client-side JS SDK cannot delete auth.users
+  // rows directly — only a security-definer Postgres function can do it.
+  //
+  async function deleteAccount() {
+    const uid = Auth.getUserId();
+    if (!uid) throw new Error('Not authenticated');
+
+    // Step 1: wipe all business data
+    await resetAccount();
+
+    // Step 2: delete the profile row
+    const { error: profileErr } = await _supabase
+      .from('profiles')
+      .delete()
+      .eq('id', uid);
+    if (profileErr) _throw(profileErr, 'deleteAccount:profile');
+
+    // Step 3: delete the auth.users row via RPC
+    const { error: rpcErr } = await _supabase.rpc('delete_own_account');
+    if (rpcErr) _throw(rpcErr, 'deleteAccount:auth');
+
+    // Step 4: sign out locally (session is now invalid anyway)
+    await Auth.signOut();
+  }
+
   function formatCurrency(n) {
     return '₹' + Number(n).toLocaleString('en-IN');
   }
+
   function formatDate(d) {
     if (!d) return '—';
-    const dt = new Date(d);
-    return dt.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+    return new Date(d).toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'short', year: 'numeric'
+    });
   }
+
   function initials(name) {
-    return (name || '').split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
-  }
-  function generateId(prefix) {
-    return prefix + String(Date.now()).slice(-6);
+    return (name || '').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   }
 
-  // ─── Reset (for dev) ──────────────────────────────
-  function reset() {
-    Object.values(KEYS).forEach(k => localStorage.removeItem(k));
-    init();
-  }
-
-  // Public API
+  // ─── Public API ───────────────────────────────────────────────
   return {
-    init, reset,
+    // User
     getUser, saveUser,
-    getProducts, addProduct, updateProduct, deleteProduct,
+    // Products
+    getProducts, addProduct, updateProduct, deleteProduct, decreaseStock,
+    // Orders
     getOrders, addOrder, updateOrder, deleteOrder,
+    // Customers
     getCustomers, addCustomer, updateCustomer, findOrCreateCustomer,
+    // Analytics + Stats
     getAnalytics, getDashStats,
+    // Account management
+    resetAccount, deleteAccount,
+    // Utilities
     formatCurrency, formatDate, initials,
   };
 })();
