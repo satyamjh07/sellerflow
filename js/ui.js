@@ -145,12 +145,35 @@ const UI = (() => {
 
   // ─── Mobile Sidebar ──────────────────────────────────────────
   function openMobileSidebar() {
-    document.querySelector('.sidebar')?.classList.add('open');
-    document.querySelector('.sidebar-overlay')?.classList.add('open');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    if (!sidebar || !overlay) return;
+
+    sidebar.classList.add('open');
+    overlay.classList.add('open');
+
+    // Inject a visible close button into the sidebar header (once only)
+    if (!document.getElementById('sidebar-close-btn')) {
+      const header = sidebar.querySelector('.sidebar-header');
+      if (header) {
+        const btn = document.createElement('button');
+        btn.id = 'sidebar-close-btn';
+        btn.className = 'sidebar-close-btn';
+        btn.setAttribute('aria-label', 'Close navigation');
+        btn.textContent = '✕';
+        btn.addEventListener('click', closeMobileSidebar);
+        header.appendChild(btn);
+      }
+    }
+
+    // Prevent body scroll while sidebar is open
+    document.body.style.overflow = 'hidden';
   }
+
   function closeMobileSidebar() {
     document.querySelector('.sidebar')?.classList.remove('open');
     document.querySelector('.sidebar-overlay')?.classList.remove('open');
+    document.body.style.overflow = '';
   }
 
   // ─── Confirm Dialog ──────────────────────────────────────────
