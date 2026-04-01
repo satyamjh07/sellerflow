@@ -388,12 +388,253 @@ const Components = (() => {
     `;
   }
 
+  // ─── Email Invoice HTML ───────────────────────────────────────────────────
+  //
+  // generateInvoiceEmailHTML(order, customer, user)
+  //
+  // Generates a fully self-contained, email-client-safe HTML invoice string.
+  // - Uses table-based layout (Gmail / Outlook / Apple Mail compatible)
+  // - Inline styles only — no CSS classes, no CSS variables, no external fonts
+  // - White/light theme so it looks clean in any email client
+  // - Mobile-friendly: single column, fluid width, min font sizes
+  // - Mirrors the exact visual structure of the in-app InvoiceTemplate
+  // - Safe to assign directly to an EmailJS template variable: {{invoice_html}}
+  // - Reusable standalone: call from modals.js, a future API route, or React
+  //
+  function generateInvoiceEmailHTML(o, customer, user) {
+    const isPaid    = o.payment === 'paid';
+    const subtotal  = o.total + (o.discount || 0);
+    const storeName = user.store || 'SellerFlow Store';
+    const upiId     = user.upiId || '';
+
+    // ── Colour tokens (email-safe, no CSS vars) ────────────────
+    const C = {
+      indigo:     '#6366F1',
+      indigoDim:  '#EEF2FF',
+      green:      '#16A34A',
+      greenDim:   '#DCFCE7',
+      amber:      '#B45309',
+      amberDim:   '#FEF3C7',
+      red:        '#DC2626',
+      border:     '#E5E7EB',
+      bg:         '#F9FAFB',
+      white:      '#FFFFFF',
+      textPrimary:'#111827',
+      textMuted:  '#6B7280',
+      textLight:  '#9CA3AF',
+    };
+
+    // ── Status badge ───────────────────────────────────────────
+    const badgeBg    = isPaid ? C.greenDim  : C.amberDim;
+    const badgeColor = isPaid ? C.green     : C.amber;
+    const badgeText  = isPaid ? '✅ PAID'   : '⏳ PAYMENT PENDING';
+
+    // ── Product rows ───────────────────────────────────────────
+    const itemRows = (o.items || []).map((item, i) => `
+      <tr style="border-bottom:1px solid ${C.border}">
+        <td style="padding:12px 8px;color:${C.textMuted};font-size:13px;vertical-align:top">${i + 1}</td>
+        <td style="padding:12px 8px;font-weight:600;color:${C.textPrimary};font-size:14px;vertical-align:top">
+          ${item.name}
+          ${item.variant ? `<div style="font-size:11px;color:${C.textMuted};font-weight:400;margin-top:2px">${item.variant}</div>` : ''}
+        </td>
+        <td style="padding:12px 8px;text-align:center;color:${C.textPrimary};font-size:14px;vertical-align:top">${item.qty}</td>
+        <td style="padding:12px 8px;text-align:right;color:${C.textMuted};font-size:14px;vertical-align:top;white-space:nowrap">${formatCurrency(item.price)}</td>
+        <td style="padding:12px 8px;text-align:right;font-weight:700;color:${C.textPrimary};font-size:14px;vertical-align:top;white-space:nowrap">${formatCurrency(item.price * item.qty)}</td>
+      </tr>
+    `).join('');
+
+    // ── Discount row (optional) ────────────────────────────────
+    const discountRow = o.discount ? `
+      <tr>
+        <td colspan="2" style="padding:6px 8px;text-align:right;font-size:13px;color:${C.textMuted}">
+          Discount (${o.coupon || 'Manual'})
+        </td>
+        <td style="padding:6px 8px;text-align:right;font-weight:600;color:${C.red};font-size:13px;white-space:nowrap">
+          -${formatCurrency(o.discount)}
+        </td>
+      </tr>
+    ` : '';
+
+    // ── Shipping address ───────────────────────────────────────
+    const addressBlock = o.shippingAddress
+      ? `<p style="margin:4px 0 0;font-size:13px;color:${C.textMuted};line-height:1.5">${o.shippingAddress}</p>`
+      : '';
+
+    // ── Notes ─────────────────────────────────────────────────
+    const notesBlock = o.notes
+      ? `<p style="margin:6px 0 0;font-size:12px;color:${C.textMuted}">📝 Note: ${o.notes}</p>`
+      : '';
+
+    // ── UPI block ─────────────────────────────────────────────
+    const upiBlock = upiId ? `
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:20px">
+        <tr>
+          <td style="background:${C.indigoDim};border-radius:10px;padding:14px 18px;text-align:center">
+            <p style="margin:0;font-size:13px;color:${C.indigo};font-weight:600">💳 Pay via UPI</p>
+            <p style="margin:6px 0 0;font-size:16px;font-weight:700;color:${C.textPrimary};letter-spacing:0.5px">${upiId}</p>
+          </td>
+        </tr>
+      </table>
+    ` : '';
+
+    // ── Full HTML ──────────────────────────────────────────────
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>Invoice ${o.id} — ${storeName}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#F3F4F6;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%">
+
+  <!-- Outer wrapper -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F3F4F6;padding:32px 16px">
+    <tr>
+      <td align="center">
+
+        <!-- Card -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:${C.white};border-radius:16px;overflow:hidden;border:1px solid ${C.border}">
+
+          <!-- ── Header stripe ───────────────────────────────── -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#6366F1 0%,#818CF8 100%);padding:28px 32px">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="vertical-align:top">
+                    <p style="margin:0;font-size:22px;font-weight:700;color:${C.white}">🛍️ ${storeName}</p>
+                    ${user.instagram ? `<p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8)">${user.instagram}</p>` : ''}
+                    ${user.phone    ? `<p style="margin:2px 0 0;font-size:13px;color:rgba(255,255,255,0.8)">${user.phone}</p>` : ''}
+                  </td>
+                  <td style="vertical-align:top;text-align:right">
+                    <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase">Invoice</p>
+                    <p style="margin:4px 0 0;font-size:18px;font-weight:700;color:${C.white}">#${o.id}</p>
+                    <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.75)">${formatDate(o.date)}</p>
+                    <!-- Status badge -->
+                    <div style="display:inline-block;margin-top:10px;padding:5px 12px;background:${badgeBg};border-radius:20px">
+                      <span style="font-size:12px;font-weight:700;color:${badgeColor}">${badgeText}</span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ── From / Bill To ─────────────────────────────── -->
+          <tr>
+            <td style="padding:24px 32px 0">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <!-- From -->
+                  <td style="vertical-align:top;width:50%;padding-right:16px">
+                    <p style="margin:0;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${C.indigo}">FROM</p>
+                    <p style="margin:6px 0 0;font-size:15px;font-weight:700;color:${C.textPrimary}">${storeName}</p>
+                    ${user.email ? `<p style="margin:3px 0 0;font-size:12px;color:${C.textMuted}">${user.email}</p>` : ''}
+                    ${user.phone ? `<p style="margin:3px 0 0;font-size:12px;color:${C.textMuted}">${user.phone}</p>` : ''}
+                  </td>
+                  <!-- Bill To -->
+                  <td style="vertical-align:top;width:50%;padding-left:16px;border-left:2px solid ${C.border}">
+                    <p style="margin:0;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${C.indigo}">BILL TO</p>
+                    <p style="margin:6px 0 0;font-size:15px;font-weight:700;color:${C.textPrimary}">${o.customerName}</p>
+                    ${customer?.email    ? `<p style="margin:3px 0 0;font-size:12px;color:${C.textMuted}">${customer.email}</p>` : ''}
+                    ${customer?.phone    ? `<p style="margin:3px 0 0;font-size:12px;color:${C.textMuted}">${customer.phone}</p>` : ''}
+                    ${customer?.instagram? `<p style="margin:3px 0 0;font-size:12px;color:${C.textMuted}">${customer.instagram}</p>` : ''}
+                    ${addressBlock}
+                    ${notesBlock}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ── Divider ────────────────────────────────────── -->
+          <tr>
+            <td style="padding:20px 32px 0">
+              <div style="height:1px;background-color:${C.border}"></div>
+            </td>
+          </tr>
+
+          <!-- ── Products table ─────────────────────────────── -->
+          <tr>
+            <td style="padding:0 32px">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <!-- Table header -->
+                <tr style="background-color:${C.bg}">
+                  <th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:700;color:${C.textMuted};text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${C.border}">#</th>
+                  <th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:700;color:${C.textMuted};text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${C.border}">Product</th>
+                  <th style="padding:10px 8px;text-align:center;font-size:11px;font-weight:700;color:${C.textMuted};text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${C.border}">Qty</th>
+                  <th style="padding:10px 8px;text-align:right;font-size:11px;font-weight:700;color:${C.textMuted};text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${C.border}">Price</th>
+                  <th style="padding:10px 8px;text-align:right;font-size:11px;font-weight:700;color:${C.textMuted};text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${C.border}">Total</th>
+                </tr>
+                ${itemRows}
+              </table>
+            </td>
+          </tr>
+
+          <!-- ── Totals ─────────────────────────────────────── -->
+          <tr>
+            <td style="padding:16px 32px 0">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="width:55%"></td>
+                  <td style="width:45%">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.bg};border-radius:10px;overflow:hidden">
+                      <tr>
+                        <td style="padding:10px 16px;font-size:13px;color:${C.textMuted}">Subtotal</td>
+                        <td style="padding:10px 16px;font-size:13px;color:${C.textPrimary};text-align:right;font-weight:600;white-space:nowrap">${formatCurrency(subtotal)}</td>
+                      </tr>
+                      ${discountRow}
+                      <tr>
+                        <td style="padding:10px 16px;font-size:13px;color:${C.textMuted}">Shipping</td>
+                        <td style="padding:10px 16px;font-size:13px;color:${C.green};text-align:right;font-weight:600">Free</td>
+                      </tr>
+                      <tr style="border-top:2px solid ${C.border}">
+                        <td style="padding:14px 16px;font-size:15px;font-weight:700;color:${C.textPrimary}">Total Due</td>
+                        <td style="padding:14px 16px;font-size:18px;font-weight:700;color:${C.indigo};text-align:right;white-space:nowrap">${formatCurrency(o.total)}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ── UPI payment block ───────────────────────────── -->
+          <tr>
+            <td style="padding:0 32px">
+              ${upiBlock}
+            </td>
+          </tr>
+
+          <!-- ── Thank you footer ───────────────────────────── -->
+          <tr>
+            <td style="padding:28px 32px;text-align:center;border-top:1px solid ${C.border};margin-top:24px">
+              <p style="margin:0;font-size:20px">💜</p>
+              <p style="margin:8px 0 0;font-size:15px;font-weight:700;color:${C.textPrimary}">Thank you for shopping with us!</p>
+              <p style="margin:6px 0 0;font-size:13px;color:${C.textMuted}">Questions? DM us on Instagram or reply to this email.</p>
+              <p style="margin:20px 0 0;font-size:11px;color:${C.textLight}">Generated by <strong>SellerFlow</strong> • sellerflow.in</p>
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Card -->
+
+      </td>
+    </tr>
+  </table>
+  <!-- /Outer wrapper -->
+
+</body>
+</html>`;
+  }
+
   return {
     ProductRow,
     OrderRow,
     ViewOrderContent,
     CustomerRow,
     ViewCustomerContent,
-    InvoiceTemplate
+    InvoiceTemplate,
+    generateInvoiceEmailHTML,
   };
 })();
