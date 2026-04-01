@@ -150,6 +150,18 @@ const UI = (() => {
     return `<span class="badge ${cls}">${label}</span>`;
   }
 
+  // ─── Messaging ────────────────────────────────────
+  function generateInvoiceMessage(order, user) {
+    const customerFirstName = order.customerName ? order.customerName.split(' ')[0] : 'Customer';
+    const storeName = user.store || 'Our Store';
+    // Use SF directly
+    const amount = SF.formatCurrency(order.total);
+    const status = order.payment === 'paid' ? 'PAID' : 'PENDING';
+    const upi = user.upiId ? `\nUPI: ${user.upiId}\n` : '';
+
+    return `Hi ${customerFirstName} 👋\nThank you for shopping with ${storeName} 💜\n\nYour order invoice #${order.id} is ready.\nTotal amount: ${amount}\nPayment status: ${status}\n${upi}\nThank you for your order ✨`;
+  }
+
   // ─── Debounce ─────────────────────────────────────
   function debounce(fn, delay = 250) {
     let timer;
@@ -164,6 +176,6 @@ const UI = (() => {
     toast, openModal, closeModal, closeAllModals,
     navigate, openMobileSidebar, closeMobileSidebar,
     confirm, updateBadges, emptyState,
-    orderStatusBadge, paymentBadge, debounce,
+    orderStatusBadge, paymentBadge, debounce, generateInvoiceMessage,
   };
 })();
