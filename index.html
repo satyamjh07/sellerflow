@@ -7,15 +7,7 @@
   <link rel="stylesheet" href="css/style.css" />
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- Print styles -->
-  <style>
-    @media print {
-      body > *:not(#print-portal) { display: none !important; }
-      #print-portal { display: block !important; }
-      .invoice-wrapper { box-shadow: none !important; }
-    }
-    #print-portal { display: none; }
-  </style>
+
 </head>
 <body>
 
@@ -759,8 +751,10 @@
       <button class="modal-close" data-close-modal="modal-invoice">✕</button>
     </div>
     <div id="invoice-preview-body"></div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close-modal="modal-invoice">Close</button>
+    <div class="modal-footer" style="flex-wrap: wrap;">
+      <button class="btn btn-secondary" style="margin-right:auto" data-close-modal="modal-invoice">Close</button>
+      <button class="btn btn-secondary" id="invoice-copy-msg-btn" title="Copy invoice message">📋 Copy Msg</button>
+      <button class="btn" id="invoice-wa-btn" style="background:#25D366; color:#fff; box-shadow:0 4px 16px rgba(37,211,102,0.35);" title="Share via WhatsApp">🟢 WhatsApp Share</button>
       <button class="btn" id="invoice-toggle-payment">✅ Mark as Paid</button>
       <button class="btn print-btn" id="invoice-print-btn">🖨️ Print Invoice</button>
     </div>
@@ -789,10 +783,12 @@
 
 <!-- ── Scripts ──────────────────────────────────── -->
 <script src="js/data.js"></script>
+<script src="js/components.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/pages.js"></script>
 <script src="js/modals.js"></script>
 <script src="js/app.js"></script>
 
+<div id="print-portal"></div>
 </body>
 </html>
