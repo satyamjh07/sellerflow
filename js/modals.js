@@ -224,61 +224,7 @@ const Modals = (() => {
     if (!o) return;
 
     const content = document.getElementById('view-order-content');
-    content.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
-        <div>
-          <div class="form-label">Order ID</div>
-          <div class="fw-700 text-accent" style="font-size:16px">${o.id}</div>
-        </div>
-        <div>
-          <div class="form-label">Date</div>
-          <div class="fw-600">${SF.formatDate(o.date)}</div>
-        </div>
-        <div>
-          <div class="form-label">Customer</div>
-          <div class="fw-600">${o.customerName}</div>
-        </div>
-        <div>
-          <div class="form-label">Total</div>
-          <div class="fw-700" style="font-size:18px;color:var(--accent)">${SF.formatCurrency(o.total)}</div>
-        </div>
-      </div>
-
-      <div class="form-label" style="margin-bottom:8px">Items</div>
-      <div style="background:var(--bg-input);border-radius:8px;padding:12px;margin-bottom:16px">
-        ${o.items.map(i => `
-          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
-            <span>${i.name} × ${i.qty}</span>
-            <span class="fw-600">${SF.formatCurrency(i.price * i.qty)}</span>
-          </div>
-        `).join('')}
-        <div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:700;font-size:14px">
-          <span>Total</span>
-          <span class="text-accent">${SF.formatCurrency(o.total)}</span>
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-        <div>
-          <div class="form-label">Delivery Status</div>
-          <select id="update-delivery-status" class="form-select" style="margin-top:4px">
-            ${['processing','shipped','delivered','cancelled'].map(s =>
-              `<option value="${s}" ${o.status===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`
-            ).join('')}
-          </select>
-        </div>
-        <div>
-          <div class="form-label">Payment Status</div>
-          <select id="update-payment-status" class="form-select" style="margin-top:4px">
-            ${['pending','paid','refunded'].map(s =>
-              `<option value="${s}" ${o.payment===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`
-            ).join('')}
-          </select>
-        </div>
-      </div>
-
-      ${o.notes ? `<div class="form-label">Notes</div><div style="font-size:13px;color:var(--text-secondary);background:var(--bg-input);padding:10px;border-radius:8px;margin-top:4px">${o.notes}</div>` : ''}
-    `;
+    content.innerHTML = Components.ViewOrderContent(o);
 
     document.getElementById('view-order-update-btn').onclick = () => {
       const delivery = document.getElementById('update-delivery-status').value;
@@ -307,90 +253,7 @@ const Modals = (() => {
 
     const subtotal = o.total;
     const isPaid = o.payment === 'paid';
-
-    const invoiceHTML = `
-      <div class="invoice-wrapper" id="invoice-print-area">
-        <div class="invoice-header">
-          <div class="invoice-brand">
-            <div class="brand-name">🛍️ ${user.store || 'SellerFlow Store'}</div>
-            <p>${user.instagram || ''}</p>
-            <p>${user.phone || ''}</p>
-            <p>UPI: ${user.upiId || ''}</p>
-          </div>
-          <div class="invoice-meta">
-            <div class="invoice-number">INVOICE</div>
-            <p>#${o.id}</p>
-            <p>Date: ${SF.formatDate(o.date)}</p>
-            <div>
-              <span class="invoice-status-banner ${isPaid ? 'invoice-status-paid' : 'invoice-status-pending'}">
-                ${isPaid ? '✅ PAID' : '⏳ PAYMENT PENDING'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div class="invoice-parties">
-          <div class="invoice-party">
-            <div class="invoice-party-label">From</div>
-            <div class="invoice-party-name">${user.store || 'Your Store'}</div>
-            <p>${user.email || ''}</p>
-            <p>${user.phone || ''}</p>
-          </div>
-          <div class="invoice-party">
-            <div class="invoice-party-label">Bill To</div>
-            <div class="invoice-party-name">${o.customerName}</div>
-            <p>Instagram Order</p>
-            ${o.notes ? `<p>Note: ${o.notes}</p>` : ''}
-          </div>
-        </div>
-
-        <table class="invoice-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Product</th>
-              <th style="text-align:center">Qty</th>
-              <th style="text-align:right">Unit Price</th>
-              <th style="text-align:right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${o.items.map((item, i) => `
-              <tr>
-                <td style="color:#999">${i+1}</td>
-                <td style="font-weight:600;color:#1a1a1a">${item.name}</td>
-                <td style="text-align:center">${item.qty}</td>
-                <td style="text-align:right">${SF.formatCurrency(item.price)}</td>
-                <td style="text-align:right;font-weight:700;color:#1a1a1a">${SF.formatCurrency(item.price * item.qty)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-
-        <div class="invoice-totals">
-          <div class="invoice-totals-inner">
-            <div class="invoice-total-row">
-              <span>Subtotal</span>
-              <span>${SF.formatCurrency(subtotal)}</span>
-            </div>
-            <div class="invoice-total-row">
-              <span>Shipping</span>
-              <span style="color:#10B981">Free</span>
-            </div>
-            <div class="invoice-total-row grand">
-              <span>Total Due</span>
-              <span style="color:#6366f1">${SF.formatCurrency(subtotal)}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="invoice-footer">
-          <p>Thank you for shopping with us! 💜</p>
-          <p style="margin-top:4px">Pay via UPI: <strong>${user.upiId || 'upi@bank'}</strong> | Questions? DM us on Instagram</p>
-          <p style="margin-top:6px;font-size:10px">Generated by SellerFlow • sellerflow.in</p>
-        </div>
-      </div>
-    `;
+    const invoiceHTML = Components.InvoiceTemplate(o, user);
 
     document.getElementById('invoice-preview-body').innerHTML = invoiceHTML;
 
@@ -408,116 +271,73 @@ const Modals = (() => {
       UI.updateBadges();
     };
 
-  document.getElementById('invoice-print-btn').onclick = () => {
-  const invoiceContent = document.getElementById('invoice-print-area').outerHTML;
+    // WhatsApp Share Button
+    const waBtn = document.getElementById('invoice-wa-btn');
+    const cust = SF.getCustomers().find(c => c.id === o.customerId);
+    const phoneNum = cust && cust.phone ? cust.phone : '';
+    
+    if (phoneNum) {
+      waBtn.title = `Share via WhatsApp to ${phoneNum}`;
+    } else {
+      waBtn.title = `WhatsApp (No phone number saved)`;
+    }
 
-  const printWindow = window.open('', '_blank', 'width=900,height=700');
+    waBtn.onclick = () => {
+      const msg = UI.generateInvoiceMessage(o, user);
+      const encoded = encodeURIComponent(msg);
+      const cleanPhone = phoneNum.replace(/[^\d+]/g, '');
+      
+      let url;
+      if (cleanPhone) {
+        url = `https://wa.me/${cleanPhone.startsWith('+') ? cleanPhone.slice(1) : cleanPhone}?text=${encoded}`;
+      } else {
+        url = `https://api.whatsapp.com/send?text=${encoded}`;
+        UI.toast('No customer phone found. Opening WhatsApp Web.', 'info');
+      }
+      window.open(url, '_blank');
+    };
 
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Invoice #${o.id}</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            background: white;
-            margin: 0;
-            padding: 30px;
-            color: #1a1a1a;
-          }
+    // Copy Message Button
+    document.getElementById('invoice-copy-msg-btn').onclick = () => {
+      const msg = UI.generateInvoiceMessage(o, user);
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(msg).then(() => {
+          UI.toast('Invoice message copied to clipboard!', 'success');
+        }).catch(err => {
+          console.error(err);
+          UI.toast('Failed to copy', 'error');
+        });
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = msg;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          UI.toast('Invoice message copied to clipboard!', 'success');
+        } catch (err) {
+          UI.toast('Failed to copy', 'error');
+        }
+        document.body.removeChild(textArea);
+      }
+    };
 
-          .invoice-wrapper {
-            background: #fff;
-            color: #1a1a1a;
-            padding: 40px;
-            max-width: 800px;
-            margin: auto;
-          }
-
-          .invoice-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 32px;
-            padding-bottom: 24px;
-            border-bottom: 2px solid #f0f0f0;
-          }
-
-          .invoice-parties {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin-bottom: 28px;
-          }
-
-          .invoice-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 24px;
-          }
-
-          .invoice-table th,
-          .invoice-table td {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            text-align: left;
-          }
-
-          .invoice-totals {
-            display: flex;
-            justify-content: flex-end;
-          }
-
-          .invoice-totals-inner {
-            width: 240px;
-          }
-
-          .invoice-total-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-          }
-
-          .invoice-total-row.grand {
-            border-top: 2px solid #ddd;
-            font-weight: bold;
-            margin-top: 8px;
-            padding-top: 10px;
-          }
-
-          .invoice-footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-          }
-
-          @media print {
-            body {
-              padding: 0;
-            }
-
-            * {
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        ${invoiceContent}
-      </body>
-    </html>
-  `);
-
-  printWindow.document.close();
-  printWindow.focus();
-
-  setTimeout(() => {
-    printWindow.print();
-    printWindow.close();
-  }, 300);
-};
+    document.getElementById('invoice-print-btn').onclick = () => {
+      const invoiceContent = document.getElementById('invoice-print-area').outerHTML;
+      const printPortal = document.getElementById('print-portal');
+      
+      // Inject the invoice into the print portal and trigger print
+      printPortal.innerHTML = invoiceContent;
+      
+      // Small delay to ensure styles and layouts are applied before print triggers
+      setTimeout(() => {
+        window.print();
+        // Clean up portal
+        setTimeout(() => {
+          printPortal.innerHTML = '';
+        }, 500);
+      }, 100);
+    };
 
     UI.openModal('modal-invoice');
   }
@@ -529,56 +349,7 @@ const Modals = (() => {
     const orders = SF.getOrders().filter(o => o.customerId === id);
 
     const content = document.getElementById('view-customer-content');
-    content.innerHTML = `
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border)">
-        <div style="width:56px;height:56px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--accent)">
-          ${SF.initials(c.name)}
-        </div>
-        <div>
-          <div style="font-family:var(--font-display);font-size:20px;font-weight:700">${c.name}</div>
-          <div style="font-size:13px;color:var(--text-secondary)">${c.instagram || ''} · ${c.city || ''}</div>
-        </div>
-        ${c.totalOrders >= 2 ? `<span class="badge badge-success" style="margin-left:auto">⭐ Repeat Customer</span>` : ''}
-      </div>
-
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
-        <div style="background:var(--bg-input);border-radius:10px;padding:14px;text-align:center">
-          <div style="font-size:22px;font-weight:700;font-family:var(--font-display)">${c.totalOrders || 0}</div>
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Total Orders</div>
-        </div>
-        <div style="background:var(--accent-dim);border-radius:10px;padding:14px;text-align:center">
-          <div style="font-size:20px;font-weight:700;color:var(--accent)">${SF.formatCurrency(c.totalSpent || 0)}</div>
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Total Spent</div>
-        </div>
-        <div style="background:var(--bg-input);border-radius:10px;padding:14px;text-align:center">
-          <div style="font-size:14px;font-weight:700">${SF.formatDate(c.lastOrder)}</div>
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Last Order</div>
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-        <div><div class="form-label">Phone</div><div class="fw-600" style="margin-top:3px">${c.phone || '—'}</div></div>
-        <div><div class="form-label">Email</div><div class="fw-600" style="margin-top:3px">${c.email || '—'}</div></div>
-      </div>
-
-      <div class="form-label" style="margin-bottom:8px">Order History (${orders.length})</div>
-      ${orders.length === 0
-        ? `<div class="text-muted" style="font-size:13px;padding:12px;text-align:center">No orders yet</div>`
-        : orders.map(o => `
-            <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--bg-input);border-radius:8px;margin-bottom:6px">
-              <div style="flex:1">
-                <div style="font-size:13px;font-weight:700;color:var(--accent)">${o.id}</div>
-                <div style="font-size:11px;color:var(--text-muted)">${SF.formatDate(o.date)}</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-weight:700">${SF.formatCurrency(o.total)}</div>
-                <div>${UI.paymentBadge(o.payment)}</div>
-              </div>
-              <button class="action-btn action-btn-edit" onclick="UI.closeModal('modal-view-customer');Modals.showInvoice('${o.id}')">🧾</button>
-            </div>
-          `).join('')
-      }
-    `;
+    content.innerHTML = Components.ViewCustomerContent(c, orders);
 
     UI.openModal('modal-view-customer');
   }
