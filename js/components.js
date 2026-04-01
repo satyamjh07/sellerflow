@@ -116,7 +116,7 @@ const Components = (() => {
     ` : '';
 
     return `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+      <div class="mobile-grid-1" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
         <div>
           <div class="form-label">Order ID</div>
           <div class="fw-700 text-accent" style="font-size:16px">${o.id}</div>
@@ -152,7 +152,7 @@ const Components = (() => {
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="mobile-grid-1" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
         <div>
           <div class="form-label">Delivery Status</div>
           <select id="update-delivery-status" class="form-select" style="margin-top:4px">
@@ -212,7 +212,7 @@ const Components = (() => {
   function ViewCustomerContent(c, orders) {
     // Future-proofing fields: whatsapp, repeat score, notes
     return `
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border)">
+      <div class="mobile-flex-col" style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border)">
         <div style="width:56px;height:56px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--accent)">
           ${initials(c.name)}
         </div>
@@ -224,7 +224,7 @@ const Components = (() => {
         ${c.totalOrders >= 2 ? `<span class="badge badge-success" style="margin-left:auto;text-align:right">⭐ Repeat Customer<br><small style="font-weight:normal;opacity:0.8">Score: ${c.repeatScore || 'Good'}</small></span>` : ''}
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+      <div class="mobile-grid-1" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
         <div style="background:var(--bg-input);border-radius:10px;padding:14px;text-align:center">
           <div style="font-size:22px;font-weight:700;font-family:var(--font-display)">${c.totalOrders || 0}</div>
           <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Total Orders</div>
@@ -239,10 +239,23 @@ const Components = (() => {
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div class="mobile-grid-1" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
         <div><div class="form-label">Phone</div><div class="fw-600" style="margin-top:3px">${c.phone || '—'}</div></div>
         <div><div class="form-label">Email</div><div class="fw-600" style="margin-top:3px">${c.email || '—'}</div></div>
       </div>
+      
+      ${c.address || c.city || c.pincode ? `
+      <div style="margin-bottom:20px">
+        <div class="form-label">Saved Delivery Address</div>
+        <div style="margin-top:5px;padding:12px;background:var(--bg-input);border-radius:8px;font-size:13.5px;line-height:1.5">
+          <div class="fw-600" style="color:var(--text-primary)">
+            ${c.address ? `${c.address}<br>` : ''}
+            ${c.landmark ? `${c.landmark}<br>` : ''}
+            ${[c.city, c.state, c.pincode].filter(Boolean).join(', ')}
+          </div>
+        </div>
+      </div>
+      ` : ''}
       
       ${c.notes ? `<div class="form-label">Customer Notes</div><div style="margin-bottom:20px;padding:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;font-size:13px">${c.notes}</div>` : ''}
 
