@@ -39,13 +39,13 @@ const Components = (() => {
             </div>
           </div>
         </td>
-        <td><span class="badge badge-muted">${p.category || 'Uncategorized'}</span></td>
-        <td class="fw-700">${formatCurrency(p.price)}</td>
-        <td>
+        <td data-label="Category"><span class="badge badge-muted">${p.category || 'Uncategorized'}</span></td>
+        <td data-label="Price" class="fw-700">${formatCurrency(p.price)}</td>
+        <td data-label="Stock">
           <span class="stock-number ${stockClass}">${p.stock}</span>
           ${stockBadge}
         </td>
-        <td class="text-muted" style="font-size:12px">${p.lowStockThreshold || 5}</td>
+        <td data-label="Low Alert" class="text-muted" style="font-size:12px">${p.lowStockThreshold || 5}</td>
         <td>
           <div class="action-btns">
             <button class="action-btn action-btn-edit" onclick="Modals.editProduct('${p.id}')">✏️ Edit</button>
@@ -59,32 +59,32 @@ const Components = (() => {
   // ─── Orders Components ──────────────────────────────────────────
 
   function OrderRow(o) {
-    // Future-proofing fields: order source, tracking ID
+    // data-label attrs on each <td> power the CSS card layout on mobile (≤ 480px).
+    // Desktop ignores them. The first <td> merges Order ID + Customer for the card header.
     const sourceBadge = o.source ? `<span class="badge badge-muted" style="margin-top:4px;font-size:10px">${o.source}</span>` : '';
-    
+
     return `
-      <tr>
+      <tr onclick="Modals.viewOrder('${o.id}')" style="cursor:pointer">
         <td class="fw-700 text-accent">
-          <div>${o.id}</div>
-          ${sourceBadge}
-        </td>
-        <td>
-          <div class="customer-name-cell">
-            <div class="customer-avatar" style="width:30px;height:30px;font-size:11px">${initials(o.customerName)}</div>
-            <span>${o.customerName}</span>
+          <div class="customer-name-cell" style="gap:10px">
+            <div class="customer-avatar" style="width:34px;height:34px;font-size:12px;flex-shrink:0">${initials(o.customerName)}</div>
+            <div>
+              <div class="fw-700 text-accent" style="font-size:13px">${o.id} ${sourceBadge}</div>
+              <div style="font-size:12px;color:var(--text-secondary);font-weight:400">${o.customerName}</div>
+            </div>
           </div>
         </td>
-        <td style="font-size:12px;color:var(--text-secondary)">
+        <td data-label="Items" style="font-size:12px;color:var(--text-secondary)">
           ${o.items.map(i => i.name).join(', ')}
         </td>
-        <td class="fw-700">${formatCurrency(o.total)}</td>
-        <td>${UI.orderStatusBadge(o.status)}</td>
-        <td>${UI.paymentBadge(o.payment)}</td>
-        <td>${formatDate(o.date)}</td>
+        <td data-label="Total" class="fw-700">${formatCurrency(o.total)}</td>
+        <td data-label="Delivery">${UI.orderStatusBadge(o.status)}</td>
+        <td data-label="Payment">${UI.paymentBadge(o.payment)}</td>
+        <td data-label="Date">${formatDate(o.date)}</td>
         <td>
           <div class="action-btns">
-            <button class="action-btn action-btn-edit" onclick="Modals.viewOrder('${o.id}')">👁️ View</button>
-            <button class="action-btn action-btn-edit" onclick="Modals.showInvoice('${o.id}')">🧾</button>
+            <button class="action-btn action-btn-edit" onclick="event.stopPropagation();Modals.viewOrder('${o.id}')">👁️ View</button>
+            <button class="action-btn action-btn-edit" onclick="event.stopPropagation();Modals.showInvoice('${o.id}')">🧾</button>
           </div>
         </td>
       </tr>
@@ -200,11 +200,11 @@ const Components = (() => {
             </div>
           </div>
         </td>
-        <td>${c.city || '—'}</td>
-        <td class="fw-700">${c.totalOrders || 0}</td>
-        <td class="fw-700 text-accent">${formatCurrency(c.totalSpent || 0)}</td>
-        <td>${formatDate(c.lastOrder)}</td>
-        <td>${typeBadge}</td>
+        <td data-label="City">${c.city || '—'}</td>
+        <td data-label="Orders" class="fw-700">${c.totalOrders || 0}</td>
+        <td data-label="Spent" class="fw-700 text-accent">${formatCurrency(c.totalSpent || 0)}</td>
+        <td data-label="Last Order">${formatDate(c.lastOrder)}</td>
+        <td data-label="Type">${typeBadge}</td>
       </tr>
     `;
   }
