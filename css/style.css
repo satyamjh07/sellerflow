@@ -543,7 +543,7 @@ img { max-width: 100%; display: block; }
   flex-wrap: wrap;
   gap: 12px;
 }
-.page-header-left {}
+
 .page-header h2 {
   font-family: var(--font-display);
   font-size: 22px;
@@ -883,7 +883,7 @@ img { max-width: 100%; display: block; }
   align-items: center;
   gap: 12px;
 }
-.product-name-info {}
+
 .product-name { font-size: 13.5px; font-weight: 600; }
 .product-sku { font-size: 11px; color: var(--text-muted); }
 
@@ -1302,7 +1302,7 @@ img { max-width: 100%; display: block; }
   border-bottom: 1px solid var(--border);
 }
 .toggle-row:last-child { border-bottom: none; }
-.toggle-info {}
+
 .toggle-label { font-size: 13.5px; font-weight: 600; }
 .toggle-desc  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
@@ -1484,6 +1484,9 @@ img { max-width: 100%; display: block; }
 @media (max-width: 480px) {
   .stats-grid { grid-template-columns: 1fr; }
   .page-header { flex-direction: column; align-items: flex-start; }
+  .modal-footer { flex-direction: column; align-items: stretch; gap: 8px; }
+  .modal-footer .btn { width: 100%; margin-right: 0 !important; justify-content: center; }
+  .quick-actions { grid-template-columns: 1fr; }
 }
 
 /* ─── Animations ─────────────────────────────────── */
@@ -1497,3 +1500,67 @@ img { max-width: 100%; display: block; }
   to { transform: rotate(360deg); }
 }
 .spin { animation: spin 1s linear infinite; }
+
+/* ─── Print Portal Base ──────────────────────────── */
+#print-portal { display: none; }
+
+/* ─── Print Styles ───────────────────────────────── */
+@media print {
+  /* Set light mode explicitly for printing to save ink and look professional */
+  :root, body, #print-portal {
+    --bg-base: #FFFFFF !important;
+    --bg-surface: #FFFFFF !important;
+    --bg-card: #FFFFFF !important;
+    --bg-input: #F8FAFC !important;
+    --text-primary: #0F172A !important;
+    --text-secondary: #475569 !important;
+    --text-muted: #64748B !important;
+    --border: #E2E8F0 !important;
+    --accent: #4F46E5 !important;
+    --accent-dim: rgba(79,70,229,0.1) !important;
+  }
+
+  body {
+    background: white !important;
+    color: #0F172A !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body > *:not(#print-portal) {
+    display: none !important;
+  }
+  
+  #print-portal {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* Invoice Print Overrides */
+  .invoice-wrapper {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 20px 40px !important;
+    max-width: 100% !important;
+    color: #0F172A !important;
+  }
+
+  .invoice-table th, .invoice-table td {
+    color: #0F172A !important;
+    border-color: #E2E8F0 !important;
+  }
+
+  .invoice-status-paid {
+    border: 1px solid #10B981 !important;
+  }
+
+  .badge {
+    border: 1px solid currentColor !important;
+  }
+
+  /* Ensure background colors and borders print correctly (Chrome/Safari/Edge) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
