@@ -177,13 +177,33 @@ const Modals = (() => {
     const customerSel = document.getElementById('order-customer-select').value;
     let customerId, customerName;
 
+    let shippingAddress = '';
+
     if (customerSel === 'new') {
       const name = document.getElementById('new-customer-name').value.trim();
       const insta = document.getElementById('new-customer-insta').value.trim();
       const phone = document.getElementById('new-customer-phone').value.trim();
+      const email = document.getElementById('new-customer-email').value.trim();
+      
+      const address = document.getElementById('new-customer-address').value.trim();
+      const landmark = document.getElementById('new-customer-landmark').value.trim();
+      const city = document.getElementById('new-customer-city').value.trim();
+      const state = document.getElementById('new-customer-state').value.trim();
+      const pincode = document.getElementById('new-customer-pincode').value.trim();
+
       if (!name) { UI.toast('Please enter customer name', 'error'); return; }
       const nc = SF.findOrCreateCustomer(name, insta);
-      if (phone) SF.updateCustomer(nc.id, { phone });
+      
+      const updates = {};
+      if (phone) updates.phone = phone;
+      if (email) updates.email = email;
+      if (address) updates.address = address;
+      if (landmark) updates.landmark = landmark;
+      if (city) updates.city = city;
+      if (state) updates.state = state;
+      if (pincode) updates.pincode = pincode;
+
+      if (Object.keys(updates).length > 0) SF.updateCustomer(nc.id, updates);
       customerId = nc.id;
       customerName = nc.name;
     } else if (customerSel) {
@@ -194,6 +214,15 @@ const Modals = (() => {
     } else {
       UI.toast('Please select or create a customer', 'error');
       return;
+    }
+
+    const custForAddr = SF.getCustomers().find(c => c.id === customerId);
+    if (custForAddr && custForAddr.address) {
+      shippingAddress = `${custForAddr.address}`;
+      if (custForAddr.landmark) shippingAddress += `, ${custForAddr.landmark}`;
+      if (custForAddr.city) shippingAddress += `, ${custForAddr.city}`;
+      if (custForAddr.state) shippingAddress += `, ${custForAddr.state}`;
+      if (custForAddr.pincode) shippingAddress += ` - ${custForAddr.pincode}`;
     }
 
     const payment = document.getElementById('order-payment-status').value;
@@ -208,6 +237,7 @@ const Modals = (() => {
       status: 'processing',
       payment,
       notes,
+      shippingAddress,
     };
 
     const created = SF.addOrder(order);
