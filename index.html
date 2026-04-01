@@ -508,6 +508,16 @@
             <h3><span>🔔</span> Notifications</h3>
             <div class="toggle-row">
               <div class="toggle-info">
+                <div class="toggle-label">Auto send confirmation emails</div>
+                <div class="toggle-desc">Automatically email customers when orders are created</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="settings-auto-email">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
                 <div class="toggle-label">Low Stock Alerts</div>
                 <div class="toggle-desc">Alert when stock falls below threshold</div>
               </div>
@@ -669,16 +679,46 @@
             <input class="form-input" type="text" id="new-customer-insta" placeholder="@handle" />
           </div>
         </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Phone Number</label>
-          <input class="form-input" type="tel" id="new-customer-phone" placeholder="+91 98765 43210" />
+        <div class="form-row" style="margin-bottom:0">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Phone Number</label>
+            <input class="form-input" type="tel" id="new-customer-phone" placeholder="+91 98765 43210" />
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Email Address</label>
+            <input class="form-input" type="email" id="new-customer-email" placeholder="customer@email.com" />
+          </div>
+        </div>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-top:16px;margin-bottom:12px">Delivery Address</div>
+        <div class="form-group">
+          <label class="form-label">Street Address</label>
+          <input class="form-input" type="text" id="new-customer-address" placeholder="Flat, House no., Building, Apartment" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Landmark / Area</label>
+          <input class="form-input" type="text" id="new-customer-landmark" placeholder="e.g. Near Metro Station" />
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">City</label>
+            <input class="form-input" type="text" id="new-customer-city" placeholder="e.g. Mumbai" />
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">State</label>
+            <input class="form-input" type="text" id="new-customer-state" placeholder="e.g. Maharashtra" />
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:14px;margin-bottom:0">
+          <label class="form-label">Pincode / ZIP</label>
+          <input class="form-input" type="text" id="new-customer-pincode" placeholder="e.g. 400001" style="max-width: 50%" />
         </div>
       </div>
 
       <!-- Add item row -->
       <div style="background:var(--bg-input);border-radius:10px;padding:14px;margin-bottom:14px">
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-bottom:10px">Add Items</div>
-        <div style="display:flex;gap:8px;align-items:flex-end">
+        <div style="display:flex;gap:8px;align-items:flex-end" class="add-item-row">
           <div style="flex:1">
             <label class="form-label">Product</label>
             <select class="form-select" id="order-product-select"></select>
@@ -782,12 +822,21 @@
 
 
 <!-- ── Scripts ──────────────────────────────────── -->
-<script src="js/data.js"></script>
-<script src="js/components.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/pages.js"></script>
-<script src="js/modals.js"></script>
-<script src="js/app.js"></script>
+  <!-- EmailJS Integration -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script type="text/javascript">
+    (function(){
+      // TODO: Replace with your actual EmailJS Public Key once registered
+      // emailjs.init("YOUR_PUBLIC_KEY");
+    })();
+  </script>
+
+  <script src="js/data.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/pages.js"></script>
+  <script src="js/modals.js"></script>
+  <script src="js/app.js"></script>
 
 <div id="print-portal"></div>
 </body>
