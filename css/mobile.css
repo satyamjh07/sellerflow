@@ -1,0 +1,1252 @@
+/* ============================================================
+   SellerFlow — Mobile-First Enhancement Layer
+   Scope: All screens ≤ 768px, with targeted fixes at ≤ 480px
+   Strategy:
+     • Overrides only what needs to change — desktop untouched
+     • Tables → horizontal scroll on tablet, stacked cards on phone
+     • Modals → full-screen bottom sheet on mobile
+     • Forms → full-width, generous tap targets (min 48px)
+     • Sidebar → native-style drawer with close button
+     • Invoice → responsive with collapsing two-column layout
+     • Fixed bottom action bar in key modals
+   Compatible with: Android Chrome, iOS Safari, in-app browsers
+   ============================================================ */
+
+
+/* ── 0. GLOBAL TOUCH + OVERFLOW GUARD ─────────────────────── */
+
+html, body {
+  /* Belt-and-suspenders horizontal overflow guard */
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Ensure all images + embeds never bust their containers */
+img, canvas, iframe, video, table {
+  max-width: 100%;
+}
+
+/* Minimum comfortable tap target for interactive elements */
+button, .btn, .nav-item, .filter-tab, .quick-action-btn,
+.action-btn, .lsa-btn, .billing-card, .modal-close {
+  -webkit-tap-highlight-color: rgba(99,102,241,0.15);
+  touch-action: manipulation; /* remove 300ms delay on Android */
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   1. SIDEBAR — native drawer + visible close button
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* Close ✕ button injected by JS into .sidebar-header */
+  .sidebar-close-btn {
+    display: flex;
+    margin-left: auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 18px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: var(--transition);
+  }
+  .sidebar-close-btn:hover {
+    background: var(--danger-dim);
+    color: var(--danger);
+  }
+
+  /* Sidebar slides in from left as a full-height overlay drawer */
+  .sidebar {
+    /* Already set to translateX(-100%) in base CSS at 768px */
+    box-shadow: none;
+    /* Slightly wider on small phones for better readability */
+    width: min(var(--sidebar-width), 88vw);
+  }
+
+  /* Overlay gets a blur backdrop when sidebar is open */
+  .sidebar-overlay.open {
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  /* Nav items: bigger touch targets */
+  .nav-item {
+    padding: 13px 14px;
+    font-size: 14px;
+    border-radius: 10px;
+    min-height: 48px;
+  }
+
+  .nav-icon { font-size: 18px; }
+
+  /* User area at sidebar bottom */
+  .sidebar-footer {
+    padding: 14px 12px 20px; /* extra bottom for safe-area */
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+
+  .sidebar-user {
+    min-height: 52px;
+    padding: 12px 14px;
+    border-radius: 10px;
+  }
+
+  .sidebar-avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 14px;
+  }
+
+  .sidebar-user-name { font-size: 14px; }
+  .sidebar-user-role { font-size: 12px; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   2. TOPBAR
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  .topbar {
+    padding: 0 14px;
+    gap: 10px;
+    height: 56px;
+    /* Stick to the top and account for notch */
+    padding-top: env(safe-area-inset-top, 0);
+    height: calc(56px + env(safe-area-inset-top, 0px));
+  }
+
+  .topbar-mobile-menu {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .topbar-title {
+    font-size: 16px;
+    letter-spacing: -0.2px;
+    /* Keep it from truncating between burger + actions */
+    min-width: 0;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .topbar-actions {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .topbar-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   3. PAGE CONTENT + HEADERS
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  .page-content {
+    padding: 16px 14px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .page-header h2 {
+    font-size: 20px;
+    letter-spacing: -0.3px;
+  }
+
+  .page-header p {
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  .page-header-actions {
+    width: 100%;
+  }
+
+  /* Primary action buttons span full width on mobile */
+  .page-header-actions .btn-primary {
+    width: 100%;
+    justify-content: center;
+    padding: 13px 18px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-content { padding: 14px 12px; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   4. STAT CARDS + DASHBOARD
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .stat-card {
+    padding: 16px 16px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+    letter-spacing: -0.5px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 0.3px;
+  }
+
+  .stat-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+  /* Dashboard grids — force single column */
+  .dash-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .dash-grid .col-2,
+  .dash-grid .col-1 {
+    grid-column: span 1;
+  }
+
+  .dash-grid-bottom {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* Charts: comfortable height on mobile */
+  .chart-container {
+    height: 200px;
+  }
+
+  /* Quick actions: 2-up grid, slightly bigger */
+  .quick-actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .quick-action-btn {
+    padding: 18px 12px;
+    font-size: 12.5px;
+  }
+
+  .quick-action-btn .qa-icon {
+    font-size: 24px;
+  }
+
+  /* Recent orders list items */
+  .recent-order-item {
+    padding: 11px 0;
+    gap: 10px;
+  }
+
+  .order-name { font-size: 13px; }
+  .order-meta { font-size: 10px; }
+  .order-amount { font-size: 13px; }
+
+  /* Low stock alerts */
+  .low-stock-alert {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .lsa-name { font-size: 12.5px; }
+  .lsa-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .stat-value { font-size: 20px; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   5. TABLES — horizontal scroll on tablet, cards on phone
+══════════════════════════════════════════════════════════════ */
+
+/* ── 5a. Tablet (481–768px): horizontal scroll ──────────────── */
+@media (max-width: 768px) {
+
+  /* Allow the table wrapper to scroll without causing page overflow */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Subtle fade on right edge signals scrollability */
+    mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    /* Ensure it doesn't add its own horizontal overflow to the page */
+    max-width: 100%;
+  }
+
+  /* Once we have the mask for scrollability hint, 
+     remove the mask when table fits (handled per breakpoint below) */
+
+  .table {
+    min-width: 560px; /* tablet threshold: table scrolls before squashing */
+  }
+
+  .table th, .table td {
+    padding: 10px 12px;
+    font-size: 12.5px;
+  }
+
+  .table th {
+    font-size: 10px;
+    letter-spacing: 0.4px;
+  }
+}
+
+/* ── 5b. Phone (≤ 480px): stacked card layout for Orders ─────── */
+/*
+   On very small screens the orders and products tables are replaced
+   by native-feeling cards. We hide the <thead> and repaint each
+   <tr> as a flex card using data attributes set in Components.
+   Products table stays scrollable (fewer columns needed at a glance).
+*/
+
+@media (max-width: 480px) {
+
+  /* ─── ORDERS table → card stack ──────────────────────────── */
+
+  #orders-tbody .table-row-card,
+  #orders-tbody tr {
+    display: block;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  #orders-tbody tr:hover {
+    border-color: var(--border-active);
+    background: var(--bg-card-hover);
+  }
+
+  /* Hide table header row entirely — cards are self-labelled */
+  #page-orders .table thead {
+    display: none;
+  }
+
+  /* Each <td> becomes a block; we use data-label for labelling */
+  #orders-tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    border: none;
+    font-size: 13px;
+    /* Prevent the bottom-border from appearing between card cells */
+    border-bottom: none !important;
+  }
+
+  /* Label column (set via CSS attr() from data-label on <td>) */
+  #orders-tbody td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-right: 10px;
+    min-width: 72px;
+  }
+
+  /* The first cell (Order ID + Customer) spans full width as header */
+  #orders-tbody td:first-child {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border) !important;
+    margin-bottom: 8px;
+  }
+
+  #orders-tbody td:first-child::before {
+    display: none; /* no label for the header cell */
+  }
+
+  /* Actions cell: full-width, centred buttons */
+  #orders-tbody td:last-child {
+    justify-content: flex-end;
+    padding-top: 10px;
+    border-top: 1px solid var(--border) !important;
+    margin-top: 6px;
+    gap: 8px;
+  }
+
+  #orders-tbody td:last-child::before {
+    display: none;
+  }
+
+  /* Action buttons inside card — bigger on mobile */
+  #orders-tbody .action-btn {
+    padding: 8px 14px;
+    font-size: 12.5px;
+    min-height: 36px;
+  }
+
+  /* Items column: allow wrapping */
+  #orders-tbody td[data-label="Items"] {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  /* ─── PRODUCTS table → card stack ─────────────────────────── */
+
+  #products-tbody tr {
+    display: block;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 14px;
+    margin-bottom: 10px;
+    transition: var(--transition);
+  }
+
+  #page-products .table thead {
+    display: none;
+  }
+
+  #products-tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    border: none;
+    border-bottom: none !important;
+    font-size: 13px;
+  }
+
+  #products-tbody td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-right: 10px;
+    min-width: 72px;
+  }
+
+  /* Product name cell: full row header */
+  #products-tbody td:first-child {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border) !important;
+    margin-bottom: 8px;
+  }
+
+  #products-tbody td:first-child::before {
+    display: none;
+  }
+
+  /* Actions cell */
+  #products-tbody td:last-child {
+    justify-content: flex-end;
+    padding-top: 10px;
+    border-top: 1px solid var(--border) !important;
+    margin-top: 6px;
+  }
+
+  #products-tbody td:last-child::before { display: none; }
+
+  /* ─── CUSTOMERS table → card stack ──────────────────────── */
+
+  #customers-tbody tr {
+    display: block;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  #page-customers .table thead {
+    display: none;
+  }
+
+  #customers-tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    border: none;
+    border-bottom: none !important;
+    font-size: 13px;
+  }
+
+  #customers-tbody td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-right: 10px;
+    min-width: 72px;
+  }
+
+  #customers-tbody td:first-child {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border) !important;
+    margin-bottom: 8px;
+  }
+
+  #customers-tbody td:first-child::before { display: none; }
+
+  /* Remove the fade mask on phone — cards don't need it */
+  .table-wrapper {
+    mask-image: none;
+    -webkit-mask-image: none;
+    overflow-x: visible;
+  }
+
+  /* The <table> itself should also flow naturally */
+  .table {
+    min-width: unset;
+    width: 100%;
+    display: block;
+  }
+
+  .table tbody {
+    display: block;
+    width: 100%;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   6. MODALS — full-screen bottom-sheet on mobile
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  .modal-overlay {
+    /* Remove centering padding — modal fills from bottom */
+    padding: 0;
+    align-items: flex-end;
+    justify-content: stretch;
+  }
+
+  .modal {
+    /* Full-width bottom sheet */
+    max-width: 100%;
+    width: 100%;
+    max-height: 92vh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    padding: 20px 18px 16px;
+    /* Slide up animation */
+    transform: translateY(40px);
+    /* Ensure bottom content clears the home indicator on iOS */
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+  }
+
+  .modal-overlay.open .modal {
+    transform: translateY(0);
+  }
+
+  /* Pull handle indicator (visual affordance for swipeable sheet) */
+  .modal::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 99px;
+    margin: 0 auto 18px;
+  }
+
+  /* All size variants collapse to full-width on mobile */
+  .modal-lg,
+  .modal-xl {
+    max-width: 100%;
+  }
+
+  .modal-header {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-title {
+    font-size: 17px;
+  }
+
+  /* Close button — bigger tap target */
+  .modal-close {
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+    border-radius: 10px;
+  }
+
+  /* Modal footer — stacks vertically with safe-area padding */
+  .modal-footer {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 18px;
+    padding-top: 16px;
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-modal);
+    /* Ensure footer is always visible above keyboard */
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
+    /* Remove the border on sticky footer — it merges with scroll */
+    border-top: 1px solid var(--border);
+    z-index: 2;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+    font-size: 14px;
+    margin-right: 0 !important;
+  }
+
+  /* "Close" / secondary actions de-emphasised (less visual weight) */
+  .modal-footer .btn-secondary {
+    order: 10; /* push below primary actions */
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   7. FORMS — full-width, generous tap targets
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* All two-column form rows collapse to single column */
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  /* Each field group: comfortable spacing */
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  /* Inputs, selects, textareas: bigger touch targets */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 13px 14px;
+    font-size: 16px; /* Prevents iOS auto-zoom on focus */
+    border-radius: var(--radius-sm);
+    min-height: 48px;
+  }
+
+  .form-label {
+    font-size: 11px;
+    margin-bottom: 7px;
+  }
+
+  /* Textarea: taller default on phone */
+  .form-textarea {
+    min-height: 88px;
+  }
+
+  /* Search inputs inside pages */
+  .products-search input,
+  .topbar-search input {
+    font-size: 16px; /* prevent iOS zoom */
+    padding: 12px 14px 12px 36px;
+    min-height: 44px;
+  }
+
+  /* Filter select */
+  .filter-select {
+    font-size: 14px;
+    padding: 11px 14px;
+    min-height: 44px;
+  }
+
+  /* Products header row: search full-width, category below */
+  .products-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .products-search {
+    max-width: none;
+    width: 100%;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   8. CREATE ORDER MODAL — optimised for phone keyboard + thumb
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* Add-item row: product select stacked above qty + button */
+  .add-item-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .add-item-row > div {
+    width: 100% !important;
+  }
+
+  /* Qty and Add-button side by side (thumb-reach) */
+  .add-item-row .qty-add-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .add-item-row .qty-add-row > * {
+    flex: 1;
+  }
+
+  /* Order add-item button: full width, prominent */
+  #order-add-item-btn {
+    width: 100%;
+    min-height: 48px;
+    font-size: 14px;
+  }
+
+  /* New customer section: tighter padding on mobile */
+  #new-customer-fields {
+    padding: 12px 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+
+  /* Order items list: each item card slightly more breathing room */
+  #order-items-list > div {
+    padding: 10px 12px;
+  }
+
+  /* Order total prominently at a glance */
+  #order-total-display {
+    font-size: 17px;
+  }
+
+  /* Payment status + notes: full-width */
+  #order-payment-status {
+    width: 100%;
+  }
+
+  /* Remove-item button inside order items: bigger tap zone */
+  #order-items-list button {
+    padding: 6px 12px;
+    min-height: 34px;
+    font-size: 12px;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   9. INVOICE PREVIEW MODAL
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* Invoice wrapper: reduce padding to use the screen width */
+  .invoice-wrapper {
+    padding: 20px 16px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+  }
+
+  /* Header: side-by-side brand + meta collapses to stacked */
+  .invoice-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+  }
+
+  .invoice-brand .brand-name {
+    font-size: 18px;
+  }
+
+  .invoice-meta {
+    text-align: left;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .invoice-number {
+    font-size: 16px;
+  }
+
+  /* Parties: single column */
+  .invoice-parties {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  /* Items table: allow horizontal scroll within the invoice wrapper */
+  .invoice-table {
+    font-size: 12px;
+    /* Ensure it can scroll if needed without breaking layout */
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    min-width: 320px; /* never too narrow */
+  }
+
+  .invoice-table th,
+  .invoice-table td {
+    padding: 8px 10px;
+    white-space: nowrap;
+  }
+
+  /* Totals: slightly smaller */
+  .invoice-totals-inner {
+    width: 100%;
+    max-width: 260px;
+    margin-left: auto;
+  }
+
+  .invoice-total-row {
+    font-size: 12px;
+  }
+
+  .invoice-total-row.grand {
+    font-size: 14px;
+  }
+
+  /* Invoice footer buttons — the modal-footer handles stacking */
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   10. BILLING PAGE
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* Billing stat cards: 2-column */
+  #page-billing .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Billing invoice cards: 1-column */
+  .billing-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .billing-card {
+    padding: 16px 18px;
+    /* Row layout: amount right-aligned */
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: 16px;
+    row-gap: 4px;
+  }
+
+  .billing-order-num { font-size: 13px; grid-column: 1; }
+  .billing-customer { grid-column: 1; margin-bottom: 0; }
+  .billing-amount {
+    font-size: 20px;
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: center;
+    text-align: right;
+    margin-bottom: 0;
+  }
+  .billing-footer {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 480px) {
+  #page-billing .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   11. SETTINGS PAGE
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* Settings grid: single column on all mobile */
+  .settings-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .settings-section {
+    padding: 20px 16px;
+    border-radius: var(--radius-md);
+  }
+
+  .settings-section h3 {
+    font-size: 14.5px;
+    margin-bottom: 16px;
+  }
+
+  /* Danger zone spans full width (it's already 1/-1 on desktop grid) */
+  .danger-zone-section {
+    grid-column: 1; /* reset for single-column grid */
+  }
+
+  .danger-zone-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .danger-zone-row .btn-danger,
+  .danger-zone-row .btn-danger-solid {
+    width: 100%;
+    justify-content: center;
+    min-height: 46px;
+  }
+
+  /* Toggle rows: comfortable height */
+  .toggle-row {
+    padding: 14px 0;
+    gap: 12px;
+  }
+
+  .toggle-label { font-size: 13px; }
+  .toggle-desc  { font-size: 11px; }
+
+  /* Toggle switch: slightly larger for fat fingers */
+  .toggle {
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+  }
+
+  .toggle-slider::before {
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    top: 3px;
+  }
+
+  .toggle input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+  }
+
+  /* Save button on settings: full-width on mobile */
+  #page-settings .page-header-actions {
+    width: 100%;
+  }
+
+  #save-settings-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   12. CARDS + GENERAL COMPONENTS
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  .card {
+    padding: 16px 14px;
+    border-radius: var(--radius-md);
+  }
+
+  .card-header {
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .card-title { font-size: 14px; }
+  .card-subtitle { font-size: 11px; }
+
+  /* Badges: slightly larger text on mobile for readability */
+  .badge {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  /* Action buttons in tables: keep visible */
+  .action-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-height: 36px;
+    border-radius: 7px;
+  }
+
+  .action-btns {
+    gap: 6px;
+  }
+
+  /* Customer avatar cells */
+  .customer-avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 14px;
+  }
+
+  /* Product image cell */
+  .product-img {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .product-name { font-size: 13px; }
+  .product-sku  { font-size: 10px; }
+
+  /* Filter tabs bar: horizontal scroll */
+  .order-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+    gap: 6px;
+  }
+
+  .order-filters::-webkit-scrollbar { display: none; }
+
+  .filter-tab {
+    white-space: nowrap;
+    padding: 8px 14px;
+    font-size: 12px;
+    flex-shrink: 0;
+    min-height: 36px;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   13. TOASTS — bottom-positioned on mobile
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  .toast-container {
+    /* Move toasts to the bottom on mobile (thumb-visible area) */
+    top: auto;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    right: 12px;
+    left: 12px;
+    /* Centre the toasts horizontally */
+    align-items: center;
+  }
+
+  .toast {
+    min-width: unset;
+    max-width: 100%;
+    width: 100%;
+    /* Slide in from bottom instead of from right */
+    animation: toastInMobile 0.3s ease forwards;
+  }
+
+  .toast.removing {
+    animation: toastOutMobile 0.25s ease forwards;
+  }
+
+  @keyframes toastInMobile {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes toastOutMobile {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(24px); }
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   14. EMPTY STATE
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  .empty-state {
+    padding: 40px 20px;
+  }
+
+  .empty-icon { font-size: 40px; }
+
+  .empty-title {
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+
+  .empty-desc {
+    font-size: 12px;
+    max-width: 260px;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   15. LOGIN PAGE — already mobile-friendly, minor polish
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+
+  .login-card {
+    padding: 32px 20px 28px;
+    border-radius: var(--radius-lg);
+    /* Hug the edges on very small screens */
+    margin: 12px;
+    max-width: calc(100vw - 24px);
+  }
+
+  .login-title { font-size: 22px; }
+  .login-subtitle { font-size: 13px; margin-bottom: 24px; }
+  .login-logo-text { font-size: 19px; }
+
+  /* Signup form: name + store stack on mobile */
+  #auth-signup-form .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   16. CUSTOMER VIEW MODAL — stat grid mobile layout
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* Customer profile header: avatar + name + badge */
+  #view-customer-content [style*="grid-template-columns:repeat(3,1fr)"] {
+    /* Override inline grid to 3-equal columns (already looks fine)
+       but reduce font sizes for the number display */
+  }
+
+  /* Customer stat figures: slightly smaller on mobile */
+  #view-customer-content [style*="font-size:22px"] {
+    font-size: 19px !important;
+  }
+
+  #view-customer-content [style*="font-size:20px"] {
+    font-size: 17px !important;
+  }
+
+  /* Customer order history items */
+  #view-customer-content [style*="align-items:center;gap:12px;padding:10px"] {
+    flex-wrap: wrap;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   17. ACCESSIBILITY — focus rings visible on mobile too
+══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* Ensure focus-visible is usable for keyboard/switch control users */
+  .btn:focus-visible,
+  .form-input:focus-visible,
+  .form-select:focus-visible,
+  .form-textarea:focus-visible,
+  .nav-item:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   18. SAFE-AREA UTILS (iOS notch + home indicator)
+══════════════════════════════════════════════════════════════ */
+
+/* Applied to the fixed topbar so it doesn't hide behind notch */
+@supports (padding-top: env(safe-area-inset-top)) {
+  @media (max-width: 768px) {
+    .topbar {
+      padding-top: env(safe-area-inset-top, 0);
+    }
+
+    /* Push main content below the taller topbar */
+    .main {
+      padding-top: env(safe-area-inset-top, 0);
+    }
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   19. PRINT: unchanged — no mobile changes to print styles
+══════════════════════════════════════════════════════════════ */
+
+/* All @media print rules remain in style.css — nothing overridden here */
