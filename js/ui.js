@@ -1,17 +1,18 @@
 // SellerFlow — UI Utilities Module
-// Handles: toasts, modals, sidebar, navigation, global interactions
+// Handles: toasts, modals, sidebar, navigation, loading states, auth errors
 // ================================================================
 
 const UI = (() => {
 
-  // ─── Toast Notifications ─────────────────────────
+  // ─── Toast Notifications ─────────────────────────────────────
   function toast(msg, type = 'info') {
-    const icons = { success:'✅', error:'❌', warn:'⚠️', info:'ℹ️' };
+    const icons = { success: '✅', error: '❌', warn: '⚠️', info: 'ℹ️' };
     const container = document.getElementById('toast-container');
+    if (!container) return;
     const el = document.createElement('div');
     el.className = `toast toast-${type}`;
     el.innerHTML = `
-      <span class="toast-icon">${icons[type]||'ℹ️'}</span>
+      <span class="toast-icon">${icons[type] || 'ℹ️'}</span>
       <span class="toast-msg">${msg}</span>
       <span class="toast-close" onclick="this.parentElement.remove()">✕</span>
     `;
@@ -22,35 +23,103 @@ const UI = (() => {
     }, 3200);
   }
 
-  // ─── Modals ──────────────────────────────────────
-  function openModal(id) {
-    const overlay = document.getElementById(id);
-    if (overlay) {
-      overlay.classList.add('open');
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) closeModal(id);
-      }, { once: true });
+  // ─── Loading Overlay ─────────────────────────────────────────
+  // Shows/hides a full-page spinner while async data is loading.
+
+  function showLoading(msg = 'Loading…') {
+    let overlay = document.getElementById('sf-loading-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'sf-loading-overlay';
+      overlay.innerHTML = `
+        <div class="sf-loading-inner">
+          <div class="sf-spinner"></div>
+          <div class="sf-loading-msg" id="sf-loading-msg">${msg}</div>
+        </div>`;
+      document.body.appendChild(overlay);
+    } else {
+      document.getElementById('sf-loading-msg').textContent = msg;
+    }
+    overlay.classList.add('active');
+  }
+
+  function hideLoading() {
+    const overlay = document.getElementById('sf-loading-overlay');
+    if (overlay) overlay.classList.remove('active');
+  }
+
+  // ─── Page-level skeleton loader ──────────────────────────────
+  // Shows skeleton rows in tables while async data loads.
+
+  function showSkeleton(tbodyId, cols = 5, rows = 4) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    const cells = Array(cols).fill('<td><div class="skeleton-line"></div></td>').join('');
+    tbody.innerHTML = Array(rows).fill(`<tr>${cells}</tr>`).join('');
+  }
+
+  function showCardSkeleton(containerId, count = 6) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = Array(count).fill(`
+      <div class="billing-card skeleton-card">
+        <div class="skeleton-line" style="width:60%;height:14px;margin-bottom:10px"></div>
+        <div class="skeleton-line" style="width:40%;height:11px;margin-bottom:16px"></div>
+        <div class="skeleton-line" style="width:50%;height:24px;margin-bottom:12px"></div>
+        <div class="skeleton-line" style="width:70%;height:11px"></div>
+      </div>`).join('');
+  }
+
+  // ─── Async error boundary ─────────────────────────────────────
+  // Wraps an async page-render call, shows a toast on failure,
+  // and can force logout on auth errors.
+
+  async function safeRender(fn, label = 'page') {
+    try {
+      await fn();
+    } catch (err) {
+      console.error(`[UI:safeRender:${label}]`, err);
+      const msg = err?.message || '';
+      if (msg.includes('JWT') || msg.includes('not authenticated') || msg.includes('invalid claim')) {
+        toast('Session expired. Please log in again.', 'error');
+        setTimeout(() => window.dispatchEvent(new Event('sf:signed-out')), 1200);
+      } else {
+        toast(`Failed to load ${label}. Please try again.`, 'error');
+      }
     }
   }
+
+  // ─── Modals ──────────────────────────────────────────────────
+  function openModal(id) {
+    const overlay = document.getElementById(id);
+    if (!overlay) return;
+    overlay.classList.add('open');
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal(id);
+    }, { once: true });
+  }
+
   function closeModal(id) {
     const overlay = document.getElementById(id);
     if (overlay) overlay.classList.remove('open');
   }
+
   function closeAllModals() {
     document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
   }
 
-  // ─── Navigation ──────────────────────────────────
-  function navigate(page) {
+  // ─── Navigation (async-aware) ─────────────────────────────────
+  // Pages.* functions are now async. navigate() awaits them and
+  // handles loading state + error boundary.
+
+  async function navigate(page) {
     // Deactivate all nav items
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    // Activate matching
     const navEl = document.querySelector(`.nav-item[data-page="${page}"]`);
     if (navEl) navEl.classList.add('active');
 
-    // Hide all pages
+    // Hide all pages / show target
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    // Show target page
     const pageEl = document.getElementById(`page-${page}`);
     if (pageEl) pageEl.classList.add('active');
 
@@ -63,72 +132,67 @@ const UI = (() => {
       billing:   'Billing & Invoices',
       settings:  'Settings',
     };
-    document.getElementById('topbar-title').textContent = titles[page] || 'SellerFlow';
+    const titleEl = document.getElementById('topbar-title');
+    if (titleEl) titleEl.textContent = titles[page] || 'SellerFlow';
 
-    // Close mobile sidebar
     closeMobileSidebar();
 
-    // Trigger page-specific render
-    if (typeof Pages !== 'undefined' && Pages[page]) Pages[page]();
+    // Trigger async page render
+    if (typeof Pages !== 'undefined' && Pages[page]) {
+      await safeRender(() => Pages[page](), page);
+    }
   }
 
-  // ─── Mobile Sidebar ──────────────────────────────
+  // ─── Mobile Sidebar ──────────────────────────────────────────
   function openMobileSidebar() {
-    document.querySelector('.sidebar').classList.add('open');
-    document.querySelector('.sidebar-overlay').classList.add('open');
+    document.querySelector('.sidebar')?.classList.add('open');
+    document.querySelector('.sidebar-overlay')?.classList.add('open');
   }
   function closeMobileSidebar() {
-    document.querySelector('.sidebar').classList.remove('open');
-    document.querySelector('.sidebar-overlay').classList.remove('open');
+    document.querySelector('.sidebar')?.classList.remove('open');
+    document.querySelector('.sidebar-overlay')?.classList.remove('open');
   }
 
-  // ─── Confirm Dialog ──────────────────────────────
+  // ─── Confirm Dialog ──────────────────────────────────────────
   function confirm(msg) {
     return window.confirm(msg);
   }
 
-  // ─── Update Badges ───────────────────────────────
-  function updateBadges() {
-    const stats = SF.getDashStats();
-    // Pending orders badge
-    const pendingBadge = document.getElementById('badge-pending');
-    if (pendingBadge) {
-      if (stats.pendingPayments > 0) {
-        pendingBadge.textContent = stats.pendingPayments;
-        pendingBadge.style.display = '';
-      } else {
-        pendingBadge.style.display = 'none';
+  // ─── Update Sidebar Badges ───────────────────────────────────
+  // Called after any data mutation that could affect badge counts.
+
+  async function updateBadges() {
+    try {
+      const stats = await SF.getDashStats();
+      const pendingBadge = document.getElementById('badge-pending');
+      if (pendingBadge) {
+        pendingBadge.textContent  = stats.pendingPayments;
+        pendingBadge.style.display = stats.pendingPayments > 0 ? '' : 'none';
       }
-    }
-    // Low stock badge
-    const stockBadge = document.getElementById('badge-lowstock');
-    if (stockBadge) {
-      if (stats.lowStockCount > 0) {
-        stockBadge.textContent = stats.lowStockCount;
-        stockBadge.style.display = '';
-      } else {
-        stockBadge.style.display = 'none';
+      const stockBadge = document.getElementById('badge-lowstock');
+      if (stockBadge) {
+        stockBadge.textContent  = stats.lowStockCount;
+        stockBadge.style.display = stats.lowStockCount > 0 ? '' : 'none';
       }
-    }
-    // Notification dot
-    const notifDot = document.querySelector('.notif-dot');
-    if (notifDot) {
-      notifDot.style.display = (stats.pendingPayments > 0 || stats.lowStockCount > 0) ? '' : 'none';
-    }
+      const notifDot = document.querySelector('.notif-dot');
+      if (notifDot) {
+        notifDot.style.display =
+          (stats.pendingPayments > 0 || stats.lowStockCount > 0) ? '' : 'none';
+      }
+    } catch (_) { /* badges are non-critical — swallow errors */ }
   }
 
-  // ─── Empty State Helper ───────────────────────────
+  // ─── Empty State Helper ───────────────────────────────────────
   function emptyState(icon, title, desc) {
     return `
       <div class="empty-state">
         <div class="empty-icon">${icon}</div>
         <div class="empty-title">${title}</div>
         <div class="empty-desc">${desc}</div>
-      </div>
-    `;
+      </div>`;
   }
 
-  // ─── Status Badge HTML ────────────────────────────
+  // ─── Status Badges ────────────────────────────────────────────
   function orderStatusBadge(status) {
     const map = {
       processing: ['badge-info',    '🔄 Processing'],
@@ -150,19 +214,17 @@ const UI = (() => {
     return `<span class="badge ${cls}">${label}</span>`;
   }
 
-  // ─── Messaging ────────────────────────────────────
+  // ─── Invoice WhatsApp Message ────────────────────────────────
   function generateInvoiceMessage(order, user) {
-    const customerFirstName = order.customerName ? order.customerName.split(' ')[0] : 'Customer';
+    const firstName = (order.customerName || 'Customer').split(' ')[0];
     const storeName = user.store || 'Our Store';
-    // Use SF directly
-    const amount = SF.formatCurrency(order.total);
-    const status = order.payment === 'paid' ? 'PAID' : 'PENDING';
-    const upi = user.upiId ? `\nUPI: ${user.upiId}\n` : '';
-
-    return `Hi ${customerFirstName} 👋\nThank you for shopping with ${storeName} 💜\n\nYour order invoice #${order.id} is ready.\nTotal amount: ${amount}\nPayment status: ${status}\n${upi}\nThank you for your order ✨`;
+    const amount    = SF.formatCurrency(order.total);
+    const status    = order.payment === 'paid' ? 'PAID' : 'PENDING';
+    const upiLine   = user.upiId ? `\nUPI: ${user.upiId}\n` : '';
+    return `Hi ${firstName} 👋\nThank you for shopping with ${storeName} 💜\n\nYour order invoice #${order.id} is ready.\nTotal amount: ${amount}\nPayment status: ${status}\n${upiLine}\nThank you for your order ✨`;
   }
 
-  // ─── Debounce ─────────────────────────────────────
+  // ─── Debounce ─────────────────────────────────────────────────
   function debounce(fn, delay = 250) {
     let timer;
     return (...args) => {
@@ -173,9 +235,18 @@ const UI = (() => {
 
   // Public API
   return {
-    toast, openModal, closeModal, closeAllModals,
-    navigate, openMobileSidebar, closeMobileSidebar,
-    confirm, updateBadges, emptyState,
-    orderStatusBadge, paymentBadge, debounce, generateInvoiceMessage,
+    toast,
+    showLoading, hideLoading,
+    showSkeleton, showCardSkeleton,
+    safeRender,
+    openModal, closeModal, closeAllModals,
+    navigate,
+    openMobileSidebar, closeMobileSidebar,
+    confirm,
+    updateBadges,
+    emptyState,
+    orderStatusBadge, paymentBadge,
+    generateInvoiceMessage,
+    debounce,
   };
 })();
