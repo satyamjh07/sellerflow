@@ -190,37 +190,7 @@ const Pages = (() => {
     if (list.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7">${UI.emptyState('📦','No products found','Add your first product or clear your filters')}</td></tr>`;
     } else {
-      tbody.innerHTML = list.map(p => {
-        const stockClass = p.stock === 0 ? 'stock-low' : p.stock <= p.lowStockThreshold ? 'stock-mid' : 'stock-good';
-        const stockBadge = p.stock <= p.lowStockThreshold
-          ? `<span class="badge badge-warn" style="margin-left:6px">Low</span>` : '';
-        return `
-          <tr>
-            <td>
-              <div class="product-name-cell">
-                <div class="product-img">${p.emoji || '📦'}</div>
-                <div class="product-name-info">
-                  <div class="product-name">${p.name}</div>
-                  <div class="product-sku">${p.sku}</div>
-                </div>
-              </div>
-            </td>
-            <td><span class="badge badge-muted">${p.category}</span></td>
-            <td class="fw-700">${SF.formatCurrency(p.price)}</td>
-            <td>
-              <span class="stock-number ${stockClass}">${p.stock}</span>
-              ${stockBadge}
-            </td>
-            <td class="text-muted" style="font-size:12px">${p.lowStockThreshold}</td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn-edit" onclick="Modals.editProduct('${p.id}')">✏️ Edit</button>
-                <button class="action-btn action-btn-del" onclick="Modals.deleteProduct('${p.id}')">🗑️</button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
+      tbody.innerHTML = list.map(p => Components.ProductRow(p)).join('');
     }
 
     // Populate category filter options
@@ -256,30 +226,9 @@ const Pages = (() => {
     if (!tbody) return;
 
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7">${UI.emptyState('📋','No orders found','Create a new order or change your filter')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8">${UI.emptyState('📋','No orders found','Create a new order or change your filter')}</td></tr>`;
     } else {
-      tbody.innerHTML = list.map(o => `
-        <tr>
-          <td class="fw-700 text-accent">${o.id}</td>
-          <td>
-            <div class="customer-name-cell">
-              <div class="customer-avatar" style="width:30px;height:30px;font-size:11px">${SF.initials(o.customerName)}</div>
-              <span>${o.customerName}</span>
-            </div>
-          </td>
-          <td style="font-size:12px;color:var(--text-secondary)">${o.items.map(i => i.name).join(', ')}</td>
-          <td class="fw-700">${SF.formatCurrency(o.total)}</td>
-          <td>${UI.orderStatusBadge(o.status)}</td>
-          <td>${UI.paymentBadge(o.payment)}</td>
-          <td>${SF.formatDate(o.date)}</td>
-          <td>
-            <div class="action-btns">
-              <button class="action-btn action-btn-edit" onclick="Modals.viewOrder('${o.id}')">👁️ View</button>
-              <button class="action-btn action-btn-edit" onclick="Modals.showInvoice('${o.id}')">🧾</button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = list.map(o => Components.OrderRow(o)).join('');
     }
   }
 
@@ -302,34 +251,9 @@ const Pages = (() => {
     if (!tbody) return;
 
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7">${UI.emptyState('👤','No customers found','Customers are created automatically when you add orders')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6">${UI.emptyState('👤','No customers found','Customers are created automatically when you add orders')}</td></tr>`;
     } else {
-      tbody.innerHTML = list.map(c => {
-        const isRepeat = c.totalOrders >= 2;
-        return `
-          <tr class="customer-row" onclick="Modals.viewCustomer('${c.id}')">
-            <td>
-              <div class="customer-name-cell">
-                <div class="customer-avatar">${SF.initials(c.name)}</div>
-                <div>
-                  <div class="customer-name">${c.name}</div>
-                  <div class="customer-handle">${c.instagram || '—'}</div>
-                </div>
-              </div>
-            </td>
-            <td>${c.city || '—'}</td>
-            <td class="fw-700">${c.totalOrders || 0}</td>
-            <td class="fw-700 text-accent">${SF.formatCurrency(c.totalSpent || 0)}</td>
-            <td>${SF.formatDate(c.lastOrder)}</td>
-            <td>
-              ${isRepeat
-                ? `<span class="badge badge-success">⭐ Repeat</span>`
-                : `<span class="badge badge-muted">New</span>`
-              }
-            </td>
-          </tr>
-        `;
-      }).join('');
+      tbody.innerHTML = list.map(c => Components.CustomerRow(c)).join('');
     }
   }
 
