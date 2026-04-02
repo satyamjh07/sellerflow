@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SellerFlow — Instagram Seller Dashboard</title>
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/mobile.css" />
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -12,294 +13,384 @@
     <!-- Supabase JS SDK (v2) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- EmailJS (optional — configure in supabase.js / app.js) -->
-    <script
-      type="text/javascript"
-      src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
-    ></script>
+    <!-- EmailJS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
     <style>
       /* ─── Loading overlay ─────────────────────────────── */
       #sf-loading-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: var(--bg-base);
-        z-index: 9998;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        gap: 16px;
+        display: none; position: fixed; inset: 0;
+        background: var(--bg-base); z-index: 9998;
+        align-items: center; justify-content: center;
+        flex-direction: column; gap: 16px;
       }
-      #sf-loading-overlay.active {
-        display: flex;
-      }
-      .sf-loading-inner {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 14px;
-      }
+      #sf-loading-overlay.active { display: flex; }
+      .sf-loading-inner { display: flex; flex-direction: column; align-items: center; gap: 14px; }
       .sf-spinner {
-        width: 36px;
-        height: 36px;
-        border: 3px solid var(--border);
-        border-top-color: var(--accent);
-        border-radius: 50%;
-        animation: spin 0.75s linear infinite;
+        width: 36px; height: 36px;
+        border: 3px solid var(--border); border-top-color: var(--accent);
+        border-radius: 50%; animation: spin 0.75s linear infinite;
       }
-      .sf-loading-msg {
-        font-size: 13px;
-        color: var(--text-secondary);
-        letter-spacing: 0.3px;
-      }
+      .sf-loading-msg { font-size: 13px; color: var(--text-secondary); letter-spacing: 0.3px; }
 
-      /* ─── Skeleton loader lines ───────────────────────── */
+      /* ─── Skeleton loader ─────────────────────────────── */
       .skeleton-line {
         display: block;
-        background: linear-gradient(
-          90deg,
-          var(--bg-card) 0%,
-          var(--bg-card-hover) 50%,
-          var(--bg-card) 100%
-        );
+        background: linear-gradient(90deg, var(--bg-card) 0%, var(--bg-card-hover) 50%, var(--bg-card) 100%);
         background-size: 200% 100%;
         animation: skeleton-sweep 1.4s ease infinite;
-        border-radius: 6px;
-        height: 12px;
-        width: 100%;
+        border-radius: 6px; height: 12px; width: 100%;
       }
-      .skeleton-card {
-        pointer-events: none;
-      }
+      .skeleton-card { pointer-events: none; }
       @keyframes skeleton-sweep {
-        0% {
-          background-position: 200% 0;
-        }
-        100% {
-          background-position: -200% 0;
-        }
+        0%   { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
       }
 
       /* ─── Auth tab bar ────────────────────────────────── */
       .auth-tabs {
-        display: flex;
-        border-radius: 10px;
-        background: var(--bg-input);
-        padding: 4px;
-        margin-bottom: 28px;
-        gap: 4px;
+        display: flex; border-radius: 10px; background: var(--bg-input);
+        padding: 4px; margin-bottom: 28px; gap: 4px;
       }
       .auth-tab {
-        flex: 1;
-        padding: 9px;
-        text-align: center;
-        border-radius: 7px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        color: var(--text-muted);
-        transition: var(--transition);
-        background: transparent;
-        border: none;
+        flex: 1; padding: 9px; text-align: center; border-radius: 7px;
+        font-size: 13px; font-weight: 600; cursor: pointer;
+        color: var(--text-muted); transition: var(--transition);
+        background: transparent; border: none;
       }
       .auth-tab.active {
-        background: var(--bg-card);
-        color: var(--text-primary);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        background: var(--bg-card); color: var(--text-primary);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      }
+
+      /* ─── Google button ───────────────────────────────── */
+      .btn-google {
+        width: 100%; display: flex; align-items: center; justify-content: center;
+        gap: 10px; padding: 11px 16px; border-radius: var(--radius-sm);
+        background: var(--bg-input); border: 1px solid var(--border);
+        color: var(--text-primary); font-size: 14px; font-weight: 600;
+        cursor: pointer; transition: var(--transition); font-family: var(--font-body);
+        margin-bottom: 4px;
+      }
+      .btn-google:hover {
+        border-color: rgba(66,133,244,0.5); background: rgba(66,133,244,0.07);
+        transform: translateY(-1px);
+      }
+      .btn-google:disabled { opacity: 0.6; pointer-events: none; }
+      .google-icon { width: 18px; height: 18px; flex-shrink: 0; }
+      .btn-google-spinner {
+        width: 16px; height: 16px; border: 2px solid var(--border);
+        border-top-color: #4285F4; border-radius: 50%;
+        animation: spin 0.7s linear infinite; display: inline-block; flex-shrink: 0;
+      }
+
+      /* ─── Auth divider ────────────────────────────────── */
+      .auth-or-divider {
+        display: flex; align-items: center; gap: 12px;
+        margin: 16px 0; color: var(--text-muted); font-size: 12px;
+      }
+      .auth-or-divider::before,
+      .auth-or-divider::after {
+        content: ''; flex: 1; height: 1px; background: var(--border);
+      }
+
+      /* ─── Forgot password link ────────────────────────── */
+      .forgot-link {
+        display: block; text-align: right; font-size: 12px;
+        color: var(--text-accent); cursor: pointer; margin-top: -8px;
+        margin-bottom: 16px; transition: var(--transition);
+      }
+      .forgot-link:hover { color: var(--accent); }
+
+      /* ─── Verification / reset screens ───────────────── */
+      .auth-screen-icon {
+        font-size: 48px; text-align: center; margin-bottom: 12px;
+        display: block; animation: iconBounce 0.5s ease;
+      }
+      @keyframes iconBounce {
+        0%   { transform: scale(0.7); opacity: 0; }
+        60%  { transform: scale(1.1); }
+        100% { transform: scale(1);   opacity: 1; }
+      }
+      .auth-screen-title {
+        font-family: var(--font-display); font-size: 20px; font-weight: 700;
+        text-align: center; margin-bottom: 6px; letter-spacing: -0.3px;
+      }
+      .auth-screen-subtitle {
+        font-size: 13px; color: var(--text-secondary); text-align: center;
+        margin-bottom: 24px; line-height: 1.55;
+      }
+      .auth-email-highlight {
+        color: var(--text-primary); font-weight: 600;
+        background: var(--accent-dim); padding: 2px 7px;
+        border-radius: 5px; display: inline-block;
+      }
+      .auth-back-link {
+        display: block; text-align: center; margin-top: 18px;
+        font-size: 12px; color: var(--text-muted); cursor: pointer;
+        transition: var(--transition);
+      }
+      .auth-back-link:hover { color: var(--text-secondary); }
+      .auth-back-link span { color: var(--text-accent); }
+
+      /* Verification check button row */
+      .verify-action-row {
+        display: flex; flex-direction: column; gap: 10px; margin-top: 20px;
+      }
+      .btn-verify-check {
+        background: var(--success-dim); color: var(--success);
+        border: 1px solid rgba(16,185,129,0.25); font-size: 13.5px; padding: 12px;
+      }
+      .btn-verify-check:hover { background: rgba(16,185,129,0.2); }
+
+      /* Success state for forgot / reset screens */
+      .auth-success-box {
+        background: var(--success-dim); border: 1px solid rgba(16,185,129,0.25);
+        border-radius: var(--radius-md); padding: 20px 18px;
+        text-align: center; margin-bottom: 16px;
+      }
+      .auth-success-box .success-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+      .auth-success-box p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+      .auth-success-box strong { color: var(--success); }
+
+      /* Password strength / match shake */
+      @keyframes inputShake {
+        0%, 100% { transform: translateX(0); }
+        20%       { transform: translateX(-6px); }
+        40%       { transform: translateX(6px); }
+        60%       { transform: translateX(-4px); }
+        80%       { transform: translateX(4px); }
+      }
+      .input-shake { animation: inputShake 0.45s ease; border-color: var(--danger) !important; }
+
+      /* ─── Settings provider badge row ─────────────────── */
+      .settings-provider-badge {
+        display: inline-flex; align-items: center; gap: 7px;
+        background: rgba(66,133,244,0.12); border: 1px solid rgba(66,133,244,0.25);
+        color: #4285F4; border-radius: 99px; padding: 4px 12px;
+        font-size: 12px; font-weight: 600; margin-top: 6px;
       }
 
       /* ─── Print portal ────────────────────────────────── */
-      #print-portal {
-        display: none;
-      }
+      #print-portal { display: none; }
       @media print {
-        body > *:not(#print-portal) {
-          display: none !important;
-        }
-        #print-portal {
-          display: block !important;
-          background: #fff;
-          color: #1a1a1a;
-        }
-        .invoice-wrapper {
-          box-shadow: none !important;
-          padding: 20px !important;
-        }
-        .invoice-table th,
-        .invoice-table td {
-          color: #444 !important;
-        }
+        body > *:not(#print-portal) { display: none !important; }
+        #print-portal { display: block !important; background: #fff; color: #1a1a1a; }
+        .invoice-wrapper { box-shadow: none !important; padding: 20px !important; }
+        .invoice-table th, .invoice-table td { color: #444 !important; }
         .invoice-status-paid {
-          background: #d1fae5 !important;
-          color: #059669 !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
+          background: #d1fae5 !important; color: #059669 !important;
+          -webkit-print-color-adjust: exact; print-color-adjust: exact;
         }
       }
     </style>
   </head>
   <body>
-    <!-- ══════════════════════════════════════════════
-     LOGIN / SIGNUP PAGE
+
+<!-- ══════════════════════════════════════════════
+     AUTH SCREENS (login-page wrapper)
 ══════════════════════════════════════════════ -->
-    <div id="login-page">
-      <div class="login-bg-grid"></div>
-      <div class="login-bg-orb orb-1"></div>
-      <div class="login-bg-orb orb-2"></div>
+<div id="login-page">
+  <div class="login-bg-grid"></div>
+  <div class="login-bg-orb orb-1"></div>
+  <div class="login-bg-orb orb-2"></div>
 
-      <div class="login-card">
-        <div class="login-logo">
-          <div class="login-logo-icon">🛍️</div>
-          <div class="login-logo-text">SellerFlow</div>
-        </div>
-
-        <!-- Auth Tabs -->
-        <div class="auth-tabs">
-          <button class="auth-tab active" id="auth-login-tab">Sign In</button>
-          <button class="auth-tab" id="auth-signup-tab">Create Account</button>
-        </div>
-
-        <!-- ── LOGIN FORM ──────────────────────────── -->
-        <div id="auth-login-form">
-          <h1 class="login-title">Welcome back</h1>
-          <p class="login-subtitle">Sign in to manage your Instagram store</p>
-
-          <div class="form-group">
-            <label class="form-label" for="login-email">Email</label>
-            <input
-              class="form-input"
-              type="email"
-              id="login-email"
-              placeholder="you@store.com"
-              autocomplete="email"
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="login-password">Password</label>
-            <input
-              class="form-input"
-              type="password"
-              id="login-password"
-              placeholder="Enter password"
-              autocomplete="current-password"
-            />
-          </div>
-
-          <button
-            class="btn btn-primary btn-full"
-            id="login-btn"
-            style="margin-top: 8px"
-          >
-            Sign In →
-          </button>
-
-          <p class="login-hint">
-            Just exploring? <span id="demo-login">Use demo account</span>
-          </p>
-          <p class="login-hint" style="margin-top: 6px">
-            New here?
-            <span
-              id="switch-to-signup"
-              style="color: var(--text-accent); cursor: pointer"
-              >Create a free account</span
-            >
-          </p>
-        </div>
-
-        <!-- ── SIGNUP FORM ─────────────────────────── -->
-        <div id="auth-signup-form" style="display: none">
-          <h1 class="login-title">Start for free</h1>
-          <p class="login-subtitle">Your seller dashboard, ready in seconds</p>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="signup-name">Your Name *</label>
-              <input
-                class="form-input"
-                type="text"
-                id="signup-name"
-                placeholder="e.g. Priya Sharma"
-                autocomplete="name"
-              />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="signup-store">Store Name *</label>
-              <input
-                class="form-input"
-                type="text"
-                id="signup-store"
-                placeholder="e.g. Priya Boutique"
-              />
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signup-email">Email *</label>
-            <input
-              class="form-input"
-              type="email"
-              id="signup-email"
-              placeholder="you@store.com"
-              autocomplete="email"
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signup-password"
-              >Password * (min 8 chars)</label
-            >
-            <input
-              class="form-input"
-              type="password"
-              id="signup-password"
-              placeholder="Create a strong password"
-              autocomplete="new-password"
-            />
-          </div>
-
-          <button
-            class="btn btn-primary btn-full"
-            id="signup-btn"
-            style="margin-top: 8px"
-          >
-            Create Account →
-          </button>
-
-          <p class="login-hint" style="margin-top: 12px">
-            Already have an account?
-            <span
-              id="switch-to-login"
-              style="color: var(--text-accent); cursor: pointer"
-              >Sign in</span
-            >
-          </p>
-        </div>
-
-        <div class="divider" style="margin: 20px 0 14px"></div>
-        <div
-          style="
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-            text-align: center;
-          "
-        >
-          <div style="font-size: 11px; color: var(--text-muted)">
-            <div style="font-size: 18px; margin-bottom: 4px">📦</div>
-            Manage Orders
-          </div>
-          <div style="font-size: 11px; color: var(--text-muted)">
-            <div style="font-size: 18px; margin-bottom: 4px">🧾</div>
-            Auto Invoices
-          </div>
-          <div style="font-size: 11px; color: var(--text-muted)">
-            <div style="font-size: 18px; margin-bottom: 4px">📊</div>
-            Analytics
-          </div>
-        </div>
-      </div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">🛍️</div>
+      <div class="login-logo-text">SellerFlow</div>
     </div>
 
-    <!-- ══════════════════════════════════════════════
+    <!-- Auth Tabs (hidden on verify/forgot/reset screens) -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="auth-login-tab">Sign In</button>
+      <button class="auth-tab" id="auth-signup-tab">Create Account</button>
+    </div>
+
+
+    <!-- ══ LOGIN FORM ══════════════════════════════════════════ -->
+    <div id="auth-login-form">
+      <h1 class="login-title">Welcome back</h1>
+      <p class="login-subtitle">Sign in to manage your Instagram store</p>
+
+      <!-- Google OAuth -->
+      <button class="btn-google" type="button">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="google-icon" alt="Google" />
+        Continue with Google
+      </button>
+
+      <div class="auth-or-divider">or continue with email</div>
+
+      <div class="form-group">
+        <label class="form-label" for="login-email">Email</label>
+        <input class="form-input" type="email" id="login-email" placeholder="you@store.com" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="login-password">Password</label>
+        <input class="form-input" type="password" id="login-password" placeholder="Enter password" autocomplete="current-password" />
+        <span class="forgot-link" id="forgot-password-link">Forgot password?</span>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="login-btn" style="margin-top:4px">Sign In →</button>
+
+      <p class="login-hint" style="margin-top:12px">
+        Just exploring? <span id="demo-login">Use demo account</span>
+      </p>
+      <p class="login-hint" style="margin-top:6px">
+        New here? <span id="switch-to-signup" style="color:var(--text-accent);cursor:pointer">Create a free account</span>
+      </p>
+    </div><!-- /auth-login-form -->
+
+
+    <!-- ══ SIGNUP FORM ══════════════════════════════════════════ -->
+    <div id="auth-signup-form" style="display:none">
+      <h1 class="login-title">Start for free</h1>
+      <p class="login-subtitle">Your seller dashboard, ready in seconds</p>
+
+      <!-- Google OAuth -->
+      <button class="btn-google" type="button">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="google-icon" alt="Google" />
+        Sign up with Google
+      </button>
+
+      <div class="auth-or-divider">or sign up with email</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="signup-name">Your Name *</label>
+          <input class="form-input" type="text" id="signup-name" placeholder="e.g. Priya Sharma" autocomplete="name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="signup-store">Store Name *</label>
+          <input class="form-input" type="text" id="signup-store" placeholder="e.g. Priya Boutique" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="signup-email">Email *</label>
+        <input class="form-input" type="email" id="signup-email" placeholder="you@store.com" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="signup-password">Password * <span style="font-weight:400;color:var(--text-muted)">(min 8 chars)</span></label>
+        <input class="form-input" type="password" id="signup-password" placeholder="Create a strong password" autocomplete="new-password" />
+      </div>
+
+      <button class="btn btn-primary btn-full" id="signup-btn" style="margin-top:8px">Create Account →</button>
+
+      <p class="login-hint" style="margin-top:12px">
+        Already have an account? <span id="switch-to-login" style="color:var(--text-accent);cursor:pointer">Sign in</span>
+      </p>
+    </div><!-- /auth-signup-form -->
+
+
+    <!-- ══ EMAIL VERIFICATION PENDING ══════════════════════════ -->
+    <div id="auth-verify-email-screen" style="display:none">
+      <span class="auth-screen-icon">📬</span>
+      <div class="auth-screen-title">Check your inbox</div>
+      <div class="auth-screen-subtitle">
+        We sent a confirmation link to<br>
+        <span class="auth-email-highlight" id="verify-email-address">your email</span><br><br>
+        Click the link in that email to activate your account.<br>
+        <span style="color:var(--text-muted);font-size:12px">Don't see it? Check your spam folder.</span>
+      </div>
+
+      <!-- Hidden resend input -->
+      <input type="hidden" id="resend-email-input" />
+
+      <div class="verify-action-row">
+        <button class="btn btn-verify-check" id="check-verified-btn">
+          ✅ I've Verified — Open Dashboard
+        </button>
+        <button class="btn btn-secondary" id="resend-verification-btn">
+          📧 Resend Verification Email
+        </button>
+      </div>
+
+      <div class="auth-back-link" id="verify-back-to-login">
+        ← Back to <span>Sign In</span>
+      </div>
+    </div><!-- /auth-verify-email-screen -->
+
+
+    <!-- ══ FORGOT PASSWORD ══════════════════════════════════════ -->
+    <div id="auth-forgot-password-screen" style="display:none">
+      <span class="auth-screen-icon">🔑</span>
+      <div class="auth-screen-title">Reset your password</div>
+      <div class="auth-screen-subtitle">
+        Enter your account email and we'll send you a secure reset link.
+      </div>
+
+      <!-- Form area (swapped for success state after send) -->
+      <div id="forgot-password-form-area">
+        <div class="form-group">
+          <label class="form-label" for="forgot-email-input">Email Address</label>
+          <input class="form-input" type="email" id="forgot-email-input" placeholder="you@store.com" autocomplete="email" />
+        </div>
+        <button class="btn btn-primary btn-full" id="forgot-password-btn">📧 Send Reset Email</button>
+      </div>
+
+      <!-- Success state (hidden until email sent) -->
+      <div id="forgot-password-success" style="display:none">
+        <div class="auth-success-box">
+          <span class="success-icon">✉️</span>
+          <p>Reset link sent to<br><strong id="forgot-success-email"></strong></p>
+          <p style="margin-top:8px;font-size:12px">Click the link in the email to set a new password. Check spam if you don't see it within 2 minutes.</p>
+        </div>
+      </div>
+
+      <div class="auth-back-link" id="forgot-back-to-login">
+        ← Back to <span>Sign In</span>
+      </div>
+    </div><!-- /auth-forgot-password-screen -->
+
+
+    <!-- ══ RESET PASSWORD (lands here from email link) ══════════ -->
+    <div id="auth-reset-password-screen" style="display:none">
+      <span class="auth-screen-icon">🔐</span>
+      <div class="auth-screen-title">Set a new password</div>
+      <div class="auth-screen-subtitle">
+        Choose a strong password for your SellerFlow account.
+      </div>
+
+      <!-- Form area -->
+      <div id="reset-password-form-area">
+        <div class="form-group">
+          <label class="form-label" for="reset-password-input">New Password <span style="font-weight:400;color:var(--text-muted)">(min 8 chars)</span></label>
+          <input class="form-input" type="password" id="reset-password-input" placeholder="Enter new password" autocomplete="new-password" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reset-password-confirm">Confirm New Password</label>
+          <input class="form-input" type="password" id="reset-password-confirm" placeholder="Re-enter new password" autocomplete="new-password" />
+        </div>
+        <button class="btn btn-primary btn-full" id="reset-password-btn">🔐 Set New Password</button>
+      </div>
+
+      <!-- Success state -->
+      <div id="reset-password-success" style="display:none">
+        <div class="auth-success-box">
+          <span class="success-icon">🎉</span>
+          <p><strong style="color:var(--success)">Password updated!</strong></p>
+          <p style="margin-top:6px">Redirecting you to your dashboard…</p>
+        </div>
+      </div>
+
+      <div class="auth-back-link" id="reset-back-to-login">
+        ← Back to <span>Sign In</span>
+      </div>
+    </div><!-- /auth-reset-password-screen -->
+
+
+    <!-- Feature strip (shown on login/signup only via display:none on the strip via JS when on other screens) -->
+    <div id="auth-feature-strip">
+      <div class="divider" style="margin:20px 0 14px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+        <div style="font-size:11px;color:var(--text-muted)"><div style="font-size:18px;margin-bottom:4px">📦</div>Manage Orders</div>
+        <div style="font-size:11px;color:var(--text-muted)"><div style="font-size:18px;margin-bottom:4px">🧾</div>Auto Invoices</div>
+        <div style="font-size:11px;color:var(--text-muted)"><div style="font-size:18px;margin-bottom:4px">📊</div>Analytics</div>
+      </div>
+    </div>
+  </div><!-- /login-card -->
+</div><!-- /login-page -->
+
      APP SHELL
 ══════════════════════════════════════════════ -->
     <div id="app">
@@ -626,8 +717,7 @@
                 <table class="table">
                   <thead>
                     <tr>
-                      <th>Order ID</th>
-                      <th>Customer</th>
+                      <th>Order / Customer</th>
                       <th>Items</th>
                       <th>Total</th>
                       <th>Delivery</th>
@@ -806,6 +896,23 @@
                     id="settings-upi"
                     placeholder="yourname@upi"
                   />
+                </div>
+
+                <!-- Google provider badge (shown only for Google-authenticated users) -->
+                <div id="settings-provider-row" style="display:none;margin-top:4px">
+                  <div class="form-label" style="margin-bottom:6px">Sign-in Method</div>
+                  <span class="settings-provider-badge">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:14px;height:14px" alt="" />
+                    Signed in with Google
+                  </span>
+                </div>
+
+                <!-- Change password link (hidden for Google users) -->
+                <div id="settings-password-row" style="margin-top:14px">
+                  <div class="form-label" style="margin-bottom:6px">Password</div>
+                  <span id="settings-change-password-link" style="font-size:13px;color:var(--text-accent);cursor:pointer;transition:var(--transition)">
+                    Send password reset email →
+                  </span>
                 </div>
               </div>
               <div class="settings-section">
@@ -1427,50 +1534,20 @@
     <!-- Print Portal -->
     <div id="print-portal"></div>
 
-    <!-- EmailJS Integration -->
-    <script
-      type="text/javascript"
-      src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
-    ></script>
+    <!-- EmailJS -->
     <script type="text/javascript">
       (function () {
-        // ─── EmailJS Configuration ─────────────────────────────────────────────
-        // 1. Sign up free at https://www.emailjs.com/
-        //
-        // SERVICE_ID  → EmailJS Dashboard → Email Services → copy your service ID
-        //               (set the constant in ui.js: EMAILJS_SERVICE_ID)
-        //
-        // TEMPLATE_ID → EmailJS Dashboard → Email Templates → copy template ID
-        //               (set the constant in ui.js: EMAILJS_TEMPLATE_ID)
-        //               Template variables to wire up in the EmailJS dashboard:
-        //               {{customer_name}}, {{customer_email}}, {{order_id}},
-        //               {{items_summary}}, {{total}}, {{payment_status}},
-        //               {{shipping_address}}, {{store_name}}, {{upi_id}}
-        //
-        // PUBLIC_KEY  → EmailJS Dashboard → Account → API Keys → Public Key
-        //               Replace the string below with your actual key
-        //
-        emailjs.init("avE1V-fmizcnzwLKw"); // ✅ PASTE YOUR PUBLIC KEY HERE (from EmailJS → Account → API Keys)
+        emailjs.init("avE1V-fmizcnzwLKw"); // ← your EmailJS public key
       })();
     </script>
 
-    <!-- html2pdf.js — client-side PDF generation (invoice download) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-    <!-- ══ Scripts (order matters) ════════════════════════════════ -->
-    <script src="js/supabase.js"></script>
-    <!-- Auth + _supabase client -->
-    <script src="js/data.js"></script>
-    <!-- SF.* async data layer  -->
-    <script src="js/components.js"></script>
-    <!-- Pure HTML renderers    -->
-    <script src="js/ui.js"></script>
-    <!-- UI utilities           -->
-    <script src="js/pages.js"></script>
-    <!-- Async page renderers   -->
-    <script src="js/modals.js"></script>
-    <!-- Async modal handlers   -->
-    <script src="js/app.js"></script>
-    <!-- Entry point            -->
+    <!-- ══ Scripts (load order matters) ════════════════════════ -->
+    <script src="js/supabase.js"></script>   <!-- Auth + _supabase client  -->
+    <script src="js/data.js"></script>        <!-- SF.* async data layer    -->
+    <script src="js/components.js"></script>  <!-- Pure HTML renderers      -->
+    <script src="js/ui.js"></script>          <!-- UI utilities             -->
+    <script src="js/pages.js"></script>       <!-- Async page renderers     -->
+    <script src="js/modals.js"></script>      <!-- Async modal handlers     -->
+    <script src="js/app.js"></script>         <!-- Entry point              -->
   </body>
 </html>
