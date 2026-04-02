@@ -1,781 +1,1476 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SellerFlow</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/mobile.css" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SellerFlow — Instagram Seller Dashboard</title>
+    <link rel="stylesheet" href="css/style.css" />
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-  <!-- Supabase JS SDK (v2) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase JS SDK (v2) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- EmailJS (optional — configure in supabase.js / app.js) -->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <!-- EmailJS (optional — configure in supabase.js / app.js) -->
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
+    ></script>
 
-  <style>
-    /* ─── Loading overlay ─────────────────────────────── */
-    #sf-loading-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: var(--bg-base);
-      z-index: 9998;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 16px;
-    }
-    #sf-loading-overlay.active {
-      display: flex;
-    }
-    .sf-loading-inner {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-    }
-    .sf-spinner {
-      width: 36px;
-      height: 36px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.75s linear infinite;
-    }
-    .sf-loading-msg {
-      font-size: 13px;
-      color: var(--text-secondary);
-      letter-spacing: 0.3px;
-    }
+    <style>
+      /* ─── Loading overlay ─────────────────────────────── */
+      #sf-loading-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: var(--bg-base);
+        z-index: 9998;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 16px;
+      }
+      #sf-loading-overlay.active {
+        display: flex;
+      }
+      .sf-loading-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+      }
+      .sf-spinner {
+        width: 36px;
+        height: 36px;
+        border: 3px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.75s linear infinite;
+      }
+      .sf-loading-msg {
+        font-size: 13px;
+        color: var(--text-secondary);
+        letter-spacing: 0.3px;
+      }
 
-    /* ─── Skeleton loader lines ───────────────────────── */
-    .skeleton-line {
-      display: block;
-      background: linear-gradient(
-        90deg,
-        var(--bg-card) 0%,
-        var(--bg-card-hover) 50%,
-        var(--bg-card) 100%
-      );
-      background-size: 200% 100%;
-      animation: skeleton-sweep 1.4s ease infinite;
-      border-radius: 6px;
-      height: 12px;
-      width: 100%;
-    }
-    .skeleton-card {
-      pointer-events: none;
-    }
-    @keyframes skeleton-sweep {
-      0%   { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
+      /* ─── Skeleton loader lines ───────────────────────── */
+      .skeleton-line {
+        display: block;
+        background: linear-gradient(
+          90deg,
+          var(--bg-card) 0%,
+          var(--bg-card-hover) 50%,
+          var(--bg-card) 100%
+        );
+        background-size: 200% 100%;
+        animation: skeleton-sweep 1.4s ease infinite;
+        border-radius: 6px;
+        height: 12px;
+        width: 100%;
+      }
+      .skeleton-card {
+        pointer-events: none;
+      }
+      @keyframes skeleton-sweep {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
 
-    /* ─── Auth tab bar ────────────────────────────────── */
-    .auth-tabs {
-      display: flex;
-      border-radius: 10px;
-      background: var(--bg-input);
-      padding: 4px;
-      margin-bottom: 28px;
-      gap: 4px;
-    }
-    .auth-tab {
-      flex: 1;
-      padding: 9px;
-      text-align: center;
-      border-radius: 7px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      color: var(--text-muted);
-      transition: var(--transition);
-      background: transparent;
-      border: none;
-    }
-    .auth-tab.active {
-      background: var(--bg-card);
-      color: var(--text-primary);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
+      /* ─── Auth tab bar ────────────────────────────────── */
+      .auth-tabs {
+        display: flex;
+        border-radius: 10px;
+        background: var(--bg-input);
+        padding: 4px;
+        margin-bottom: 28px;
+        gap: 4px;
+      }
+      .auth-tab {
+        flex: 1;
+        padding: 9px;
+        text-align: center;
+        border-radius: 7px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--text-muted);
+        transition: var(--transition);
+        background: transparent;
+        border: none;
+      }
+      .auth-tab.active {
+        background: var(--bg-card);
+        color: var(--text-primary);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
 
-    /* ─── Print portal ────────────────────────────────── */
-    #print-portal { display: none; }
-    @media print {
-      body > *:not(#print-portal) { display: none !important; }
+      /* ─── Print portal ────────────────────────────────── */
       #print-portal {
-        display: block !important;
-        background: #fff;
-        color: #1a1a1a;
+        display: none;
       }
-      .invoice-wrapper {
-        box-shadow: none !important;
-        padding: 20px !important;
+      @media print {
+        body > *:not(#print-portal) {
+          display: none !important;
+        }
+        #print-portal {
+          display: block !important;
+          background: #fff;
+          color: #1a1a1a;
+        }
+        .invoice-wrapper {
+          box-shadow: none !important;
+          padding: 20px !important;
+        }
+        .invoice-table th,
+        .invoice-table td {
+          color: #444 !important;
+        }
+        .invoice-status-paid {
+          background: #d1fae5 !important;
+          color: #059669 !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
       }
-      .invoice-table th, .invoice-table td {
-        color: #444 !important;
-      }
-      .invoice-status-paid {
-        background: #d1fae5 !important;
-        color: #059669 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-    }
-  </style>
-</head>
-<body>
-
-<!-- ══════════════════════════════════════════════
+    </style>
+  </head>
+  <body>
+    <!-- ══════════════════════════════════════════════
      LOGIN / SIGNUP PAGE
 ══════════════════════════════════════════════ -->
-<div id="login-page">
-  <div class="login-bg-grid"></div>
-  <div class="login-bg-orb orb-1"></div>
-  <div class="login-bg-orb orb-2"></div>
+    <div id="login-page">
+      <div class="login-bg-grid"></div>
+      <div class="login-bg-orb orb-1"></div>
+      <div class="login-bg-orb orb-2"></div>
 
-  <div class="login-card">
-    <div class="login-logo">
-      <div class="login-logo-icon">🛍️</div>
-      <div class="login-logo-text">SellerFlow</div>
-    </div>
-
-    <!-- Auth Tabs -->
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="auth-login-tab">Sign In</button>
-      <button class="auth-tab" id="auth-signup-tab">Create Account</button>
-    </div>
-
-    <!-- ── LOGIN FORM ──────────────────────────── -->
-    <div id="auth-login-form">
-      <h1 class="login-title">Welcome back</h1>
-      <p class="login-subtitle">Sign in to manage your Instagram store</p>
-
-      <div class="form-group">
-        <label class="form-label" for="login-email">Email</label>
-        <input class="form-input" type="email" id="login-email"
-          placeholder="you@store.com" autocomplete="email" />
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="login-password">Password</label>
-        <input class="form-input" type="password" id="login-password"
-          placeholder="Enter password" autocomplete="current-password" />
-      </div>
-
-      <button class="btn btn-primary btn-full" id="login-btn" style="margin-top:8px">
-        Sign In →
-      </button>
-
-      <p class="login-hint">
-        Just exploring? <span id="demo-login">Use demo account</span>
-      </p>
-      <p class="login-hint" style="margin-top:6px">
-        New here? <span id="switch-to-signup" style="color:var(--text-accent);cursor:pointer">Create a free account</span>
-      </p>
-    </div>
-
-    <!-- ── SIGNUP FORM ─────────────────────────── -->
-    <div id="auth-signup-form" style="display:none">
-      <h1 class="login-title">Start for free</h1>
-      <p class="login-subtitle">Your seller dashboard, ready in seconds</p>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="signup-name">Your Name *</label>
-          <input class="form-input" type="text" id="signup-name"
-            placeholder="e.g. Priya Sharma" autocomplete="name" />
+      <div class="login-card">
+        <div class="login-logo">
+          <div class="login-logo-icon">🛍️</div>
+          <div class="login-logo-text">SellerFlow</div>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="signup-store">Store Name *</label>
-          <input class="form-input" type="text" id="signup-store"
-            placeholder="e.g. Priya Boutique" />
+
+        <!-- Auth Tabs -->
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="auth-login-tab">Sign In</button>
+          <button class="auth-tab" id="auth-signup-tab">Create Account</button>
+        </div>
+
+        <!-- ── LOGIN FORM ──────────────────────────── -->
+        <div id="auth-login-form">
+          <h1 class="login-title">Welcome back</h1>
+          <p class="login-subtitle">Sign in to manage your Instagram store</p>
+
+          <div class="form-group">
+            <label class="form-label" for="login-email">Email</label>
+            <input
+              class="form-input"
+              type="email"
+              id="login-email"
+              placeholder="you@store.com"
+              autocomplete="email"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-password">Password</label>
+            <input
+              class="form-input"
+              type="password"
+              id="login-password"
+              placeholder="Enter password"
+              autocomplete="current-password"
+            />
+          </div>
+
+          <button
+            class="btn btn-primary btn-full"
+            id="login-btn"
+            style="margin-top: 8px"
+          >
+            Sign In →
+          </button>
+
+          <p class="login-hint">
+            Just exploring? <span id="demo-login">Use demo account</span>
+          </p>
+          <p class="login-hint" style="margin-top: 6px">
+            New here?
+            <span
+              id="switch-to-signup"
+              style="color: var(--text-accent); cursor: pointer"
+              >Create a free account</span
+            >
+          </p>
+        </div>
+
+        <!-- ── SIGNUP FORM ─────────────────────────── -->
+        <div id="auth-signup-form" style="display: none">
+          <h1 class="login-title">Start for free</h1>
+          <p class="login-subtitle">Your seller dashboard, ready in seconds</p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="signup-name">Your Name *</label>
+              <input
+                class="form-input"
+                type="text"
+                id="signup-name"
+                placeholder="e.g. Priya Sharma"
+                autocomplete="name"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="signup-store">Store Name *</label>
+              <input
+                class="form-input"
+                type="text"
+                id="signup-store"
+                placeholder="e.g. Priya Boutique"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-email">Email *</label>
+            <input
+              class="form-input"
+              type="email"
+              id="signup-email"
+              placeholder="you@store.com"
+              autocomplete="email"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-password"
+              >Password * (min 8 chars)</label
+            >
+            <input
+              class="form-input"
+              type="password"
+              id="signup-password"
+              placeholder="Create a strong password"
+              autocomplete="new-password"
+            />
+          </div>
+
+          <button
+            class="btn btn-primary btn-full"
+            id="signup-btn"
+            style="margin-top: 8px"
+          >
+            Create Account →
+          </button>
+
+          <p class="login-hint" style="margin-top: 12px">
+            Already have an account?
+            <span
+              id="switch-to-login"
+              style="color: var(--text-accent); cursor: pointer"
+              >Sign in</span
+            >
+          </p>
+        </div>
+
+        <div class="divider" style="margin: 20px 0 14px"></div>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            text-align: center;
+          "
+        >
+          <div style="font-size: 11px; color: var(--text-muted)">
+            <div style="font-size: 18px; margin-bottom: 4px">📦</div>
+            Manage Orders
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted)">
+            <div style="font-size: 18px; margin-bottom: 4px">🧾</div>
+            Auto Invoices
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted)">
+            <div style="font-size: 18px; margin-bottom: 4px">📊</div>
+            Analytics
+          </div>
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label" for="signup-email">Email *</label>
-        <input class="form-input" type="email" id="signup-email"
-          placeholder="you@store.com" autocomplete="email" />
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="signup-password">Password * (min 8 chars)</label>
-        <input class="form-input" type="password" id="signup-password"
-          placeholder="Create a strong password" autocomplete="new-password" />
-      </div>
-
-      <button class="btn btn-primary btn-full" id="signup-btn" style="margin-top:8px">
-        Create Account →
-      </button>
-
-      <p class="login-hint" style="margin-top:12px">
-        Already have an account?
-        <span id="switch-to-login" style="color:var(--text-accent);cursor:pointer">Sign in</span>
-      </p>
     </div>
 
-    <div class="divider" style="margin:20px 0 14px"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
-      <div style="font-size:11px;color:var(--text-muted)"><div style="font-size:18px;margin-bottom:4px">📦</div>Manage Orders</div>
-      <div style="font-size:11px;color:var(--text-muted)"><div style="font-size:18px;margin-bottom:4px">🧾</div>Auto Invoices</div>
-      <div style="font-size:11px;color:var(--text-muted)"><div style="font-size:18px;margin-bottom:4px">📊</div>Analytics</div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ══════════════════════════════════════════════
+    <!-- ══════════════════════════════════════════════
      APP SHELL
 ══════════════════════════════════════════════ -->
-<div id="app">
-
-  <!-- ── Sidebar ─────────────────────────────── -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-logo-icon">🛍️</div>
-      <div class="sidebar-logo-text">SellerFlow</div>
-    </div>
-
-    <nav class="sidebar-nav">
-      <div class="nav-section-label">Main</div>
-      <div class="nav-item active" data-page="dashboard">
-        <span class="nav-icon">📊</span> Dashboard
-      </div>
-      <div class="nav-item" data-page="products">
-        <span class="nav-icon">📦</span> Products
-        <span class="nav-badge warn" id="badge-lowstock" style="display:none">0</span>
-      </div>
-      <div class="nav-item" data-page="orders">
-        <span class="nav-icon">🛒</span> Orders
-        <span class="nav-badge" id="badge-pending" style="display:none">0</span>
-      </div>
-      <div class="nav-item" data-page="customers">
-        <span class="nav-icon">👥</span> Customers
-      </div>
-
-      <div class="nav-section-label" style="margin-top:8px">Finance</div>
-      <div class="nav-item" data-page="billing">
-        <span class="nav-icon">🧾</span> Billing
-      </div>
-
-      <div class="nav-section-label" style="margin-top:8px">Account</div>
-      <div class="nav-item" data-page="settings">
-        <span class="nav-icon">⚙️</span> Settings
-      </div>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="sidebar-user" id="logout-btn" title="Click to logout">
-        <div class="sidebar-avatar" id="sidebar-avatar-initials">PS</div>
-        <div class="sidebar-user-info">
-          <div class="sidebar-user-name" id="sidebar-user-name">Priya Sharma</div>
-          <div class="sidebar-user-role" id="sidebar-user-store">Priya Boutique</div>
-        </div>
-        <div class="sidebar-user-chevron">↗</div>
-      </div>
-    </div>
-  </aside>
-
-  <!-- Sidebar overlay (mobile) -->
-  <div class="sidebar-overlay"></div>
-
-  <!-- ── Main Content ─────────────────────────── -->
-  <main class="main">
-
-    <!-- Topbar -->
-    <header class="topbar">
-      <button class="topbar-mobile-menu" id="mobile-menu-btn">☰</button>
-      <div class="topbar-title" id="topbar-title">Dashboard</div>
-
-      <div class="topbar-search">
-        <span class="topbar-search-icon">🔍</span>
-        <input type="text" id="topbar-search-input" placeholder="Search products, customers…" />
-      </div>
-
-      <div class="topbar-actions">
-        <button class="topbar-btn" onclick="Modals.openCreateOrder()" title="New Order">➕</button>
-        <button class="topbar-btn" title="Notifications">
-          🔔
-          <span class="notif-dot"></span>
-        </button>
-      </div>
-    </header>
-
-    <!-- Pages -->
-    <div class="page-content">
-
-      <!-- ══ DASHBOARD ══════════════════════════════ -->
-      <div class="page active" id="page-dashboard">
-        <div class="page-header">
-          <div class="page-header-left">
-            <h2>Good morning ☀️</h2>
-            <p>Here's what's happening with your store today.</p>
-          </div>
-          <div class="page-header-actions">
-            <button class="btn btn-primary" onclick="Modals.openCreateOrder()">➕ New Order</button>
-          </div>
+    <div id="app">
+      <!-- ── Sidebar ─────────────────────────────── -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-logo-icon">🛍️</div>
+          <div class="sidebar-logo-text">SellerFlow</div>
         </div>
 
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-top"><span class="stat-label">Monthly Revenue</span><div class="stat-icon indigo">💰</div></div>
-            <div class="stat-value" id="stat-revenue">₹0</div>
-            <div class="stat-change up">↑ +18.2% vs last month</div>
+        <nav class="sidebar-nav">
+          <div class="nav-section-label">Main</div>
+          <div class="nav-item active" data-page="dashboard">
+            <span class="nav-icon">📊</span> Dashboard
           </div>
-          <div class="stat-card">
-            <div class="stat-top"><span class="stat-label">Orders (This Month)</span><div class="stat-icon cyan">📦</div></div>
-            <div class="stat-value" id="stat-orders">0</div>
-            <div class="stat-change up">↑ +12 new this month</div>
+          <div class="nav-item" data-page="products">
+            <span class="nav-icon">📦</span> Products
+            <span
+              class="nav-badge warn"
+              id="badge-lowstock"
+              style="display: none"
+              >0</span
+            >
           </div>
-          <div class="stat-card">
-            <div class="stat-top"><span class="stat-label">Pending Payments</span><div class="stat-icon amber">⏳</div></div>
-            <div class="stat-value" id="stat-pending">0</div>
-            <div class="stat-change neutral">Requires follow-up</div>
+          <div class="nav-item" data-page="orders">
+            <span class="nav-icon">🛒</span> Orders
+            <span class="nav-badge" id="badge-pending" style="display: none"
+              >0</span
+            >
           </div>
-          <div class="stat-card">
-            <div class="stat-top"><span class="stat-label">Total Customers</span><div class="stat-icon green">👥</div></div>
-            <div class="stat-value" id="stat-customers">0</div>
-            <div class="stat-change up">⭐ <span id="stat-repeat">0</span> repeat buyers</div>
+          <div class="nav-item" data-page="customers">
+            <span class="nav-icon">👥</span> Customers
           </div>
-        </div>
 
-        <div class="dash-grid" style="margin-bottom:20px">
-          <div class="card col-2">
-            <div class="card-header">
-              <div><div class="card-title">Revenue Overview</div><div class="card-subtitle">Monthly revenue for the past 12 months</div></div>
-              <span class="badge badge-success pulse">● Live</span>
+          <div class="nav-section-label" style="margin-top: 8px">Finance</div>
+          <div class="nav-item" data-page="billing">
+            <span class="nav-icon">🧾</span> Billing
+          </div>
+
+          <div class="nav-section-label" style="margin-top: 8px">Account</div>
+          <div class="nav-item" data-page="settings">
+            <span class="nav-icon">⚙️</span> Settings
+          </div>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-user" id="logout-btn" title="Click to logout">
+            <div class="sidebar-avatar" id="sidebar-avatar-initials">PS</div>
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name" id="sidebar-user-name">
+                Priya Sharma
+              </div>
+              <div class="sidebar-user-role" id="sidebar-user-store">
+                Priya Boutique
+              </div>
             </div>
-            <div class="chart-container"><canvas id="revenueChart"></canvas></div>
-          </div>
-          <div class="card col-1">
-            <div class="card-header">
-              <div><div class="card-title">Sales by Category</div><div class="card-subtitle">Revenue distribution</div></div>
-            </div>
-            <div class="chart-container" style="height:220px"><canvas id="categoryChart"></canvas></div>
+            <div class="sidebar-user-chevron">↗</div>
           </div>
         </div>
+      </aside>
 
-        <div class="dash-grid-bottom">
-          <div class="card">
-            <div class="card-header">
-              <div><div class="card-title">Recent Orders</div><div class="card-subtitle">Latest activity</div></div>
-              <button class="btn btn-secondary btn-sm" onclick="UI.navigate('orders')">View All →</button>
-            </div>
-            <div id="recent-orders-list"></div>
+      <!-- Sidebar overlay (mobile) -->
+      <div class="sidebar-overlay"></div>
+
+      <!-- ── Main Content ─────────────────────────── -->
+      <main class="main">
+        <!-- Topbar -->
+        <header class="topbar">
+          <button class="topbar-mobile-menu" id="mobile-menu-btn">☰</button>
+          <div class="topbar-title" id="topbar-title">Dashboard</div>
+
+          <div class="topbar-search">
+            <span class="topbar-search-icon">🔍</span>
+            <input
+              type="text"
+              id="topbar-search-input"
+              placeholder="Search products, customers…"
+            />
           </div>
-          <div>
-            <div class="card" style="margin-bottom:16px">
-              <div class="card-header"><div class="card-title">Quick Actions</div></div>
-              <div class="quick-actions">
-                <button class="quick-action-btn" id="qa-new-order"><span class="qa-icon">➕</span>New Order</button>
-                <button class="quick-action-btn" id="qa-add-product"><span class="qa-icon">📦</span>Add Product</button>
-                <button class="quick-action-btn" id="qa-invoices"><span class="qa-icon">🧾</span>Invoices</button>
-                <button class="quick-action-btn" id="qa-customers"><span class="qa-icon">👥</span>Customers</button>
+
+          <div class="topbar-actions">
+            <button
+              class="topbar-btn"
+              onclick="Modals.openCreateOrder()"
+              title="New Order"
+            >
+              ➕
+            </button>
+            <button class="topbar-btn" title="Notifications">
+              🔔
+              <span class="notif-dot"></span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Pages -->
+        <div class="page-content">
+          <!-- ══ DASHBOARD ══════════════════════════════ -->
+          <div class="page active" id="page-dashboard">
+            <div class="page-header">
+              <div class="page-header-left">
+                <h2>Good morning ☀️</h2>
+                <p>Here's what's happening with your store today.</p>
+              </div>
+              <div class="page-header-actions">
+                <button
+                  class="btn btn-primary"
+                  onclick="Modals.openCreateOrder()"
+                >
+                  ➕ New Order
+                </button>
+              </div>
+            </div>
+
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-top">
+                  <span class="stat-label">Monthly Revenue</span>
+                  <div class="stat-icon indigo">💰</div>
+                </div>
+                <div class="stat-value" id="stat-revenue">₹0</div>
+                <div class="stat-change up">↑ +18.2% vs last month</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-top">
+                  <span class="stat-label">Orders (This Month)</span>
+                  <div class="stat-icon cyan">📦</div>
+                </div>
+                <div class="stat-value" id="stat-orders">0</div>
+                <div class="stat-change up">↑ +12 new this month</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-top">
+                  <span class="stat-label">Pending Payments</span>
+                  <div class="stat-icon amber">⏳</div>
+                </div>
+                <div class="stat-value" id="stat-pending">0</div>
+                <div class="stat-change neutral">Requires follow-up</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-top">
+                  <span class="stat-label">Total Customers</span>
+                  <div class="stat-icon green">👥</div>
+                </div>
+                <div class="stat-value" id="stat-customers">0</div>
+                <div class="stat-change up">
+                  ⭐ <span id="stat-repeat">0</span> repeat buyers
+                </div>
+              </div>
+            </div>
+
+            <div class="dash-grid" style="margin-bottom: 20px">
+              <div class="card col-2">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">Revenue Overview</div>
+                    <div class="card-subtitle">
+                      Monthly revenue for the past 12 months
+                    </div>
+                  </div>
+                  <span class="badge badge-success pulse">● Live</span>
+                </div>
+                <div class="chart-container">
+                  <canvas id="revenueChart"></canvas>
+                </div>
+              </div>
+              <div class="card col-1">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">Sales by Category</div>
+                    <div class="card-subtitle">Revenue distribution</div>
+                  </div>
+                </div>
+                <div class="chart-container" style="height: 220px">
+                  <canvas id="categoryChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div class="dash-grid-bottom">
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">Recent Orders</div>
+                    <div class="card-subtitle">Latest activity</div>
+                  </div>
+                  <button
+                    class="btn btn-secondary btn-sm"
+                    onclick="UI.navigate('orders')"
+                  >
+                    View All →
+                  </button>
+                </div>
+                <div id="recent-orders-list"></div>
+              </div>
+              <div>
+                <div class="card" style="margin-bottom: 16px">
+                  <div class="card-header">
+                    <div class="card-title">Quick Actions</div>
+                  </div>
+                  <div class="quick-actions">
+                    <button class="quick-action-btn" id="qa-new-order">
+                      <span class="qa-icon">➕</span>New Order
+                    </button>
+                    <button class="quick-action-btn" id="qa-add-product">
+                      <span class="qa-icon">📦</span>Add Product
+                    </button>
+                    <button class="quick-action-btn" id="qa-invoices">
+                      <span class="qa-icon">🧾</span>Invoices
+                    </button>
+                    <button class="quick-action-btn" id="qa-customers">
+                      <span class="qa-icon">👥</span>Customers
+                    </button>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-header">
+                    <div>
+                      <div class="card-title">⚠️ Low Stock Alerts</div>
+                      <div class="card-subtitle">Items needing restocking</div>
+                    </div>
+                    <button
+                      class="btn btn-secondary btn-sm"
+                      onclick="UI.navigate('products')"
+                    >
+                      Manage →
+                    </button>
+                  </div>
+                  <div id="low-stock-list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /dashboard -->
+
+          <!-- ══ PRODUCTS ═══════════════════════════════ -->
+          <div class="page" id="page-products">
+            <div class="page-header">
+              <div class="page-header-left">
+                <h2>Products</h2>
+                <p>Manage your inventory and track stock levels</p>
+              </div>
+              <div class="page-header-actions">
+                <button class="btn btn-primary" id="add-product-btn">
+                  ➕ Add Product
+                </button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="products-header-row">
+                <div class="products-search">
+                  <span class="products-search-icon">🔍</span>
+                  <input
+                    type="text"
+                    id="product-search"
+                    placeholder="Search products…"
+                  />
+                </div>
+                <select class="filter-select" id="product-cat-filter">
+                  <option value="">All Categories</option>
+                </select>
+              </div>
+              <div class="table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Category</th>
+                      <th>Price</th>
+                      <th>Stock</th>
+                      <th>Low Stock Alert</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="products-tbody">
+                    <tr>
+                      <td colspan="6">
+                        <div class="empty-state">
+                          <div class="empty-icon">📦</div>
+                          <div class="empty-title">Loading…</div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <!-- /products -->
+
+          <!-- ══ ORDERS ═════════════════════════════════ -->
+          <div class="page" id="page-orders">
+            <div class="page-header">
+              <div class="page-header-left">
+                <h2>Orders</h2>
+                <p>Track and manage all customer orders</p>
+              </div>
+              <div class="page-header-actions">
+                <button class="btn btn-primary" id="create-order-btn">
+                  ➕ Create Order
+                </button>
+              </div>
+            </div>
+            <div class="order-filters">
+              <button class="filter-tab active" data-filter="all">
+                All Orders
+              </button>
+              <button class="filter-tab" data-filter="pending">
+                ⏳ Pending Payment
+              </button>
+              <button class="filter-tab" data-filter="paid">✅ Paid</button>
+              <button class="filter-tab" data-filter="shipped">
+                🚚 Shipped
+              </button>
+              <button class="filter-tab" data-filter="delivered">
+                📬 Delivered
+              </button>
+              <button class="filter-tab" data-filter="cancelled">
+                ❌ Cancelled
+              </button>
+            </div>
+            <div class="card">
+              <div class="table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Customer</th>
+                      <th>Items</th>
+                      <th>Total</th>
+                      <th>Delivery</th>
+                      <th>Payment</th>
+                      <th>Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="orders-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <!-- /orders -->
+
+          <!-- ══ CUSTOMERS ══════════════════════════════ -->
+          <div class="page" id="page-customers">
+            <div class="page-header">
+              <div class="page-header-left">
+                <h2>Customers</h2>
+                <p>Your Instagram buyers and repeat customers</p>
+              </div>
+            </div>
+            <div class="card">
+              <div class="products-header-row" style="margin-bottom: 16px">
+                <div class="products-search">
+                  <span class="products-search-icon">🔍</span>
+                  <input
+                    type="text"
+                    id="customer-search"
+                    placeholder="Search customers…"
+                  />
+                </div>
+                <span
+                  class="badge badge-info"
+                  id="customer-count-badge"
+                  style="font-size: 12px; padding: 6px 12px"
+                ></span>
+              </div>
+              <div class="table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Customer</th>
+                      <th>City</th>
+                      <th>Orders</th>
+                      <th>Total Spent</th>
+                      <th>Last Order</th>
+                      <th>Type</th>
+                    </tr>
+                  </thead>
+                  <tbody id="customers-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <!-- /customers -->
+
+          <!-- ══ BILLING ════════════════════════════════ -->
+          <div class="page" id="page-billing">
+            <div class="page-header">
+              <div class="page-header-left">
+                <h2>Billing & Invoices</h2>
+                <p>Preview and manage all order invoices</p>
+              </div>
+            </div>
+            <div class="stats-grid" style="margin-bottom: 24px">
+              <div class="stat-card">
+                <div class="stat-top">
+                  <span class="stat-label">Total Invoices</span>
+                  <div class="stat-icon indigo">🧾</div>
+                </div>
+                <div class="stat-value" id="billing-total-invoices">0</div>
+                <div class="stat-change neutral">All time</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-top">
+                  <span class="stat-label">Revenue Collected</span>
+                  <div class="stat-icon green">✅</div>
+                </div>
+                <div class="stat-value" id="billing-paid-total">₹0</div>
+                <div class="stat-change up">Paid orders</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-top">
+                  <span class="stat-label">Pending Collection</span>
+                  <div class="stat-icon amber">⏳</div>
+                </div>
+                <div class="stat-value" id="billing-pending-total">₹0</div>
+                <div class="stat-change neutral">Awaiting payment</div>
               </div>
             </div>
             <div class="card">
               <div class="card-header">
-                <div><div class="card-title">⚠️ Low Stock Alerts</div><div class="card-subtitle">Items needing restocking</div></div>
-                <button class="btn btn-secondary btn-sm" onclick="UI.navigate('products')">Manage →</button>
+                <div>
+                  <div class="card-title">All Invoices</div>
+                  <div class="card-subtitle">
+                    Click any invoice to preview and manage payment
+                  </div>
+                </div>
               </div>
-              <div id="low-stock-list"></div>
+              <div class="billing-grid" id="billing-grid"></div>
             </div>
           </div>
-        </div>
-      </div><!-- /dashboard -->
+          <!-- /billing -->
 
-
-      <!-- ══ PRODUCTS ═══════════════════════════════ -->
-      <div class="page" id="page-products">
-        <div class="page-header">
-          <div class="page-header-left"><h2>Products</h2><p>Manage your inventory and track stock levels</p></div>
-          <div class="page-header-actions"><button class="btn btn-primary" id="add-product-btn">➕ Add Product</button></div>
-        </div>
-        <div class="card">
-          <div class="products-header-row">
-            <div class="products-search">
-              <span class="products-search-icon">🔍</span>
-              <input type="text" id="product-search" placeholder="Search products…" />
-            </div>
-            <select class="filter-select" id="product-cat-filter">
-              <option value="">All Categories</option>
-            </select>
-          </div>
-          <div class="table-wrapper">
-            <table class="table">
-              <thead>
-                <tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Low Stock Alert</th><th>Actions</th></tr>
-              </thead>
-              <tbody id="products-tbody">
-                <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">Loading…</div></div></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div><!-- /products -->
-
-
-      <!-- ══ ORDERS ═════════════════════════════════ -->
-      <div class="page" id="page-orders">
-        <div class="page-header">
-          <div class="page-header-left"><h2>Orders</h2><p>Track and manage all customer orders</p></div>
-          <div class="page-header-actions"><button class="btn btn-primary" id="create-order-btn">➕ Create Order</button></div>
-        </div>
-        <div class="order-filters">
-          <button class="filter-tab active" data-filter="all">All Orders</button>
-          <button class="filter-tab" data-filter="pending">⏳ Pending Payment</button>
-          <button class="filter-tab" data-filter="paid">✅ Paid</button>
-          <button class="filter-tab" data-filter="shipped">🚚 Shipped</button>
-          <button class="filter-tab" data-filter="delivered">📬 Delivered</button>
-          <button class="filter-tab" data-filter="cancelled">❌ Cancelled</button>
-        </div>
-        <div class="card">
-          <div class="table-wrapper">
-            <table class="table">
-              <thead>
-                <tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Delivery</th><th>Payment</th><th>Date</th><th>Actions</th></tr>
-              </thead>
-              <tbody id="orders-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div><!-- /orders -->
-
-
-      <!-- ══ CUSTOMERS ══════════════════════════════ -->
-      <div class="page" id="page-customers">
-        <div class="page-header">
-          <div class="page-header-left"><h2>Customers</h2><p>Your Instagram buyers and repeat customers</p></div>
-        </div>
-        <div class="card">
-          <div class="products-header-row" style="margin-bottom:16px">
-            <div class="products-search">
-              <span class="products-search-icon">🔍</span>
-              <input type="text" id="customer-search" placeholder="Search customers…" />
-            </div>
-            <span class="badge badge-info" id="customer-count-badge" style="font-size:12px;padding:6px 12px"></span>
-          </div>
-          <div class="table-wrapper">
-            <table class="table">
-              <thead>
-                <tr><th>Customer</th><th>City</th><th>Orders</th><th>Total Spent</th><th>Last Order</th><th>Type</th></tr>
-              </thead>
-              <tbody id="customers-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div><!-- /customers -->
-
-
-      <!-- ══ BILLING ════════════════════════════════ -->
-      <div class="page" id="page-billing">
-        <div class="page-header">
-          <div class="page-header-left"><h2>Billing & Invoices</h2><p>Preview and manage all order invoices</p></div>
-        </div>
-        <div class="stats-grid" style="margin-bottom:24px">
-          <div class="stat-card">
-            <div class="stat-top"><span class="stat-label">Total Invoices</span><div class="stat-icon indigo">🧾</div></div>
-            <div class="stat-value" id="billing-total-invoices">0</div>
-            <div class="stat-change neutral">All time</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-top"><span class="stat-label">Revenue Collected</span><div class="stat-icon green">✅</div></div>
-            <div class="stat-value" id="billing-paid-total">₹0</div>
-            <div class="stat-change up">Paid orders</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-top"><span class="stat-label">Pending Collection</span><div class="stat-icon amber">⏳</div></div>
-            <div class="stat-value" id="billing-pending-total">₹0</div>
-            <div class="stat-change neutral">Awaiting payment</div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <div><div class="card-title">All Invoices</div><div class="card-subtitle">Click any invoice to preview and manage payment</div></div>
-          </div>
-          <div class="billing-grid" id="billing-grid"></div>
-        </div>
-      </div><!-- /billing -->
-
-
-      <!-- ══ SETTINGS ═══════════════════════════════ -->
-      <div class="page" id="page-settings">
-        <div class="page-header">
-          <div class="page-header-left"><h2>Settings</h2><p>Manage your store profile and preferences</p></div>
-          <div class="page-header-actions">
-            <button class="btn btn-primary" id="save-settings-btn">💾 Save Changes</button>
-          </div>
-        </div>
-        <div class="settings-grid">
-          <div class="settings-section">
-            <h3><span>🏪</span> Store Profile</h3>
-            <div class="form-group"><label class="form-label">Your Name</label><input class="form-input" type="text" id="settings-name" placeholder="Your full name" /></div>
-            <div class="form-group"><label class="form-label">Store Name</label><input class="form-input" type="text" id="settings-store" placeholder="Your store name" /></div>
-            <div class="form-group"><label class="form-label">Instagram Handle</label><input class="form-input" type="text" id="settings-instagram" placeholder="@yourstorename" /></div>
-          </div>
-          <div class="settings-section">
-            <h3><span>📞</span> Contact & Payment</h3>
-            <div class="form-group"><label class="form-label">Email Address</label><input class="form-input" type="email" id="settings-email" placeholder="you@email.com" /></div>
-            <div class="form-group"><label class="form-label">Phone Number</label><input class="form-input" type="tel" id="settings-phone" placeholder="+91 98765 43210" /></div>
-            <div class="form-group"><label class="form-label">UPI ID (for invoices)</label><input class="form-input" type="text" id="settings-upi" placeholder="yourname@upi" /></div>
-          </div>
-          <div class="settings-section">
-            <h3><span>🔔</span> Notifications</h3>
-            <div class="toggle-row">
-              <div class="toggle-info"><div class="toggle-label">Auto send confirmation emails</div><div class="toggle-desc">Email customers when orders are created (requires EmailJS)</div></div>
-              <label class="toggle"><input type="checkbox" id="settings-auto-email"><span class="toggle-slider"></span></label>
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info"><div class="toggle-label">Low Stock Alerts</div><div class="toggle-desc">Alert when stock falls below threshold</div></div>
-              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info"><div class="toggle-label">New Order Notifications</div><div class="toggle-desc">In-app notification for new orders</div></div>
-              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info"><div class="toggle-label">Pending Payment Reminders</div><div class="toggle-desc">Remind about unpaid orders</div></div>
-              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-            </div>
-          </div>
-          <div class="settings-section">
-            <h3><span>⚙️</span> Preferences</h3>
-            <div class="toggle-row">
-              <div class="toggle-info"><div class="toggle-label">Auto-generate Invoice ID</div><div class="toggle-desc">Sequentially number all invoices</div></div>
-              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info"><div class="toggle-label">Free Shipping Default</div><div class="toggle-desc">Show "Free Shipping" on invoices</div></div>
-              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info"><div class="toggle-label">Compact Table View</div><div class="toggle-desc">Denser row spacing in tables</div></div>
-              <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
-            </div>
-            <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-              <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">⚠️ This only clears local UI state — your cloud data remains safe.</p>
-              <button class="btn btn-danger btn-sm" onclick="window.location.reload()">🔄 Reload App</button>
-            </div>
-          </div>
-          <div class="settings-section danger-zone-section">
-            <h3><span>⚠️</span> Danger Zone</h3>
-
-            <!-- Reset Account -->
-            <div class="danger-zone-row">
-              <div class="danger-zone-info">
-                <div class="danger-zone-label">Reset Account Data</div>
-                <div class="danger-zone-desc">Permanently delete all your orders, customers, products, and invoices from the database. Your profile and login are kept. This cannot be undone.</div>
+          <!-- ══ SETTINGS ═══════════════════════════════ -->
+          <div class="page" id="page-settings">
+            <div class="page-header">
+              <div class="page-header-left">
+                <h2>Settings</h2>
+                <p>Manage your store profile and preferences</p>
               </div>
-              <button class="btn btn-danger" id="reset-account-btn">🗑️ Reset Data</button>
-            </div>
-
-            <!-- Delete Account -->
-            <div class="danger-zone-row danger-zone-row-last">
-              <div class="danger-zone-info">
-                <div class="danger-zone-label danger-zone-label-critical">Delete My Account</div>
-                <div class="danger-zone-desc">Permanently delete your account and all associated data. You will be signed out immediately and cannot log back in. This is irreversible.</div>
+              <div class="page-header-actions">
+                <button class="btn btn-primary" id="save-settings-btn">
+                  💾 Save Changes
+                </button>
               </div>
-              <button class="btn btn-danger-solid" id="delete-account-btn">💀 Delete Account</button>
+            </div>
+            <div class="settings-grid">
+              <div class="settings-section">
+                <h3><span>🏪</span> Store Profile</h3>
+                <div class="form-group">
+                  <label class="form-label">Your Name</label
+                  ><input
+                    class="form-input"
+                    type="text"
+                    id="settings-name"
+                    placeholder="Your full name"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Store Name</label
+                  ><input
+                    class="form-input"
+                    type="text"
+                    id="settings-store"
+                    placeholder="Your store name"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Instagram Handle</label
+                  ><input
+                    class="form-input"
+                    type="text"
+                    id="settings-instagram"
+                    placeholder="@yourstorename"
+                  />
+                </div>
+              </div>
+              <div class="settings-section">
+                <h3><span>📞</span> Contact & Payment</h3>
+                <div class="form-group">
+                  <label class="form-label">Email Address</label
+                  ><input
+                    class="form-input"
+                    type="email"
+                    id="settings-email"
+                    placeholder="you@email.com"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Phone Number</label
+                  ><input
+                    class="form-input"
+                    type="tel"
+                    id="settings-phone"
+                    placeholder="+91 98765 43210"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">UPI ID (for invoices)</label
+                  ><input
+                    class="form-input"
+                    type="text"
+                    id="settings-upi"
+                    placeholder="yourname@upi"
+                  />
+                </div>
+              </div>
+              <div class="settings-section">
+                <h3><span>🔔</span> Notifications</h3>
+                <div class="toggle-row">
+                  <div class="toggle-info">
+                    <div class="toggle-label">
+                      Auto send confirmation emails
+                    </div>
+                    <div class="toggle-desc">
+                      Email customers when orders are created (requires EmailJS)
+                    </div>
+                  </div>
+                  <label class="toggle"
+                    ><input type="checkbox" id="settings-auto-email" /><span
+                      class="toggle-slider"
+                    ></span
+                  ></label>
+                </div>
+                <div class="toggle-row">
+                  <div class="toggle-info">
+                    <div class="toggle-label">Low Stock Alerts</div>
+                    <div class="toggle-desc">
+                      Alert when stock falls below threshold
+                    </div>
+                  </div>
+                  <label class="toggle"
+                    ><input type="checkbox" checked /><span
+                      class="toggle-slider"
+                    ></span
+                  ></label>
+                </div>
+                <div class="toggle-row">
+                  <div class="toggle-info">
+                    <div class="toggle-label">New Order Notifications</div>
+                    <div class="toggle-desc">
+                      In-app notification for new orders
+                    </div>
+                  </div>
+                  <label class="toggle"
+                    ><input type="checkbox" checked /><span
+                      class="toggle-slider"
+                    ></span
+                  ></label>
+                </div>
+                <div class="toggle-row">
+                  <div class="toggle-info">
+                    <div class="toggle-label">Pending Payment Reminders</div>
+                    <div class="toggle-desc">Remind about unpaid orders</div>
+                  </div>
+                  <label class="toggle"
+                    ><input type="checkbox" checked /><span
+                      class="toggle-slider"
+                    ></span
+                  ></label>
+                </div>
+              </div>
+              <div class="settings-section">
+                <h3><span>⚙️</span> Preferences</h3>
+                <div class="toggle-row">
+                  <div class="toggle-info">
+                    <div class="toggle-label">Auto-generate Invoice ID</div>
+                    <div class="toggle-desc">
+                      Sequentially number all invoices
+                    </div>
+                  </div>
+                  <label class="toggle"
+                    ><input type="checkbox" checked /><span
+                      class="toggle-slider"
+                    ></span
+                  ></label>
+                </div>
+                <div class="toggle-row">
+                  <div class="toggle-info">
+                    <div class="toggle-label">Free Shipping Default</div>
+                    <div class="toggle-desc">
+                      Show "Free Shipping" on invoices
+                    </div>
+                  </div>
+                  <label class="toggle"
+                    ><input type="checkbox" checked /><span
+                      class="toggle-slider"
+                    ></span
+                  ></label>
+                </div>
+                <div class="toggle-row">
+                  <div class="toggle-info">
+                    <div class="toggle-label">Compact Table View</div>
+                    <div class="toggle-desc">Denser row spacing in tables</div>
+                  </div>
+                  <label class="toggle"
+                    ><input type="checkbox" /><span class="toggle-slider"></span
+                  ></label>
+                </div>
+                <div
+                  style="
+                    margin-top: 20px;
+                    padding-top: 16px;
+                    border-top: 1px solid var(--border);
+                  "
+                >
+                  <p
+                    style="
+                      font-size: 12px;
+                      color: var(--text-muted);
+                      margin-bottom: 10px;
+                    "
+                  >
+                    ⚠️ This only clears local UI state — your cloud data remains
+                    safe.
+                  </p>
+                  <button
+                    class="btn btn-danger btn-sm"
+                    onclick="window.location.reload()"
+                  >
+                    🔄 Reload App
+                  </button>
+                </div>
+              </div>
+              <div class="settings-section danger-zone-section">
+                <h3><span>⚠️</span> Danger Zone</h3>
+
+                <!-- Reset Account -->
+                <div class="danger-zone-row">
+                  <div class="danger-zone-info">
+                    <div class="danger-zone-label">Reset Account Data</div>
+                    <div class="danger-zone-desc">
+                      Permanently delete all your orders, customers, products,
+                      and invoices from the database. Your profile and login are
+                      kept. This cannot be undone.
+                    </div>
+                  </div>
+                  <button class="btn btn-danger" id="reset-account-btn">
+                    🗑️ Reset Data
+                  </button>
+                </div>
+
+                <!-- Delete Account -->
+                <div class="danger-zone-row danger-zone-row-last">
+                  <div class="danger-zone-info">
+                    <div class="danger-zone-label danger-zone-label-critical">
+                      Delete My Account
+                    </div>
+                    <div class="danger-zone-desc">
+                      Permanently delete your account and all associated data.
+                      You will be signed out immediately and cannot log back in.
+                      This is irreversible.
+                    </div>
+                  </div>
+                  <button class="btn btn-danger-solid" id="delete-account-btn">
+                    💀 Delete Account
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-
+          <!-- /settings -->
         </div>
-      </div><!-- /settings -->
+        <!-- /page-content -->
+      </main>
+    </div>
+    <!-- /app -->
 
-    </div><!-- /page-content -->
-  </main>
-</div><!-- /app -->
-
-
-<!-- ══════════════════════════════════════════════
+    <!-- ══════════════════════════════════════════════
      MODALS
 ══════════════════════════════════════════════ -->
 
-<!-- Add / Edit Product -->
-<div class="modal-overlay" id="modal-product">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="product-modal-title">Add Product</div>
-      <button class="modal-close" data-close-modal="modal-product">✕</button>
-    </div>
-    <form id="product-form" onsubmit="return false">
-      <input type="hidden" id="product-id" />
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Product Name *</label><input class="form-input" type="text" id="product-name-input" placeholder="e.g. Silk Saree - Red" required /></div>
-        <div class="form-group"><label class="form-label">SKU</label><input class="form-input" type="text" id="product-sku-input" placeholder="e.g. SAR-RED-001" /></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Category *</label><input class="form-input" type="text" id="product-category-input" placeholder="e.g. Sarees" required /></div>
-        <div class="form-group"><label class="form-label">Emoji Icon</label><input class="form-input" type="text" id="product-emoji-input" placeholder="🧣" maxlength="2" /></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Price (₹) *</label><input class="form-input" type="number" id="product-price-input" placeholder="0" min="0" required /></div>
-        <div class="form-group"><label class="form-label">Stock Quantity *</label><input class="form-input" type="number" id="product-stock-input" placeholder="0" min="0" required /></div>
-      </div>
-      <div class="form-group"><label class="form-label">Low Stock Threshold</label><input class="form-input" type="number" id="product-threshold-input" placeholder="5" min="1" value="5" /></div>
-    </form>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" id="cancel-product-btn">Cancel</button>
-      <button class="btn btn-primary" id="save-product-btn">💾 Save Product</button>
-    </div>
-  </div>
-</div>
-
-<!-- Create Order -->
-<div class="modal-overlay" id="modal-order">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <div class="modal-title">Create New Order</div>
-      <button class="modal-close" data-close-modal="modal-order">✕</button>
-    </div>
-    <form id="order-form" onsubmit="return false">
-      <div class="form-group">
-        <label class="form-label">Customer *</label>
-        <select class="form-select" id="order-customer-select"></select>
-      </div>
-      <!-- New customer fields -->
-      <div id="new-customer-fields" style="display:none;background:var(--bg-input);padding:14px;border-radius:10px;margin-bottom:14px">
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-bottom:12px">New Customer Details</div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" type="text" id="new-customer-name" placeholder="Customer name" /></div>
-          <div class="form-group"><label class="form-label">Instagram Handle</label><input class="form-input" type="text" id="new-customer-insta" placeholder="@handle" /></div>
+    <!-- Add / Edit Product -->
+    <div class="modal-overlay" id="modal-product">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" id="product-modal-title">Add Product</div>
+          <button class="modal-close" data-close-modal="modal-product">
+            ✕
+          </button>
         </div>
-        <div class="form-row" style="margin-bottom:0">
-          <div class="form-group" style="margin-bottom:0"><label class="form-label">Phone Number</label><input class="form-input" type="tel" id="new-customer-phone" placeholder="+91 98765 43210" /></div>
-          <div class="form-group" style="margin-bottom:0"><label class="form-label">Email Address</label><input class="form-input" type="email" id="new-customer-email" placeholder="customer@email.com" /></div>
+        <form id="product-form" onsubmit="return false;">
+          <input type="hidden" id="product-id" />
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Product Name *</label
+              ><input
+                class="form-input"
+                type="text"
+                id="product-name-input"
+                placeholder="e.g. Silk Saree - Red"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">SKU</label
+              ><input
+                class="form-input"
+                type="text"
+                id="product-sku-input"
+                placeholder="e.g. SAR-RED-001"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Category *</label
+              ><input
+                class="form-input"
+                type="text"
+                id="product-category-input"
+                placeholder="e.g. Sarees"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Emoji Icon</label
+              ><input
+                class="form-input"
+                type="text"
+                id="product-emoji-input"
+                placeholder="🧣"
+                maxlength="2"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Price (₹) *</label
+              ><input
+                class="form-input"
+                type="number"
+                id="product-price-input"
+                placeholder="0"
+                min="0"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Stock Quantity *</label
+              ><input
+                class="form-input"
+                type="number"
+                id="product-stock-input"
+                placeholder="0"
+                min="0"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Low Stock Threshold</label
+            ><input
+              class="form-input"
+              type="number"
+              id="product-threshold-input"
+              placeholder="5"
+              min="1"
+              value="5"
+            />
+          </div>
+        </form>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="cancel-product-btn">
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="save-product-btn">
+            💾 Save Product
+          </button>
         </div>
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-top:16px;margin-bottom:12px">Delivery Address</div>
-        <div class="form-group"><label class="form-label">Street Address</label><input class="form-input" type="text" id="new-customer-address" placeholder="Flat, House no., Building" /></div>
-        <div class="form-group"><label class="form-label">Landmark / Area</label><input class="form-input" type="text" id="new-customer-landmark" placeholder="e.g. Near Metro Station" /></div>
-        <div class="form-row">
-          <div class="form-group" style="margin-bottom:0"><label class="form-label">City</label><input class="form-input" type="text" id="new-customer-city" placeholder="e.g. Mumbai" /></div>
-          <div class="form-group" style="margin-bottom:0"><label class="form-label">State</label><input class="form-input" type="text" id="new-customer-state" placeholder="e.g. Maharashtra" /></div>
-        </div>
-        <div class="form-group" style="margin-top:14px;margin-bottom:0"><label class="form-label">Pincode</label><input class="form-input" type="text" id="new-customer-pincode" placeholder="400001" style="max-width:50%" /></div>
       </div>
-      <!-- Add items -->
-      <div style="background:var(--bg-input);border-radius:10px;padding:14px;margin-bottom:14px">
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-bottom:10px">Add Items</div>
-        <div style="display:flex;gap:8px;align-items:flex-end" class="add-item-row">
-          <div style="flex:1"><label class="form-label">Product</label><select class="form-select" id="order-product-select"></select></div>
-          <div style="width:90px"><label class="form-label">Qty</label><input class="form-input" type="number" id="order-qty-input" value="1" min="1" style="width:100%" /></div>
-          <button class="btn btn-primary" id="order-add-item-btn" type="button">+ Add</button>
+    </div>
+
+    <!-- Create Order -->
+    <div class="modal-overlay" id="modal-order">
+      <div class="modal modal-lg">
+        <div class="modal-header">
+          <div class="modal-title">Create New Order</div>
+          <button class="modal-close" data-close-modal="modal-order">✕</button>
+        </div>
+        <form id="order-form" onsubmit="return false;">
+          <div class="form-group">
+            <label class="form-label">Customer *</label>
+            <select class="form-select" id="order-customer-select"></select>
+          </div>
+          <!-- New customer fields -->
+          <div
+            id="new-customer-fields"
+            style="
+              display: none;
+              background: var(--bg-input);
+              padding: 14px;
+              border-radius: 10px;
+              margin-bottom: 14px;
+            "
+          >
+            <div
+              style="
+                font-size: 12px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--accent);
+                margin-bottom: 12px;
+              "
+            >
+              New Customer Details
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Full Name *</label
+                ><input
+                  class="form-input"
+                  type="text"
+                  id="new-customer-name"
+                  placeholder="Customer name"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Instagram Handle</label
+                ><input
+                  class="form-input"
+                  type="text"
+                  id="new-customer-insta"
+                  placeholder="@handle"
+                />
+              </div>
+            </div>
+            <div class="form-row" style="margin-bottom: 0">
+              <div class="form-group" style="margin-bottom: 0">
+                <label class="form-label">Phone Number</label
+                ><input
+                  class="form-input"
+                  type="tel"
+                  id="new-customer-phone"
+                  placeholder="+91 98765 43210"
+                />
+              </div>
+              <div class="form-group" style="margin-bottom: 0">
+                <label class="form-label">Email Address</label
+                ><input
+                  class="form-input"
+                  type="email"
+                  id="new-customer-email"
+                  placeholder="customer@email.com"
+                />
+              </div>
+            </div>
+            <div
+              style="
+                font-size: 12px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--accent);
+                margin-top: 16px;
+                margin-bottom: 12px;
+              "
+            >
+              Delivery Address
+            </div>
+            <div class="form-group">
+              <label class="form-label">Street Address</label
+              ><input
+                class="form-input"
+                type="text"
+                id="new-customer-address"
+                placeholder="Flat, House no., Building"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Landmark / Area</label
+              ><input
+                class="form-input"
+                type="text"
+                id="new-customer-landmark"
+                placeholder="e.g. Near Metro Station"
+              />
+            </div>
+            <div class="form-row">
+              <div class="form-group" style="margin-bottom: 0">
+                <label class="form-label">City</label
+                ><input
+                  class="form-input"
+                  type="text"
+                  id="new-customer-city"
+                  placeholder="e.g. Mumbai"
+                />
+              </div>
+              <div class="form-group" style="margin-bottom: 0">
+                <label class="form-label">State</label
+                ><input
+                  class="form-input"
+                  type="text"
+                  id="new-customer-state"
+                  placeholder="e.g. Maharashtra"
+                />
+              </div>
+            </div>
+            <div class="form-group" style="margin-top: 14px; margin-bottom: 0">
+              <label class="form-label">Pincode</label
+              ><input
+                class="form-input"
+                type="text"
+                id="new-customer-pincode"
+                placeholder="400001"
+                style="max-width: 50%"
+              />
+            </div>
+          </div>
+          <!-- Add items -->
+          <div
+            style="
+              background: var(--bg-input);
+              border-radius: 10px;
+              padding: 14px;
+              margin-bottom: 14px;
+            "
+          >
+            <div
+              style="
+                font-size: 12px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--accent);
+                margin-bottom: 10px;
+              "
+            >
+              Add Items
+            </div>
+            <div
+              style="display: flex; gap: 8px; align-items: flex-end"
+              class="add-item-row"
+            >
+              <div style="flex: 1">
+                <label class="form-label">Product</label
+                ><select class="form-select" id="order-product-select"></select>
+              </div>
+              <div style="width: 90px">
+                <label class="form-label">Qty</label
+                ><input
+                  class="form-input"
+                  type="number"
+                  id="order-qty-input"
+                  value="1"
+                  min="1"
+                  style="width: 100%"
+                />
+              </div>
+              <button
+                class="btn btn-primary"
+                id="order-add-item-btn"
+                type="button"
+              >
+                + Add
+              </button>
+            </div>
+          </div>
+          <!-- Items list -->
+          <div style="margin-bottom: 14px">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+              "
+            >
+              <div
+                style="
+                  font-size: 12px;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                  color: var(--text-secondary);
+                "
+              >
+                Order Items
+              </div>
+              <div
+                style="font-weight: 700; color: var(--accent)"
+                id="order-total-display"
+              >
+                ₹0
+              </div>
+            </div>
+            <div id="order-items-list">
+              <div
+                class="text-muted"
+                style="font-size: 12px; padding: 12px; text-align: center"
+              >
+                No items added yet
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Payment Status</label>
+              <select class="form-select" id="order-payment-status">
+                <option value="pending">⏳ Pending</option>
+                <option value="paid">✅ Paid</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0">
+            <label class="form-label">Order Notes</label
+            ><textarea
+              class="form-textarea"
+              id="order-notes"
+              placeholder="Size, color preferences, delivery notes…"
+            ></textarea>
+          </div>
+        </form>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="cancel-order-btn">
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="save-order-btn">
+            ✅ Create Order
+          </button>
         </div>
       </div>
-      <!-- Items list -->
-      <div style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary)">Order Items</div>
-          <div style="font-weight:700;color:var(--accent)" id="order-total-display">₹0</div>
+    </div>
+
+    <!-- View / Edit Order -->
+    <div class="modal-overlay" id="modal-view-order">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Order Details</div>
+          <button class="modal-close" data-close-modal="modal-view-order">
+            ✕
+          </button>
         </div>
-        <div id="order-items-list"><div class="text-muted" style="font-size:12px;padding:12px;text-align:center">No items added yet</div></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Payment Status</label>
-          <select class="form-select" id="order-payment-status">
-            <option value="pending">⏳ Pending</option>
-            <option value="paid">✅ Paid</option>
-          </select>
+        <div id="view-order-content"></div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-close-modal="modal-view-order">
+            Close
+          </button>
+          <button class="btn btn-secondary" id="view-order-invoice-btn">
+            🧾 Preview Invoice
+          </button>
+          <button class="btn btn-primary" id="view-order-update-btn">
+            💾 Update Order
+          </button>
         </div>
       </div>
-      <div class="form-group" style="margin-bottom:0"><label class="form-label">Order Notes</label><textarea class="form-textarea" id="order-notes" placeholder="Size, color preferences, delivery notes…"></textarea></div>
-    </form>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" id="cancel-order-btn">Cancel</button>
-      <button class="btn btn-primary" id="save-order-btn">✅ Create Order</button>
     </div>
-  </div>
-</div>
 
-<!-- View / Edit Order -->
-<div class="modal-overlay" id="modal-view-order">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Order Details</div>
-      <button class="modal-close" data-close-modal="modal-view-order">✕</button>
+    <!-- Invoice Preview -->
+    <div class="modal-overlay" id="modal-invoice">
+      <div class="modal modal-xl">
+        <div class="modal-header">
+          <div class="modal-title">Invoice Preview</div>
+          <button class="modal-close" data-close-modal="modal-invoice">
+            ✕
+          </button>
+        </div>
+        <div id="invoice-preview-body"></div>
+        <div class="modal-footer" style="flex-wrap: wrap">
+          <button
+            class="btn btn-secondary"
+            style="margin-right: auto"
+            data-close-modal="modal-invoice"
+          >
+            Close
+          </button>
+          <button
+            class="btn btn-secondary"
+            id="invoice-copy-msg-btn"
+            title="Copy invoice message"
+          >
+            📋 Copy Msg
+          </button>
+          <button
+            class="btn"
+            id="invoice-wa-btn"
+            style="
+              background: #25d366;
+              color: #fff;
+              box-shadow: 0 4px 16px rgba(37, 211, 102, 0.35);
+            "
+          >
+            🟢 WhatsApp
+          </button>
+          <button class="btn" id="invoice-toggle-payment">
+            ✅ Mark as Paid
+          </button>
+          <button
+            class="btn download-btn"
+            id="invoice-download-btn"
+            title="Download invoice as PDF"
+          >
+            ⬇️ Download PDF
+          </button>
+        </div>
+      </div>
     </div>
-    <div id="view-order-content"></div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close-modal="modal-view-order">Close</button>
-      <button class="btn btn-secondary" id="view-order-invoice-btn">🧾 Preview Invoice</button>
-      <button class="btn btn-primary" id="view-order-update-btn">💾 Update Order</button>
+
+    <!-- View Customer -->
+    <div class="modal-overlay" id="modal-view-customer">
+      <div class="modal modal-lg">
+        <div class="modal-header">
+          <div class="modal-title">Customer Profile</div>
+          <button class="modal-close" data-close-modal="modal-view-customer">
+            ✕
+          </button>
+        </div>
+        <div id="view-customer-content"></div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-secondary"
+            data-close-modal="modal-view-customer"
+          >
+            Close
+          </button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- Invoice Preview -->
-<div class="modal-overlay" id="modal-invoice">
-  <div class="modal modal-xl">
-    <div class="modal-header">
-      <div class="modal-title">Invoice Preview</div>
-      <button class="modal-close" data-close-modal="modal-invoice">✕</button>
-    </div>
-    <div id="invoice-preview-body"></div>
-    <div class="modal-footer" style="flex-wrap:wrap">
-      <button class="btn btn-secondary" style="margin-right:auto" data-close-modal="modal-invoice">Close</button>
-      <button class="btn btn-secondary" id="invoice-copy-msg-btn" title="Copy invoice message">📋 Copy Msg</button>
-      <button class="btn" id="invoice-wa-btn" style="background:#25D366;color:#fff;box-shadow:0 4px 16px rgba(37,211,102,0.35)">🟢 WhatsApp</button>
-      <button class="btn" id="invoice-toggle-payment">✅ Mark as Paid</button>
-      <button class="btn print-btn" id="invoice-print-btn">🖨️ Print</button>
-    </div>
-  </div>
-</div>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
 
-<!-- View Customer -->
-<div class="modal-overlay" id="modal-view-customer">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <div class="modal-title">Customer Profile</div>
-      <button class="modal-close" data-close-modal="modal-view-customer">✕</button>
-    </div>
-    <div id="view-customer-content"></div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close-modal="modal-view-customer">Close</button>
-    </div>
-  </div>
-</div>
+    <!-- Print Portal -->
+    <div id="print-portal"></div>
 
-<!-- Toast Container -->
-<div class="toast-container" id="toast-container"></div>
+    <!-- EmailJS Integration -->
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
+    ></script>
+    <script type="text/javascript">
+      (function () {
+        // ─── EmailJS Configuration ─────────────────────────────────────────────
+        // 1. Sign up free at https://www.emailjs.com/
+        //
+        // SERVICE_ID  → EmailJS Dashboard → Email Services → copy your service ID
+        //               (set the constant in ui.js: EMAILJS_SERVICE_ID)
+        //
+        // TEMPLATE_ID → EmailJS Dashboard → Email Templates → copy template ID
+        //               (set the constant in ui.js: EMAILJS_TEMPLATE_ID)
+        //               Template variables to wire up in the EmailJS dashboard:
+        //               {{customer_name}}, {{customer_email}}, {{order_id}},
+        //               {{items_summary}}, {{total}}, {{payment_status}},
+        //               {{shipping_address}}, {{store_name}}, {{upi_id}}
+        //
+        // PUBLIC_KEY  → EmailJS Dashboard → Account → API Keys → Public Key
+        //               Replace the string below with your actual key
+        //
+        emailjs.init("avE1V-fmizcnzwLKw"); // ✅ PASTE YOUR PUBLIC KEY HERE (from EmailJS → Account → API Keys)
+      })();
+    </script>
 
-<!-- Print Portal -->
-<div id="print-portal"></div>
+    <!-- html2pdf.js — client-side PDF generation (invoice download) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
- <!-- EmailJS Integration -->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script type="text/javascript">
-    (function(){
-      // ─── EmailJS Configuration ─────────────────────────────────────────────
-      // 1. Sign up free at https://www.emailjs.com/
-      //
-      // SERVICE_ID  → EmailJS Dashboard → Email Services → copy your service ID
-      //               (set the constant in ui.js: EMAILJS_SERVICE_ID)
-      //
-      // TEMPLATE_ID → EmailJS Dashboard → Email Templates → copy template ID
-      //               (set the constant in ui.js: EMAILJS_TEMPLATE_ID)
-      //               Template variables to wire up in the EmailJS dashboard:
-      //               {{customer_name}}, {{customer_email}}, {{order_id}},
-      //               {{items_summary}}, {{total}}, {{payment_status}},
-      //               {{shipping_address}}, {{store_name}}, {{upi_id}}
-      //
-      // PUBLIC_KEY  → EmailJS Dashboard → Account → API Keys → Public Key
-      //               Replace the string below with your actual key
-      //
-      emailjs.init("avE1V-fmizcnzwLKw"); // ✅ PASTE YOUR PUBLIC KEY HERE (from EmailJS → Account → API Keys)
-    })();
-  </script>
-
-<!-- ══ Scripts (order matters) ════════════════════════════════ -->
-<script src="js/supabase.js"></script>    <!-- Auth + _supabase client -->
-<script src="js/data.js"></script>        <!-- SF.* async data layer  -->
-<script src="js/components.js"></script>  <!-- Pure HTML renderers    -->
-<script src="js/ui.js"></script>          <!-- UI utilities           -->
-<script src="js/pages.js"></script>       <!-- Async page renderers   -->
-<script src="js/modals.js"></script>      <!-- Async modal handlers   -->
-<script src="js/app.js"></script>         <!-- Entry point            -->
-
-</body>
+    <!-- ══ Scripts (order matters) ════════════════════════════════ -->
+    <script src="js/supabase.js"></script>
+    <!-- Auth + _supabase client -->
+    <script src="js/data.js"></script>
+    <!-- SF.* async data layer  -->
+    <script src="js/components.js"></script>
+    <!-- Pure HTML renderers    -->
+    <script src="js/ui.js"></script>
+    <!-- UI utilities           -->
+    <script src="js/pages.js"></script>
+    <!-- Async page renderers   -->
+    <script src="js/modals.js"></script>
+    <!-- Async modal handlers   -->
+    <script src="js/app.js"></script>
+    <!-- Entry point            -->
+  </body>
 </html>
