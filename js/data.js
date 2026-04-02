@@ -13,37 +13,36 @@
 // ================================================================
 
 const SF = (() => {
-
   // ─── Column mappers ──────────────────────────────────────────
   // Products: DB → JS
   function _productToJS(row) {
     if (!row) return null;
     return {
-      id:                row.id,
-      name:              row.name,
-      sku:               row.sku               || '',
-      category:          row.category          || '',
-      price:             Number(row.price)     || 0,
-      stock:             row.stock             || 0,
+      id: row.id,
+      name: row.name,
+      sku: row.sku || "",
+      category: row.category || "",
+      price: Number(row.price) || 0,
+      stock: row.stock || 0,
       lowStockThreshold: row.low_stock_threshold || 5,
-      emoji:             row.emoji             || '📦',
-      image:             row.image             || null,
-      variant:           row.variant           || null,
+      emoji: row.emoji || "📦",
+      image: row.image || null,
+      variant: row.variant || null,
     };
   }
 
   // Products: JS → DB (omit id/user_id — handled separately)
   function _productToDB(p) {
     return {
-      name:                p.name,
-      sku:                 p.sku                 || '',
-      category:            p.category            || '',
-      price:               p.price               || 0,
-      stock:               p.stock               || 0,
-      low_stock_threshold: p.lowStockThreshold   || 5,
-      emoji:               p.emoji               || '📦',
-      image:               p.image               || null,
-      variant:             p.variant             || null,
+      name: p.name,
+      sku: p.sku || "",
+      category: p.category || "",
+      price: p.price || 0,
+      stock: p.stock || 0,
+      low_stock_threshold: p.lowStockThreshold || 5,
+      emoji: p.emoji || "📦",
+      image: p.image || null,
+      variant: p.variant || null,
     };
   }
 
@@ -51,45 +50,45 @@ const SF = (() => {
   function _customerToJS(row) {
     if (!row) return null;
     return {
-      id:           row.id,
-      name:         row.name,
-      instagram:    row.instagram    || '',
-      phone:        row.phone        || '',
-      email:        row.email        || '',
-      city:         row.city         || '',
-      state:        row.state        || '',
-      address:      row.address      || '',
-      landmark:     row.landmark     || '',
-      pincode:      row.pincode      || '',
-      whatsapp:     row.whatsapp     || '',
-      notes:        row.notes        || '',
-      repeatScore:  row.repeat_score || null,
-      totalOrders:  row.total_orders || 0,
-      totalSpent:   Number(row.total_spent) || 0,
-      firstOrder:   row.first_order  || null,
-      lastOrder:    row.last_order   || null,
+      id: row.id,
+      name: row.name,
+      instagram: row.instagram || "",
+      phone: row.phone || "",
+      email: row.email || "",
+      city: row.city || "",
+      state: row.state || "",
+      address: row.address || "",
+      landmark: row.landmark || "",
+      pincode: row.pincode || "",
+      whatsapp: row.whatsapp || "",
+      notes: row.notes || "",
+      repeatScore: row.repeat_score || null,
+      totalOrders: row.total_orders || 0,
+      totalSpent: Number(row.total_spent) || 0,
+      firstOrder: row.first_order || null,
+      lastOrder: row.last_order || null,
     };
   }
 
   // Customers: JS → DB
   function _customerToDB(c) {
     return {
-      name:         c.name,
-      instagram:    c.instagram    || '',
-      phone:        c.phone        || '',
-      email:        c.email        || '',
-      city:         c.city         || '',
-      state:        c.state        || '',
-      address:      c.address      || '',
-      landmark:     c.landmark     || '',
-      pincode:      c.pincode      || '',
-      whatsapp:     c.whatsapp     || '',
-      notes:        c.notes        || '',
-      repeat_score: c.repeatScore  || null,
-      total_orders: c.totalOrders  || 0,
-      total_spent:  c.totalSpent   || 0,
-      first_order:  c.firstOrder   || null,
-      last_order:   c.lastOrder    || null,
+      name: c.name,
+      instagram: c.instagram || "",
+      phone: c.phone || "",
+      email: c.email || "",
+      city: c.city || "",
+      state: c.state || "",
+      address: c.address || "",
+      landmark: c.landmark || "",
+      pincode: c.pincode || "",
+      whatsapp: c.whatsapp || "",
+      notes: c.notes || "",
+      repeat_score: c.repeatScore || null,
+      total_orders: c.totalOrders || 0,
+      total_spent: c.totalSpent || 0,
+      first_order: c.firstOrder || null,
+      last_order: c.lastOrder || null,
     };
   }
 
@@ -97,42 +96,42 @@ const SF = (() => {
   function _orderToJS(row) {
     if (!row) return null;
     return {
-      id:              row.id,
-      customerId:      row.customer_id      || null,
-      customerName:    row.customer_name    || '',
-      items:           Array.isArray(row.items) ? row.items : [],
-      total:           Number(row.total)    || 0,
-      discount:        Number(row.discount) || 0,
-      coupon:          row.coupon           || '',
-      status:          row.status           || 'processing',
-      payment:         row.payment          || 'pending',
-      shippingAddress: row.shipping_address || '',
-      trackingId:      row.tracking_id      || '',
-      deliveryPartner: row.delivery_partner || '',
-      source:          row.source           || '',
-      notes:           row.notes            || '',
-      date:            row.order_date       || row.created_at?.slice(0, 10) || '',
+      id: row.id,
+      customerId: row.customer_id || null,
+      customerName: row.customer_name || "",
+      items: Array.isArray(row.items) ? row.items : [],
+      total: Number(row.total) || 0,
+      discount: Number(row.discount) || 0,
+      coupon: row.coupon || "",
+      status: row.status || "processing",
+      payment: row.payment || "pending",
+      shippingAddress: row.shipping_address || "",
+      trackingId: row.tracking_id || "",
+      deliveryPartner: row.delivery_partner || "",
+      source: row.source || "",
+      notes: row.notes || "",
+      date: row.order_date || row.created_at?.slice(0, 10) || "",
     };
   }
 
   // Orders: JS → DB
   function _orderToDB(o) {
     return {
-      id:               o.id,
-      customer_id:      o.customerId      || null,
-      customer_name:    o.customerName    || '',
-      items:            o.items           || [],
-      total:            o.total           || 0,
-      discount:         o.discount        || 0,
-      coupon:           o.coupon          || '',
-      status:           o.status          || 'processing',
-      payment:          o.payment         || 'pending',
-      shipping_address: o.shippingAddress || '',
-      tracking_id:      o.trackingId      || '',
-      delivery_partner: o.deliveryPartner || '',
-      source:           o.source          || '',
-      notes:            o.notes           || '',
-      order_date:       o.date            || new Date().toISOString().slice(0, 10),
+      id: o.id,
+      customer_id: o.customerId || null,
+      customer_name: o.customerName || "",
+      items: o.items || [],
+      total: o.total || 0,
+      discount: o.discount || 0,
+      coupon: o.coupon || "",
+      status: o.status || "processing",
+      payment: o.payment || "pending",
+      shipping_address: o.shippingAddress || "",
+      tracking_id: o.trackingId || "",
+      delivery_partner: o.deliveryPartner || "",
+      source: o.source || "",
+      notes: o.notes || "",
+      order_date: o.date || new Date().toISOString().slice(0, 10),
     };
   }
 
@@ -140,12 +139,12 @@ const SF = (() => {
   function _profileToJS(row) {
     if (!row) return null;
     return {
-      name:      row.name      || '',
-      store:     row.store     || '',
-      instagram: row.instagram || '',
-      phone:     row.phone     || '',
-      email:     row.email     || '',
-      upiId:     row.upi_id    || '',
+      name: row.name || "",
+      store: row.store || "",
+      instagram: row.instagram || "",
+      phone: row.phone || "",
+      email: row.email || "",
+      upiId: row.upi_id || "",
       autoEmail: row.auto_email || false,
     };
   }
@@ -162,11 +161,11 @@ const SF = (() => {
     const uid = Auth.getUserId();
     if (!uid) return null;
     const { data, error } = await _supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', uid)
+      .from("profiles")
+      .select("*")
+      .eq("id", uid)
       .single();
-    if (error) _throw(error, 'getUser');
+    if (error) _throw(error, "getUser");
     return _profileToJS(data);
   }
 
@@ -174,19 +173,19 @@ const SF = (() => {
     const uid = Auth.getUserId();
     if (!uid) return;
     const dbRow = {
-      name:       updates.name      || '',
-      store:      updates.store     || '',
-      instagram:  updates.instagram || '',
-      phone:      updates.phone     || '',
-      email:      updates.email     || '',
-      upi_id:     updates.upiId     || '',
+      name: updates.name || "",
+      store: updates.store || "",
+      instagram: updates.instagram || "",
+      phone: updates.phone || "",
+      email: updates.email || "",
+      upi_id: updates.upiId || "",
       auto_email: updates.autoEmail || false,
     };
     const { error } = await _supabase
-      .from('profiles')
+      .from("profiles")
       .update(dbRow)
-      .eq('id', uid);
-    if (error) _throw(error, 'saveUser');
+      .eq("id", uid);
+    if (error) _throw(error, "saveUser");
   }
 
   // ─── Products ─────────────────────────────────────────────────
@@ -194,11 +193,11 @@ const SF = (() => {
   async function getProducts() {
     const uid = Auth.getUserId();
     const { data, error } = await _supabase
-      .from('products')
-      .select('*')
-      .eq('user_id', uid)
-      .order('created_at', { ascending: true });
-    if (error) _throw(error, 'getProducts');
+      .from("products")
+      .select("*")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: true });
+    if (error) _throw(error, "getProducts");
     return (data || []).map(_productToJS);
   }
 
@@ -206,32 +205,32 @@ const SF = (() => {
     const uid = Auth.getUserId();
     const row = { ..._productToDB(p), user_id: uid };
     const { data, error } = await _supabase
-      .from('products')
+      .from("products")
       .insert(row)
       .select()
       .single();
-    if (error) _throw(error, 'addProduct');
+    if (error) _throw(error, "addProduct");
     return _productToJS(data);
   }
 
   async function updateProduct(id, updates) {
     const uid = Auth.getUserId();
     const { error } = await _supabase
-      .from('products')
+      .from("products")
       .update(_productToDB(updates))
-      .eq('id', id)
-      .eq('user_id', uid);      // RLS belt-and-suspenders
-    if (error) _throw(error, 'updateProduct');
+      .eq("id", id)
+      .eq("user_id", uid); // RLS belt-and-suspenders
+    if (error) _throw(error, "updateProduct");
   }
 
   async function deleteProduct(id) {
     const uid = Auth.getUserId();
     const { error } = await _supabase
-      .from('products')
+      .from("products")
       .delete()
-      .eq('id', id)
-      .eq('user_id', uid);
-    if (error) _throw(error, 'deleteProduct');
+      .eq("id", id)
+      .eq("user_id", uid);
+    if (error) _throw(error, "deleteProduct");
   }
 
   // Decrease stock by qty (used after order creation)
@@ -239,20 +238,20 @@ const SF = (() => {
     const uid = Auth.getUserId();
     // Use Supabase RPC or fetch-then-update
     const { data: current, error: fetchErr } = await _supabase
-      .from('products')
-      .select('stock')
-      .eq('id', productId)
-      .eq('user_id', uid)
+      .from("products")
+      .select("stock")
+      .eq("id", productId)
+      .eq("user_id", uid)
       .single();
-    if (fetchErr) _throw(fetchErr, 'decreaseStock:fetch');
+    if (fetchErr) _throw(fetchErr, "decreaseStock:fetch");
 
     const newStock = Math.max(0, (current.stock || 0) - qty);
     const { error: updateErr } = await _supabase
-      .from('products')
+      .from("products")
       .update({ stock: newStock })
-      .eq('id', productId)
-      .eq('user_id', uid);
-    if (updateErr) _throw(updateErr, 'decreaseStock:update');
+      .eq("id", productId)
+      .eq("user_id", uid);
+    if (updateErr) _throw(updateErr, "decreaseStock:update");
   }
 
   // ─── Orders ───────────────────────────────────────────────────
@@ -260,28 +259,55 @@ const SF = (() => {
   async function getOrders() {
     const uid = Auth.getUserId();
     const { data, error } = await _supabase
-      .from('orders')
-      .select('*')
-      .eq('user_id', uid)
-      .order('order_date', { ascending: false });
-    if (error) _throw(error, 'getOrders');
+      .from("orders")
+      .select("*")
+      .eq("user_id", uid)
+      .order("order_date", { ascending: false });
+    if (error) _throw(error, "getOrders");
     return (data || []).map(_orderToJS);
   }
 
-  // Generates sequential ID like ORD-042 scoped per seller
-  async function _nextOrderId() {
-    const uid = Auth.getUserId();
-    const { count, error } = await _supabase
-      .from('orders')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', uid);
-    if (error) _throw(error, '_nextOrderId');
-    return 'ORD-' + String((count || 0) + 1).padStart(3, '0');
+  // Generates a unique, human-readable order ID.
+  //
+  // Previous approach: COUNT existing rows → ORD-{count+1}
+  // Problem: COUNT is not atomic. If two orders are created at the
+  // same time, both see the same count and generate the same ID,
+  // causing a duplicate-key violation on the orders_pkey constraint.
+  // Deleting orders also breaks the sequence (count drops, ID repeats).
+  //
+  // New approach: date prefix + 4-char random alphanumeric suffix.
+  //   Format: ORD-YYYYMMDD-XXXX   e.g. ORD-20250402-K7M2
+  //   • Date prefix keeps IDs chronologically sortable at a glance.
+  //   • 4-char base-36 suffix = 1,679,616 combinations per day —
+  //     collision probability per order ≈ 1 in 840,000. Safe for
+  //     any realistic seller order volume.
+  //   • Entirely client-side and synchronous — no extra DB round-trip.
+  //   • Does not depend on row count, so deletions never cause repeats.
+  //
+  // If you later need strictly sequential display numbers (e.g. invoice #42),
+  // store a separate `display_number` using a Postgres sequence or an
+  // auto-increment column — keep it independent of the primary key.
+  //
+  function _generateOrderId() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const date = `${year}${month}${day}`;
+
+    // 4 random base-36 chars (0-9, A-Z), uppercased
+    const suffix = Math.random()
+      .toString(36)
+      .slice(2, 6)
+      .toUpperCase()
+      .padEnd(4, "0");
+
+    return `ORD-${date}-${suffix}`;
   }
 
   async function addOrder(o) {
-    const uid  = Auth.getUserId();
-    const id   = await _nextOrderId();
+    const uid = Auth.getUserId();
+    const id = _generateOrderId(); // sync, no DB call, no race condition
     const date = new Date().toISOString().slice(0, 10);
 
     const row = {
@@ -290,15 +316,15 @@ const SF = (() => {
     };
 
     const { data, error } = await _supabase
-      .from('orders')
+      .from("orders")
       .insert(row)
       .select()
       .single();
-    if (error) _throw(error, 'addOrder');
+    if (error) _throw(error, "addOrder");
 
     // Decrease stock for each item (fire-and-forget in parallel)
     await Promise.all(
-      (o.items || []).map(item => decreaseStock(item.productId, item.qty))
+      (o.items || []).map((item) => decreaseStock(item.productId, item.qty)),
     );
 
     // Update customer stats
@@ -311,28 +337,30 @@ const SF = (() => {
     const uid = Auth.getUserId();
     // Build a partial DB object — only pass what's changed
     const partial = {};
-    if (updates.status  !== undefined) partial.status  = updates.status;
+    if (updates.status !== undefined) partial.status = updates.status;
     if (updates.payment !== undefined) partial.payment = updates.payment;
-    if (updates.trackingId      !== undefined) partial.tracking_id      = updates.trackingId;
-    if (updates.deliveryPartner !== undefined) partial.delivery_partner = updates.deliveryPartner;
-    if (updates.notes   !== undefined) partial.notes   = updates.notes;
+    if (updates.trackingId !== undefined)
+      partial.tracking_id = updates.trackingId;
+    if (updates.deliveryPartner !== undefined)
+      partial.delivery_partner = updates.deliveryPartner;
+    if (updates.notes !== undefined) partial.notes = updates.notes;
 
     const { error } = await _supabase
-      .from('orders')
+      .from("orders")
       .update(partial)
-      .eq('id', id)
-      .eq('user_id', uid);
-    if (error) _throw(error, 'updateOrder');
+      .eq("id", id)
+      .eq("user_id", uid);
+    if (error) _throw(error, "updateOrder");
   }
 
   async function deleteOrder(id) {
     const uid = Auth.getUserId();
     const { error } = await _supabase
-      .from('orders')
+      .from("orders")
       .delete()
-      .eq('id', id)
-      .eq('user_id', uid);
-    if (error) _throw(error, 'deleteOrder');
+      .eq("id", id)
+      .eq("user_id", uid);
+    if (error) _throw(error, "deleteOrder");
   }
 
   // ─── Customers ────────────────────────────────────────────────
@@ -340,11 +368,11 @@ const SF = (() => {
   async function getCustomers() {
     const uid = Auth.getUserId();
     const { data, error } = await _supabase
-      .from('customers')
-      .select('*')
-      .eq('user_id', uid)
-      .order('created_at', { ascending: true });
-    if (error) _throw(error, 'getCustomers');
+      .from("customers")
+      .select("*")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: true });
+    if (error) _throw(error, "getCustomers");
     return (data || []).map(_customerToJS);
   }
 
@@ -352,52 +380,55 @@ const SF = (() => {
     const uid = Auth.getUserId();
     const row = {
       ..._customerToDB(c),
-      user_id:      uid,
+      user_id: uid,
       total_orders: 0,
-      total_spent:  0,
-      first_order:  null,
-      last_order:   null,
+      total_spent: 0,
+      first_order: null,
+      last_order: null,
     };
     const { data, error } = await _supabase
-      .from('customers')
+      .from("customers")
       .insert(row)
       .select()
       .single();
-    if (error) _throw(error, 'addCustomer');
+    if (error) _throw(error, "addCustomer");
     return _customerToJS(data);
   }
 
   async function updateCustomer(id, updates) {
     const uid = Auth.getUserId();
     const { error } = await _supabase
-      .from('customers')
+      .from("customers")
       .update(_customerToDB(updates))
-      .eq('id', id)
-      .eq('user_id', uid);
-    if (error) _throw(error, 'updateCustomer');
+      .eq("id", id)
+      .eq("user_id", uid);
+    if (error) _throw(error, "updateCustomer");
   }
 
   // Find existing by instagram handle or name, or create new
   async function findOrCreateCustomer(name, instagram) {
     const uid = Auth.getUserId();
     // Try to find by instagram first, then by name
-    let query = _supabase
-      .from('customers')
-      .select('*')
-      .eq('user_id', uid);
+    let query = _supabase.from("customers").select("*").eq("user_id", uid);
 
     if (instagram) {
-      query = query.eq('instagram', instagram);
+      query = query.eq("instagram", instagram);
     } else {
-      query = query.eq('name', name);
+      query = query.eq("name", name);
     }
 
     const { data, error } = await query.maybeSingle();
-    if (error) _throw(error, 'findOrCreateCustomer:find');
+    if (error) _throw(error, "findOrCreateCustomer:find");
     if (data) return _customerToJS(data);
 
     // Not found — create
-    return await addCustomer({ name, instagram: instagram || '', phone: '', email: '', city: '' });
+    return await addCustomer({
+      name,
+      instagram: instagram || "",
+      phone: "",
+      email: "",
+      city: "",
+    });
   }
 
   // Called internally after addOrder
@@ -407,25 +438,29 @@ const SF = (() => {
 
     // Fetch current customer stats
     const { data: cust, error } = await _supabase
-      .from('customers')
-      .select('total_orders, total_spent, first_order')
-      .eq('id', order.customerId)
-      .eq('user_id', uid)
+      .from("customers")
+      .select("total_orders, total_spent, first_order")
+      .eq("id", order.customerId)
+      .eq("user_id", uid)
       .single();
-    if (error) { console.warn('[SF] _updateCustomerAfterOrder fetch failed', error); return; }
+    if (error) {
+      console.warn("[SF] _updateCustomerAfterOrder fetch failed", error);
+      return;
+    }
 
     const today = new Date().toISOString().slice(0, 10);
     const { error: updateErr } = await _supabase
-      .from('customers')
+      .from("customers")
       .update({
         total_orders: (cust.total_orders || 0) + 1,
-        total_spent:  Number(cust.total_spent || 0) + Number(order.total || 0),
-        last_order:   today,
-        first_order:  cust.first_order || today,
+        total_spent: Number(cust.total_spent || 0) + Number(order.total || 0),
+        last_order: today,
+        first_order: cust.first_order || today,
       })
-      .eq('id', order.customerId)
-      .eq('user_id', uid);
-    if (updateErr) console.warn('[SF] _updateCustomerAfterOrder update failed', updateErr);
+      .eq("id", order.customerId)
+      .eq("user_id", uid);
+    if (updateErr)
+      console.warn("[SF] _updateCustomerAfterOrder update failed", updateErr);
   }
 
   // ─── Analytics ────────────────────────────────────────────────
@@ -435,45 +470,47 @@ const SF = (() => {
     const orders = await getOrders();
 
     // Build monthly revenue for last 12 months
-    const now       = new Date();
-    const months    = [];
+    const now = new Date();
+    const months = [];
     const revByMonth = {};
     const ordByMonth = {};
 
     for (let i = 11; i >= 0; i--) {
-      const d  = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const label = d.toLocaleString('default', { month: 'short' });
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleString("default", { month: "short" });
       months.push(label);
       revByMonth[key] = 0;
       ordByMonth[key] = 0;
     }
 
-    orders.forEach(o => {
-      const key = (o.date || '').slice(0, 7);
+    orders.forEach((o) => {
+      const key = (o.date || "").slice(0, 7);
       if (revByMonth[key] !== undefined) {
-        if (o.payment === 'paid') revByMonth[key] += o.total;
+        if (o.payment === "paid") revByMonth[key] += o.total;
         ordByMonth[key]++;
       }
     });
 
     // Category distribution from products
-    const products  = await getProducts();
+    const products = await getProducts();
     const catTotals = {};
-    products.forEach(p => {
+    products.forEach((p) => {
       catTotals[p.category] = (catTotals[p.category] || 0) + 1;
     });
     const total = Object.values(catTotals).reduce((s, v) => s + v, 0) || 1;
     const catLabels = Object.keys(catTotals);
-    const catData   = catLabels.map(k => Math.round((catTotals[k] / total) * 100));
+    const catData = catLabels.map((k) =>
+      Math.round((catTotals[k] / total) * 100),
+    );
 
     return {
       months,
       monthlyRevenue: Object.values(revByMonth),
-      monthlyOrders:  Object.values(ordByMonth),
+      monthlyOrders: Object.values(ordByMonth),
       topCategories: {
-        labels: catLabels.length ? catLabels : ['No data'],
-        data:   catData.length  ? catData   : [100],
+        labels: catLabels.length ? catLabels : ["No data"],
+        data: catData.length ? catData : [100],
       },
     };
   }
@@ -483,28 +520,36 @@ const SF = (() => {
 
   async function getDashStats() {
     const [orders, products, customers] = await Promise.all([
-      getOrders(), getProducts(), getCustomers()
+      getOrders(),
+      getProducts(),
+      getCustomers(),
     ]);
 
-    const month       = new Date().toISOString().slice(0, 7);
-    const monthOrders = orders.filter(o => (o.date || '').startsWith(month));
-    const revenue     = monthOrders.filter(o => o.payment === 'paid').reduce((s, o) => s + o.total, 0);
-    const pending     = orders.filter(o => o.payment === 'pending').length;
-    const lowStock    = products.filter(p => p.stock <= p.lowStockThreshold).length;
-    const repeatCusts = customers.filter(c => c.totalOrders >= 2).length;
-    const allRevenue  = orders.filter(o => o.payment === 'paid').reduce((s, o) => s + o.total, 0);
+    const month = new Date().toISOString().slice(0, 7);
+    const monthOrders = orders.filter((o) => (o.date || "").startsWith(month));
+    const revenue = monthOrders
+      .filter((o) => o.payment === "paid")
+      .reduce((s, o) => s + o.total, 0);
+    const pending = orders.filter((o) => o.payment === "pending").length;
+    const lowStock = products.filter(
+      (p) => p.stock <= p.lowStockThreshold,
+    ).length;
+    const repeatCusts = customers.filter((c) => c.totalOrders >= 2).length;
+    const allRevenue = orders
+      .filter((o) => o.payment === "paid")
+      .reduce((s, o) => s + o.total, 0);
 
     return {
-      totalRevenue:    revenue,
-      totalOrders:     monthOrders.length,
+      totalRevenue: revenue,
+      totalOrders: monthOrders.length,
       pendingPayments: pending,
-      lowStockCount:   lowStock,
+      lowStockCount: lowStock,
       repeatCustomers: repeatCusts,
-      totalCustomers:  customers.length,
+      totalCustomers: customers.length,
       allRevenue,
       // Pass through raw lists so callers don't re-fetch
-      _orders:    orders,
-      _products:  products,
+      _orders: orders,
+      _products: products,
       _customers: customers,
     };
   }
@@ -519,17 +564,14 @@ const SF = (() => {
   //
   async function resetAccount() {
     const uid = Auth.getUserId();
-    if (!uid) throw new Error('Not authenticated');
+    if (!uid) throw new Error("Not authenticated");
 
     // Delete in dependency order: orders first, then customers, then products
     // (orders reference customers; deleting customers first could cause FK issues
     //  depending on your Supabase cascade config)
-    const tables = ['orders', 'customers', 'products'];
+    const tables = ["orders", "customers", "products"];
     for (const table of tables) {
-      const { error } = await _supabase
-        .from(table)
-        .delete()
-        .eq('user_id', uid);
+      const { error } = await _supabase.from(table).delete().eq("user_id", uid);
       if (error) _throw(error, `resetAccount:${table}`);
     }
   }
@@ -555,56 +597,78 @@ const SF = (() => {
   //
   async function deleteAccount() {
     const uid = Auth.getUserId();
-    if (!uid) throw new Error('Not authenticated');
+    if (!uid) throw new Error("Not authenticated");
 
     // Step 1: wipe all business data
     await resetAccount();
 
     // Step 2: delete the profile row
     const { error: profileErr } = await _supabase
-      .from('profiles')
+      .from("profiles")
       .delete()
-      .eq('id', uid);
-    if (profileErr) _throw(profileErr, 'deleteAccount:profile');
+      .eq("id", uid);
+    if (profileErr) _throw(profileErr, "deleteAccount:profile");
 
     // Step 3: delete the auth.users row via RPC
-    const { error: rpcErr } = await _supabase.rpc('delete_own_account');
-    if (rpcErr) _throw(rpcErr, 'deleteAccount:auth');
+    const { error: rpcErr } = await _supabase.rpc("delete_own_account");
+    if (rpcErr) _throw(rpcErr, "deleteAccount:auth");
 
     // Step 4: sign out locally (session is now invalid anyway)
     await Auth.signOut();
   }
 
   function formatCurrency(n) {
-    return '₹' + Number(n).toLocaleString('en-IN');
+    return "₹" + Number(n).toLocaleString("en-IN");
   }
 
   function formatDate(d) {
-    if (!d) return '—';
-    return new Date(d).toLocaleDateString('en-IN', {
-      day: 'numeric', month: 'short', year: 'numeric'
+    if (!d) return "—";
+    return new Date(d).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
     });
   }
 
   function initials(name) {
-    return (name || '').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    return (name || "")
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   }
 
   // ─── Public API ───────────────────────────────────────────────
   return {
     // User
-    getUser, saveUser,
+    getUser,
+    saveUser,
     // Products
-    getProducts, addProduct, updateProduct, deleteProduct, decreaseStock,
+    getProducts,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    decreaseStock,
     // Orders
-    getOrders, addOrder, updateOrder, deleteOrder,
+    getOrders,
+    addOrder,
+    updateOrder,
+    deleteOrder,
     // Customers
-    getCustomers, addCustomer, updateCustomer, findOrCreateCustomer,
+    getCustomers,
+    addCustomer,
+    updateCustomer,
+    findOrCreateCustomer,
     // Analytics + Stats
-    getAnalytics, getDashStats,
+    getAnalytics,
+    getDashStats,
     // Account management
-    resetAccount, deleteAccount,
+    resetAccount,
+    deleteAccount,
     // Utilities
-    formatCurrency, formatDate, initials,
+    formatCurrency,
+    formatDate,
+    initials,
   };
 })();
