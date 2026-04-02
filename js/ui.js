@@ -23,8 +23,6 @@ const UI = (() => {
   }
 
   // ─── Loading Overlay ─────────────────────────────────────────
-  // Shows/hides a full-page spinner while async data is loading.
-
   function showLoading(msg = "Loading…") {
     let overlay = document.getElementById("sf-loading-overlay");
     if (!overlay) {
@@ -37,7 +35,8 @@ const UI = (() => {
         </div>`;
       document.body.appendChild(overlay);
     } else {
-      document.getElementById("sf-loading-msg").textContent = msg;
+      const msgEl = document.getElementById("sf-loading-msg");
+      if (msgEl) msgEl.textContent = msg;
     }
     overlay.classList.add("active");
   }
@@ -47,9 +46,7 @@ const UI = (() => {
     if (overlay) overlay.classList.remove("active");
   }
 
-  // ─── Page-level skeleton loader ──────────────────────────────
-  // Shows skeleton rows in tables while async data loads.
-
+  // ─── Skeleton loaders ────────────────────────────────────────
   function showSkeleton(tbodyId, cols = 5, rows = 4) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
@@ -62,23 +59,16 @@ const UI = (() => {
   function showCardSkeleton(containerId, count = 6) {
     const el = document.getElementById(containerId);
     if (!el) return;
-    el.innerHTML = Array(count)
-      .fill(
-        `
+    el.innerHTML = Array(count).fill(`
       <div class="billing-card skeleton-card">
         <div class="skeleton-line" style="width:60%;height:14px;margin-bottom:10px"></div>
         <div class="skeleton-line" style="width:40%;height:11px;margin-bottom:16px"></div>
         <div class="skeleton-line" style="width:50%;height:24px;margin-bottom:12px"></div>
         <div class="skeleton-line" style="width:70%;height:11px"></div>
-      </div>`,
-      )
-      .join("");
+      </div>`).join("");
   }
 
   // ─── Async error boundary ─────────────────────────────────────
-  // Wraps an async page-render call, shows a toast on failure,
-  // and can force logout on auth errors.
-
   async function safeRender(fn, label = "page") {
     try {
       await fn();
@@ -91,10 +81,7 @@ const UI = (() => {
         msg.includes("invalid claim")
       ) {
         toast("Session expired. Please log in again.", "error");
-        setTimeout(
-          () => window.dispatchEvent(new Event("sf:signed-out")),
-          1200,
-        );
+        setTimeout(() => window.dispatchEvent(new Event("sf:signed-out")), 1200);
       } else {
         toast(`Failed to load ${label}. Please try again.`, "error");
       }
@@ -106,13 +93,9 @@ const UI = (() => {
     const overlay = document.getElementById(id);
     if (!overlay) return;
     overlay.classList.add("open");
-    overlay.addEventListener(
-      "click",
-      (e) => {
-        if (e.target === overlay) closeModal(id);
-      },
-      { once: true },
-    );
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeModal(id);
+    }, { once: true });
   }
 
   function closeModal(id) {
@@ -121,45 +104,33 @@ const UI = (() => {
   }
 
   function closeAllModals() {
-    document
-      .querySelectorAll(".modal-overlay.open")
+    document.querySelectorAll(".modal-overlay.open")
       .forEach((m) => m.classList.remove("open"));
   }
 
   // ─── Navigation (async-aware) ─────────────────────────────────
-  // Pages.* functions are now async. navigate() awaits them and
-  // handles loading state + error boundary.
-
   async function navigate(page) {
-    // Deactivate all nav items
-    document
-      .querySelectorAll(".nav-item")
-      .forEach((n) => n.classList.remove("active"));
+    document.querySelectorAll(".nav-item").forEach((n) => n.classList.remove("active"));
     const navEl = document.querySelector(`.nav-item[data-page="${page}"]`);
     if (navEl) navEl.classList.add("active");
 
-    // Hide all pages / show target
-    document
-      .querySelectorAll(".page")
-      .forEach((p) => p.classList.remove("active"));
+    document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
     const pageEl = document.getElementById(`page-${page}`);
     if (pageEl) pageEl.classList.add("active");
 
-    // Update topbar title
     const titles = {
       dashboard: "Dashboard",
-      products: "Products",
-      orders: "Orders",
+      products:  "Products",
+      orders:    "Orders",
       customers: "Customers",
-      billing: "Billing & Invoices",
-      settings: "Settings",
+      billing:   "Billing & Invoices",
+      settings:  "Settings",
     };
     const titleEl = document.getElementById("topbar-title");
     if (titleEl) titleEl.textContent = titles[page] || "SellerFlow";
 
     closeMobileSidebar();
 
-    // Trigger async page render
     if (typeof Pages !== "undefined" && Pages[page]) {
       await safeRender(() => Pages[page](), page);
     }
@@ -170,11 +141,8 @@ const UI = (() => {
     const sidebar = document.querySelector(".sidebar");
     const overlay = document.querySelector(".sidebar-overlay");
     if (!sidebar || !overlay) return;
-
     sidebar.classList.add("open");
     overlay.classList.add("open");
-
-    // Inject a visible close button into the sidebar header (once only)
     if (!document.getElementById("sidebar-close-btn")) {
       const header = sidebar.querySelector(".sidebar-header");
       if (header) {
@@ -187,8 +155,6 @@ const UI = (() => {
         header.appendChild(btn);
       }
     }
-
-    // Prevent body scroll while sidebar is open
     document.body.style.overflow = "hidden";
   }
 
@@ -199,24 +165,20 @@ const UI = (() => {
   }
 
   // ─── Confirm Dialog ──────────────────────────────────────────
-  function confirm(msg) {
-    return window.confirm(msg);
-  }
+  function confirm(msg) { return window.confirm(msg); }
 
-  // ─── Update Sidebar Badges ───────────────────────────────────
-  // Called after any data mutation that could affect badge counts.
-
+  // ─── Badges ──────────────────────────────────────────────────
   async function updateBadges() {
     try {
       const stats = await SF.getDashStats();
       const pendingBadge = document.getElementById("badge-pending");
       if (pendingBadge) {
-        pendingBadge.textContent = stats.pendingPayments;
+        pendingBadge.textContent  = stats.pendingPayments;
         pendingBadge.style.display = stats.pendingPayments > 0 ? "" : "none";
       }
       const stockBadge = document.getElementById("badge-lowstock");
       if (stockBadge) {
-        stockBadge.textContent = stats.lowStockCount;
+        stockBadge.textContent  = stats.lowStockCount;
         stockBadge.style.display = stats.lowStockCount > 0 ? "" : "none";
       }
       const notifDot = document.querySelector(".notif-dot");
@@ -224,12 +186,10 @@ const UI = (() => {
         notifDot.style.display =
           stats.pendingPayments > 0 || stats.lowStockCount > 0 ? "" : "none";
       }
-    } catch (_) {
-      /* badges are non-critical — swallow errors */
-    }
+    } catch (_) { /* badges are non-critical */ }
   }
 
-  // ─── Empty State Helper ───────────────────────────────────────
+  // ─── Empty State ─────────────────────────────────────────────
   function emptyState(icon, title, desc) {
     return `
       <div class="empty-state">
@@ -242,10 +202,10 @@ const UI = (() => {
   // ─── Status Badges ────────────────────────────────────────────
   function orderStatusBadge(status) {
     const map = {
-      processing: ["badge-info", "🔄 Processing"],
-      shipped: ["badge-cyan", "🚚 Shipped"],
-      delivered: ["badge-success", "✅ Delivered"],
-      cancelled: ["badge-danger", "❌ Cancelled"],
+      processing: ["badge-info",    "🔄 Processing"],
+      shipped:    ["badge-cyan",    "🚚 Shipped"],
+      delivered:  ["badge-success", "✅ Delivered"],
+      cancelled:  ["badge-danger",  "❌ Cancelled"],
     };
     const [cls, label] = map[status] || ["badge-muted", status];
     return `<span class="badge ${cls}">${label}</span>`;
@@ -253,9 +213,9 @@ const UI = (() => {
 
   function paymentBadge(status) {
     const map = {
-      paid: ["badge-success", "✅ Paid"],
-      pending: ["badge-warn", "⏳ Pending"],
-      refunded: ["badge-muted", "↩️ Refunded"],
+      paid:     ["badge-success", "✅ Paid"],
+      pending:  ["badge-warn",    "⏳ Pending"],
+      refunded: ["badge-muted",   "↩️ Refunded"],
     };
     const [cls, label] = map[status] || ["badge-muted", status];
     return `<span class="badge ${cls}">${label}</span>`;
@@ -265,9 +225,9 @@ const UI = (() => {
   function generateInvoiceMessage(order, user) {
     const firstName = (order.customerName || "Customer").split(" ")[0];
     const storeName = user.store || "Our Store";
-    const amount = SF.formatCurrency(order.total);
-    const status = order.payment === "paid" ? "PAID" : "PENDING";
-    const upiLine = user.upiId ? `\nUPI: ${user.upiId}\n` : "";
+    const amount    = SF.formatCurrency(order.total);
+    const status    = order.payment === "paid" ? "PAID" : "PENDING";
+    const upiLine   = user.upiId ? `\nUPI: ${user.upiId}\n` : "";
     return `Hi ${firstName} 👋\nThank you for shopping with ${storeName} 💜\n\nYour order invoice #${order.id} is ready.\nTotal amount: ${amount}\nPayment status: ${status}\n${upiLine}\nThank you for your order ✨`;
   }
 
@@ -283,22 +243,16 @@ const UI = (() => {
   // Public API
   return {
     toast,
-    showLoading,
-    hideLoading,
-    showSkeleton,
-    showCardSkeleton,
+    showLoading, hideLoading,
+    showSkeleton, showCardSkeleton,
     safeRender,
-    openModal,
-    closeModal,
-    closeAllModals,
+    openModal, closeModal, closeAllModals,
     navigate,
-    openMobileSidebar,
-    closeMobileSidebar,
+    openMobileSidebar, closeMobileSidebar,
     confirm,
     updateBadges,
     emptyState,
-    orderStatusBadge,
-    paymentBadge,
+    orderStatusBadge, paymentBadge,
     generateInvoiceMessage,
     debounce,
   };
