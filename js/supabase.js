@@ -13,8 +13,9 @@
 //
 // ================================================================
 
-const SUPABASE_URL  = 'https://tdwxohfcgdxxtsimwdwf.supabase.co';   // ← replace
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkd3hvaGZjZ2R4eHRzaW13ZHdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NzI4NDksImV4cCI6MjA5MDQ0ODg0OX0.32R42dHwdKvDnLCKtb4LHBUbDp_81NnJ1N50T-6CS1c';                   // ← replace
+const SUPABASE_URL = "https://tdwxohfcgdxxtsimwdwf.supabase.co"; // ← replace
+const SUPABASE_ANON =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkd3hvaGZjZ2R4eHRzaW13ZHdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NzI4NDksImV4cCI6MjA5MDQ0ODg0OX0.32R42dHwdKvDnLCKtb4LHBUbDp_81NnJ1N50T-6CS1c"; // ← replace
 
 // ─── Client ───────────────────────────────────────────────────
 // Loaded via CDN in index.html: @supabase/supabase-js
@@ -23,32 +24,31 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
     // Persist session in localStorage across page refreshes
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,  // handles magic link / OAuth redirects
-  }
+    detectSessionInUrl: true, // handles magic link / OAuth redirects
+  },
 });
 
 // ─── Auth Module ──────────────────────────────────────────────
 const Auth = (() => {
-
   // ── Current session cache ────────────────────────────────────
-  let _session  = null;
-  let _user     = null;
+  let _session = null;
+  let _user = null;
 
   // ── Bootstrap: called once on DOMContentLoaded ───────────────
   async function init() {
     // Restore any existing session (page refresh / returning user)
     const { data } = await _supabase.auth.getSession();
     _session = data?.session ?? null;
-    _user    = _session?.user ?? null;
+    _user = _session?.user ?? null;
 
     // Listen for future auth state changes (login, logout, token refresh)
     _supabase.auth.onAuthStateChange((event, session) => {
       _session = session;
-      _user    = session?.user ?? null;
+      _user = session?.user ?? null;
 
-      if (event === 'SIGNED_OUT') {
+      if (event === "SIGNED_OUT") {
         // Let app.js handle the redirect back to login screen
-        window.dispatchEvent(new Event('sf:signed-out'));
+        window.dispatchEvent(new Event("sf:signed-out"));
       }
     });
 
@@ -63,21 +63,24 @@ const Auth = (() => {
       password,
       options: {
         // Passed to the trigger so the profile gets a name + store immediately
-        data: { name, store }
-      }
+        data: { name, store },
+      },
     });
     if (error) throw error;
     _session = data.session;
-    _user    = data.user;
+    _user = data.user;
     return data;
   }
 
   // ── Sign In ──────────────────────────────────────────────────
   async function signIn(email, password) {
-    const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await _supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     if (error) throw error;
     _session = data.session;
-    _user    = data.user;
+    _user = data.user;
     return data;
   }
 
@@ -86,15 +89,32 @@ const Auth = (() => {
     const { error } = await _supabase.auth.signOut();
     if (error) throw error;
     _session = null;
-    _user    = null;
+    _user = null;
   }
 
   // ── Getters ──────────────────────────────────────────────────
-  function getUser()    { return _user; }
-  function getUserId()  { return _user?.id ?? null; }
-  function getSession() { return _session; }
-  function isLoggedIn() { return !!_user; }
+  function getUser() {
+    return _user;
+  }
+  function getUserId() {
+    return _user?.id ?? null;
+  }
+  function getSession() {
+    return _session;
+  }
+  function isLoggedIn() {
+    return !!_user;
+  }
 
   // Public API
-  return { init, signUp, signIn, signOut, getUser, getUserId, getSession, isLoggedIn };
+  return {
+    init,
+    signUp,
+    signIn,
+    signOut,
+    getUser,
+    getUserId,
+    getSession,
+    isLoggedIn,
+  };
 })();
