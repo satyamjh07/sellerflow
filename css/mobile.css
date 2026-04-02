@@ -12,34 +12,43 @@
    Compatible with: Android Chrome, iOS Safari, in-app browsers
    ============================================================ */
 
-
 /* ── 0. GLOBAL TOUCH + OVERFLOW GUARD ─────────────────────── */
 
-html, body {
+html,
+body {
   /* Belt-and-suspenders horizontal overflow guard */
   max-width: 100vw;
   overflow-x: hidden;
 }
 
 /* Ensure all images + embeds never bust their containers */
-img, canvas, iframe, video, table {
+img,
+canvas,
+iframe,
+video,
+table {
   max-width: 100%;
 }
 
 /* Minimum comfortable tap target for interactive elements */
-button, .btn, .nav-item, .filter-tab, .quick-action-btn,
-.action-btn, .lsa-btn, .billing-card, .modal-close {
-  -webkit-tap-highlight-color: rgba(99,102,241,0.15);
+button,
+.btn,
+.nav-item,
+.filter-tab,
+.quick-action-btn,
+.action-btn,
+.lsa-btn,
+.billing-card,
+.modal-close {
+  -webkit-tap-highlight-color: rgba(99, 102, 241, 0.15);
   touch-action: manipulation; /* remove 300ms delay on Android */
 }
-
 
 /* ══════════════════════════════════════════════════════════════
    1. SIDEBAR — native drawer + visible close button
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   /* Close ✕ button injected by JS into .sidebar-header */
   .sidebar-close-btn {
     display: flex;
@@ -47,7 +56,7 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     width: 36px;
     height: 36px;
     border-radius: 8px;
-    background: rgba(255,255,255,0.06);
+    background: rgba(255, 255, 255, 0.06);
     border: 1px solid var(--border);
     color: var(--text-secondary);
     font-size: 18px;
@@ -84,7 +93,9 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     min-height: 48px;
   }
 
-  .nav-icon { font-size: 18px; }
+  .nav-icon {
+    font-size: 18px;
+  }
 
   /* User area at sidebar bottom */
   .sidebar-footer {
@@ -104,17 +115,19 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     font-size: 14px;
   }
 
-  .sidebar-user-name { font-size: 14px; }
-  .sidebar-user-role { font-size: 12px; }
+  .sidebar-user-name {
+    font-size: 14px;
+  }
+  .sidebar-user-role {
+    font-size: 12px;
+  }
 }
-
 
 /* ══════════════════════════════════════════════════════════════
    2. TOPBAR
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   .topbar {
     padding: 0 14px;
     gap: 10px;
@@ -154,13 +167,11 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
   }
 }
 
-
 /* ══════════════════════════════════════════════════════════════
    3. PAGE CONTENT + HEADERS
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   .page-content {
     padding: 16px 14px;
   }
@@ -196,16 +207,16 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
 }
 
 @media (max-width: 480px) {
-  .page-content { padding: 14px 12px; }
+  .page-content {
+    padding: 14px 12px;
+  }
 }
-
 
 /* ══════════════════════════════════════════════════════════════
    4. STAT CARDS + DASHBOARD
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   .stats-grid {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
@@ -275,16 +286,24 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     gap: 10px;
   }
 
-  .order-name { font-size: 13px; }
-  .order-meta { font-size: 10px; }
-  .order-amount { font-size: 13px; }
+  .order-name {
+    font-size: 13px;
+  }
+  .order-meta {
+    font-size: 10px;
+  }
+  .order-amount {
+    font-size: 13px;
+  }
 
   /* Low stock alerts */
   .low-stock-alert {
     padding: 10px 12px;
     gap: 10px;
   }
-  .lsa-name { font-size: 12.5px; }
+  .lsa-name {
+    font-size: 12.5px;
+  }
   .lsa-btn {
     padding: 6px 12px;
     font-size: 11px;
@@ -296,9 +315,10 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
   .stats-grid {
     grid-template-columns: 1fr 1fr;
   }
-  .stat-value { font-size: 20px; }
+  .stat-value {
+    font-size: 20px;
+  }
 }
-
 
 /* ══════════════════════════════════════════════════════════════
    5. TABLES — horizontal scroll on tablet, cards on phone
@@ -306,14 +326,21 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
 
 /* ── 5a. Tablet (481–768px): horizontal scroll ──────────────── */
 @media (max-width: 768px) {
-
   /* Allow the table wrapper to scroll without causing page overflow */
   .table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     /* Subtle fade on right edge signals scrollability */
-    mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(
+      to right,
+      black calc(100% - 24px),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      black calc(100% - 24px),
+      transparent 100%
+    );
     border-radius: 0 0 var(--radius-md) var(--radius-md);
     /* Ensure it doesn't add its own horizontal overflow to the page */
     max-width: 100%;
@@ -326,7 +353,8 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     min-width: 560px; /* tablet threshold: table scrolls before squashing */
   }
 
-  .table th, .table td {
+  .table th,
+  .table td {
     padding: 10px 12px;
     font-size: 12.5px;
   }
@@ -346,7 +374,6 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
 */
 
 @media (max-width: 480px) {
-
   /* ─── ORDERS table → card stack ──────────────────────────── */
 
   #orders-tbody .table-row-card,
@@ -496,7 +523,9 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     margin-top: 6px;
   }
 
-  #products-tbody td:last-child::before { display: none; }
+  #products-tbody td:last-child::before {
+    display: none;
+  }
 
   /* ─── CUSTOMERS table → card stack ──────────────────────── */
 
@@ -546,7 +575,9 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     margin-bottom: 8px;
   }
 
-  #customers-tbody td:first-child::before { display: none; }
+  #customers-tbody td:first-child::before {
+    display: none;
+  }
 
   /* Remove the fade mask on phone — cards don't need it */
   .table-wrapper {
@@ -568,13 +599,11 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
   }
 }
 
-
 /* ══════════════════════════════════════════════════════════════
    6. MODALS — full-screen bottom-sheet on mobile
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   .modal-overlay {
     /* Remove centering padding — modal fills from bottom */
     padding: 0;
@@ -601,7 +630,7 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
 
   /* Pull handle indicator (visual affordance for swipeable sheet) */
   .modal::before {
-    content: '';
+    content: "";
     display: block;
     width: 40px;
     height: 4px;
@@ -664,13 +693,11 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
   }
 }
 
-
 /* ══════════════════════════════════════════════════════════════
    7. FORMS — full-width, generous tap targets
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   /* All two-column form rows collapse to single column */
   .form-row {
     grid-template-columns: 1fr;
@@ -734,13 +761,11 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
   }
 }
 
-
 /* ══════════════════════════════════════════════════════════════
    8. CREATE ORDER MODAL — optimised for phone keyboard + thumb
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   /* Add-item row: product select stacked above qty + button */
   .add-item-row {
     flex-direction: column !important;
@@ -799,13 +824,11 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
   }
 }
 
-
 /* ══════════════════════════════════════════════════════════════
    9. INVOICE PREVIEW MODAL
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   /* Invoice wrapper: reduce padding to use the screen width */
   .invoice-wrapper {
     padding: 20px 16px;
@@ -880,13 +903,11 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
   /* Invoice footer buttons — the modal-footer handles stacking */
 }
 
-
 /* ══════════════════════════════════════════════════════════════
    10. BILLING PAGE
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   /* Billing stat cards: 2-column */
   #page-billing .stats-grid {
     grid-template-columns: 1fr 1fr;
@@ -909,8 +930,14 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     row-gap: 4px;
   }
 
-  .billing-order-num { font-size: 13px; grid-column: 1; }
-  .billing-customer { grid-column: 1; margin-bottom: 0; }
+  .billing-order-num {
+    font-size: 13px;
+    grid-column: 1;
+  }
+  .billing-customer {
+    grid-column: 1;
+    margin-bottom: 0;
+  }
   .billing-amount {
     font-size: 20px;
     grid-column: 2;
@@ -933,13 +960,11 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
   }
 }
 
-
 /* ══════════════════════════════════════════════════════════════
    11. SETTINGS PAGE
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   /* Settings grid: single column on all mobile */
   .settings-grid {
     grid-template-columns: 1fr;
@@ -980,8 +1005,12 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     gap: 12px;
   }
 
-  .toggle-label { font-size: 13px; }
-  .toggle-desc  { font-size: 11px; }
+  .toggle-label {
+    font-size: 13px;
+  }
+  .toggle-desc {
+    font-size: 11px;
+  }
 
   /* Toggle switch: slightly larger for fat fingers */
   .toggle {
@@ -1013,13 +1042,11 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
   }
 }
 
-
 /* ══════════════════════════════════════════════════════════════
    12. CARDS + GENERAL COMPONENTS
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   .card {
     padding: 16px 14px;
     border-radius: var(--radius-md);
@@ -1031,8 +1058,12 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     gap: 8px;
   }
 
-  .card-title { font-size: 14px; }
-  .card-subtitle { font-size: 11px; }
+  .card-title {
+    font-size: 14px;
+  }
+  .card-subtitle {
+    font-size: 11px;
+  }
 
   /* Badges: slightly larger text on mobile for readability */
   .badge {
@@ -1066,8 +1097,12 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     font-size: 20px;
   }
 
-  .product-name { font-size: 13px; }
-  .product-sku  { font-size: 10px; }
+  .product-name {
+    font-size: 13px;
+  }
+  .product-sku {
+    font-size: 10px;
+  }
 
   /* Filter tabs bar: horizontal scroll */
   .order-filters {
@@ -1079,7 +1114,9 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     gap: 6px;
   }
 
-  .order-filters::-webkit-scrollbar { display: none; }
+  .order-filters::-webkit-scrollbar {
+    display: none;
+  }
 
   .filter-tab {
     white-space: nowrap;
@@ -1090,13 +1127,11 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
   }
 }
 
-
 /* ══════════════════════════════════════════════════════════════
    13. TOASTS — bottom-positioned on mobile
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   .toast-container {
     /* Move toasts to the bottom on mobile (thumb-visible area) */
     top: auto;
@@ -1120,28 +1155,40 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
   }
 
   @keyframes toastInMobile {
-    from { opacity: 0; transform: translateY(24px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes toastOutMobile {
-    from { opacity: 1; transform: translateY(0); }
-    to   { opacity: 0; transform: translateY(24px); }
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(24px);
+    }
   }
 }
-
 
 /* ══════════════════════════════════════════════════════════════
    14. EMPTY STATE
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   .empty-state {
     padding: 40px 20px;
   }
 
-  .empty-icon { font-size: 40px; }
+  .empty-icon {
+    font-size: 40px;
+  }
 
   .empty-title {
     font-size: 15px;
@@ -1154,13 +1201,11 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
   }
 }
 
-
 /* ══════════════════════════════════════════════════════════════
    15. LOGIN PAGE — already mobile-friendly, minor polish
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 480px) {
-
   .login-card {
     padding: 32px 20px 28px;
     border-radius: var(--radius-lg);
@@ -1169,9 +1214,16 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     max-width: calc(100vw - 24px);
   }
 
-  .login-title { font-size: 22px; }
-  .login-subtitle { font-size: 13px; margin-bottom: 24px; }
-  .login-logo-text { font-size: 19px; }
+  .login-title {
+    font-size: 22px;
+  }
+  .login-subtitle {
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+  .login-logo-text {
+    font-size: 19px;
+  }
 
   /* Signup form: name + store stack on mobile */
   #auth-signup-form .form-row {
@@ -1179,13 +1231,11 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
   }
 }
 
-
 /* ══════════════════════════════════════════════════════════════
    16. CUSTOMER VIEW MODAL — stat grid mobile layout
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   /* Customer profile header: avatar + name + badge */
   #view-customer-content [style*="grid-template-columns:repeat(3,1fr)"] {
     /* Override inline grid to 3-equal columns (already looks fine)
@@ -1207,13 +1257,11 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
   }
 }
 
-
 /* ══════════════════════════════════════════════════════════════
    17. ACCESSIBILITY — focus rings visible on mobile too
 ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-
   /* Ensure focus-visible is usable for keyboard/switch control users */
   .btn:focus-visible,
   .form-input:focus-visible,
@@ -1224,7 +1272,6 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     outline-offset: 2px;
   }
 }
-
 
 /* ══════════════════════════════════════════════════════════════
    18. SAFE-AREA UTILS (iOS notch + home indicator)
@@ -1243,7 +1290,6 @@ button, .btn, .nav-item, .filter-tab, .quick-action-btn,
     }
   }
 }
-
 
 /* ══════════════════════════════════════════════════════════════
    19. PRINT: unchanged — no mobile changes to print styles
