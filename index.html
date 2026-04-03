@@ -391,7 +391,7 @@
   </div><!-- /login-card -->
 </div><!-- /login-page -->
 
-<!-- ──      APP SHELL
+     APP SHELL
 ══════════════════════════════════════════════ -->
     <div id="app">
       <!-- ── Sidebar ─────────────────────────────── -->
@@ -504,6 +504,9 @@
                 </button>
               </div>
             </div>
+
+            <!-- Plan expiry warning banner — rendered by Billing.init() -->
+            <div id="plan-banner-container"></div>
 
             <div class="stats-grid">
               <div class="stat-card">
@@ -1032,6 +1035,16 @@
                   </button>
                 </div>
               </div>
+              <!-- ── SUBSCRIPTION / PLAN ──────────────────────── -->
+              <div class="settings-section" style="grid-column:1 / -1">
+                <h3><span>💳</span> Subscription & Plan</h3>
+                <!-- Rendered dynamically by Billing.renderSubscriptionSection() -->
+                <div id="subscription-section">
+                  <div class="skeleton-line" style="height:80px;border-radius:10px;margin-bottom:14px"></div>
+                  <div class="skeleton-line" style="height:40px;border-radius:8px;width:60%"></div>
+                </div>
+              </div>
+
               <div class="settings-section danger-zone-section">
                 <h3><span>⚠️</span> Danger Zone</h3>
 
@@ -1541,11 +1554,15 @@
       })();
     </script>
 
+    <!-- html2pdf.js — invoice PDF download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <!-- ══ Scripts (load order matters) ════════════════════════ -->
     <script src="js/supabase.js"></script>   <!-- Auth + _supabase client  -->
     <script src="js/data.js"></script>        <!-- SF.* async data layer    -->
     <script src="js/components.js"></script>  <!-- Pure HTML renderers      -->
     <script src="js/ui.js"></script>          <!-- UI utilities             -->
+    <script src="js/billing.js"></script>     <!-- Subscription system      -->
     <script src="js/pages.js"></script>       <!-- Async page renderers     -->
     <script src="js/modals.js"></script>      <!-- Async modal handlers     -->
     <script src="js/app.js"></script>         <!-- Entry point              -->
