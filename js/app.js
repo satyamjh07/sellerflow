@@ -457,6 +457,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (settingsProviderRow) settingsProviderRow.style.display = Auth.isGoogleUser() ? '' : 'none';
     if (settingsPasswordRow) settingsPasswordRow.style.display = Auth.isGoogleUser() ? 'none' : '';
 
+    // ── Billing: init plan state, check expiry, schedule reminders ──
+    // MUST be awaited so _currentPlan is set before any page renders.
+    // Previously fire-and-forget caused race: settings/dashboard rendered
+    // with stale _currentPlan = 'free' before the DB fetch completed.
+    try {
+      await Billing.init();
+    } catch (err) {
+      console.warn('[App] Billing.init non-fatal:', err.message);
+    }
+
     UI.updateBadges();
     await UI.navigate('dashboard');
   }
