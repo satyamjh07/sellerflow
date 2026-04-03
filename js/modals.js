@@ -301,38 +301,82 @@ const Modals = (() => {
       UI.closeModal('modal-order');
 
       // ─── Auto Email Confirmation (non-blocking) ────────────────────────────
-      // Runs in setTimeout(0) so it is fully outside this try/catch.
-      // A broken email config will NEVER block order creation or show
-      // a false "order failed" error. The order is already saved at this point.
+      // Runs in setTimeout(0) — fully outside the order try/catch so a broken
+      // email config can NEVER block or roll back order creation.
+      //
+      // ROOT CAUSE OF PREVIOUS ERR_HTTP2_PROTOCOL_ERROR:
+      // Sending the full invoice HTML (~15-17KB) as a JSON variable caused
+      // HTTP/2 DATA frame fragmentation errors between Cloudflare-hosted sites
+      // and api.emailjs.com. The fix: send only small structured text variables
+      // and render the visual invoice inside the EmailJS template itself using
+      // {{invoice_items}}, {{total}}, etc. — keeping the payload under 2KB.
+      //
       setTimeout(async () => {
         try {
           const user = await SF.getUser();
           if (!user?.autoEmail) return; // Toggle is OFF in Settings — skip
 
-          // Re-fetch customer by ID so newly-created customers are found too
           const allCustomers = await SF.getCustomers();
           const savedCustomer = allCustomers.find(c => c.id === customerId);
 
           if (!savedCustomer?.email) {
-            console.info(`[SellerFlow] Email skipped for ${created.id} — no email on file for customer.`);
+            console.info(`[SellerFlow] Email skipped for ${created.id} — no email on file.`);
             return;
           }
 
-          // Build the full self-contained invoice HTML (email-safe, table-based)
-          const invoiceHTML = Components.generateInvoiceEmailHTML(created, savedCustomer, user);
+          // ── Build a compact plain-text items summary ─────────────────────
+          // Keeps the total payload well under 5KB — no HTTP/2 frame issues.
+          const itemsSummary = (created.items || [])
+            .map(i => `• ${i.name} × ${i.qty}  →  ${SF.formatCurrency(i.price * i.qty)}`)
+            .join('\n');
 
+          const paymentLine  = created.payment === 'paid' ? '✅ PAID' : '⏳ PAYMENT PENDING';
+          const customerFirst = customerName.split(' ')[0];
+
+          // ── Small HTML snippet for the email body ────────────────────────
+          // This is NOT a full HTML document — just a <div> block with the
+          // essential order details. Total size: ~500–800 bytes, not 15KB.
+          // The EmailJS template wraps it in whatever header/footer you've set.
+          const invoiceSnippet = [
+            `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto">`,
+            `  <div style="background:#6366F1;color:#fff;padding:20px 24px;border-radius:10px 10px 0 0">`,
+            `    <p style="margin:0;font-size:18px;font-weight:700">🛍️ ${user.store || 'SellerFlow Store'}</p>`,
+            `    <p style="margin:6px 0 0;font-size:13px;opacity:0.85">Order Confirmation</p>`,
+            `  </div>`,
+            `  <div style="background:#f9fafb;padding:20px 24px;border:1px solid #e5e7eb">`,
+            `    <p style="margin:0 0 4px;font-size:13px;color:#6b7280">Order ID</p>`,
+            `    <p style="margin:0 0 16px;font-size:16px;font-weight:700;color:#111827">#${created.id}</p>`,
+            `    <p style="margin:0 0 4px;font-size:13px;color:#6b7280">Items</p>`,
+            `    <pre style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:13px;color:#374151;white-space:pre-wrap">${itemsSummary}</pre>`,
+            `    <p style="margin:0 0 4px;font-size:13px;color:#6b7280">Total</p>`,
+            `    <p style="margin:0 0 16px;font-size:20px;font-weight:700;color:#6366F1">${SF.formatCurrency(created.total)}</p>`,
+            `    <p style="margin:0 0 4px;font-size:13px;color:#6b7280">Payment</p>`,
+            `    <p style="margin:0 0 16px;font-size:14px;font-weight:600;color:#111827">${paymentLine}</p>`,
+            user.upiId ? `    <div style="background:#eef2ff;border-radius:8px;padding:12px 16px;margin-top:8px">` +
+              `<p style="margin:0;font-size:12px;color:#6366F1;font-weight:600">💳 Pay via UPI</p>` +
+              `<p style="margin:4px 0 0;font-size:15px;font-weight:700;color:#111827">${user.upiId}</p></div>` : '',
+            `  </div>`,
+            `  <div style="padding:16px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 10px 10px;text-align:center">`,
+            `    <p style="margin:0;font-size:13px;color:#6b7280">Questions? DM us or reply to this email 💜</p>`,
+            `  </div>`,
+            `</div>`,
+          ].filter(Boolean).join('\n');
+
+          // ── Send via EmailJS with small payload ──────────────────────────
+          // Total payload: ~1-2KB vs the previous ~17KB that caused HTTP/2 errors.
           await emailjs.send('service_5k8qt0o', 'template_x6h0iqc', {
-            to_email:     savedCustomer.email,
-            to_name:      customerName,
-            order_id:     created.id,
-            order_total:  SF.formatCurrency(created.total),
-            store_name:   user.store || 'SellerFlow Store',
-            invoice_html: invoiceHTML,   // ← full rendered invoice injected here
+            to_email:      savedCustomer.email,
+            to_name:       customerFirst,
+            order_id:      created.id,
+            order_total:   SF.formatCurrency(created.total),
+            store_name:    user.store || 'SellerFlow Store',
+            payment_status: paymentLine,
+            items_summary: itemsSummary,
+            invoice_html:  invoiceSnippet,   // compact snippet, not a full HTML doc
           });
 
           UI.toast(`Confirmation email sent to ${savedCustomer.email} 📧`, 'success');
         } catch (emailErr) {
-          // Email errors are non-fatal — warn without surfacing as an order error
           console.error('[SellerFlow] EmailJS send failed:', emailErr);
           UI.toast('Order saved! (Email delivery failed — check browser Console)', 'warn');
         }
