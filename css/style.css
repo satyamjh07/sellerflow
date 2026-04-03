@@ -2129,3 +2129,439 @@ img {
     print-color-adjust: exact !important;
   }
 }
+
+
+/* ══════════════════════════════════════════════════════════════
+   BILLING & SUBSCRIPTION SYSTEM
+   Covers: plan banner, current plan card, upgrade grid,
+           logo upload, payment modal — all mobile-first.
+══════════════════════════════════════════════════════════════ */
+
+/* ─── Plan expiry banner (dashboard) ────────────────────────── */
+#plan-banner-container {
+  margin-bottom: 18px;
+}
+
+.plan-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: 13.5px;
+  animation: fadeIn 0.3s ease;
+  flex-wrap: wrap;
+}
+
+.plan-banner-info {
+  background: rgba(99,102,241,0.10);
+  border-color: rgba(99,102,241,0.25);
+  color: var(--text-primary);
+}
+.plan-banner-warn {
+  background: rgba(245,158,11,0.10);
+  border-color: rgba(245,158,11,0.30);
+  color: var(--text-primary);
+}
+.plan-banner-danger {
+  background: rgba(239,68,68,0.10);
+  border-color: rgba(239,68,68,0.35);
+  color: var(--text-primary);
+}
+
+.plan-banner-icon { font-size: 18px; flex-shrink: 0; }
+
+.plan-banner-text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.5;
+}
+
+.plan-banner-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.plan-banner-btn:hover { background: #4F46E5; }
+
+
+/* ─── Subscription section (settings page) ──────────────────── */
+
+/* Current plan card */
+.sub-current-plan {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-bottom: 6px;
+}
+
+.sub-plan-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sub-plan-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.sub-plan-name {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+.sub-plan-name strong { color: var(--text-primary); }
+
+.sub-plan-price {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.sub-expiry {
+  font-size: 12px;
+  color: var(--success);
+  margin-top: 6px;
+  font-weight: 600;
+}
+.sub-expiry-expired { color: var(--danger); }
+
+.sub-plan-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.sub-feature-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sub-feature-item {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+
+/* ─── Upgrade grid ───────────────────────────────────────────── */
+.sub-upgrade-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 6px;
+}
+
+.sub-upgrade-card {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: var(--transition);
+}
+.sub-upgrade-card:hover {
+  border-color: var(--plan-color, var(--accent));
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+
+.sub-upgrade-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  align-self: flex-start;
+}
+
+.sub-upgrade-price {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  letter-spacing: -0.3px;
+}
+
+.sub-upgrade-features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.sub-upgrade-features li {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.sub-upgrade-btn {
+  width: 100%;
+  justify-content: center;
+  min-height: 42px;
+  font-size: 13px;
+  margin-top: auto;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.sub-upgrade-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.sub-upgrade-inline-btn {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid rgba(99,102,241,0.25);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.sub-upgrade-inline-btn:hover { background: rgba(99,102,241,0.25); }
+
+.sub-active-msg {
+  background: var(--success-dim);
+  border: 1px solid rgba(16,185,129,0.2);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  font-size: 13.5px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.sub-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sub-section-desc {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin: 6px 0 12px;
+  line-height: 1.5;
+}
+
+
+/* ─── Logo upload section ────────────────────────────────────── */
+.sub-logo-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.sub-logo-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.sub-logo-img {
+  max-height: 60px;
+  max-width: 180px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 6px;
+}
+
+.sub-logo-placeholder {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 12px 16px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+}
+
+.sub-logo-delete {
+  flex-shrink: 0;
+}
+
+.sub-logo-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sub-logo-label {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sub-logo-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sub-logo-locked {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.sub-lock-icon { font-size: 16px; }
+
+
+/* ─── Payment modal ──────────────────────────────────────────── */
+.payment-plan-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.payment-plan-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.payment-plan-price {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  letter-spacing: -0.3px;
+}
+
+.payment-instructions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.payment-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.payment-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.payment-step-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+
+.payment-step-desc {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.payment-upi-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 14px;
+  background: var(--accent-dim);
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.payment-upi-id:hover { background: rgba(99,102,241,0.2); }
+
+.payment-copy-hint {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-muted);
+  text-transform: lowercase;
+}
+
+.payment-txn-row {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+
+/* ─── Mobile overrides ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sub-upgrade-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sub-plan-header {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .plan-banner {
+    gap: 8px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+  }
+
+  .payment-step { gap: 10px; }
+
+  .sub-logo-upload-row { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 480px) {
+  .sub-upgrade-card { padding: 14px 12px; }
+  .sub-upgrade-price { font-size: 16px; }
+}
