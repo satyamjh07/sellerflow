@@ -374,6 +374,18 @@ button,
 */
 
 @media (max-width: 480px) {
+  /* Keep all order filter tabs visible without horizontal scrolling */
+  .order-filters {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    padding-bottom: 0;
+    gap: 8px;
+  }
+
+  .filter-tab {
+    flex: 0 1 auto;
+  }
+
   /* ─── ORDERS table → card stack ──────────────────────────── */
   /*
      Each <tr> becomes a self-contained card. The first <td> (Order ID +
@@ -384,6 +396,8 @@ button,
 
   #orders-tbody tr {
     display: block;
+    width: 100%;
+    max-width: 100%;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
@@ -408,6 +422,7 @@ button,
     display: flex;
     align-items: center;
     justify-content: space-between;
+    width: 100%;
     padding: 5px 0;
     border: none;
     font-size: 13px;
