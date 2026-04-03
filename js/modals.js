@@ -283,6 +283,18 @@ const Modals = (() => {
         shippingAddress: shippingAddress || '',
       };
 
+      // ── Order limit gate (Free plan: 20/month) ────────────────
+      if (typeof Billing !== 'undefined') {
+        const stats = await SF.getDashStats();
+        if (Billing.isOrderLimitReached(stats.totalOrders)) {
+          const limit = Billing.getMonthlyOrderLimit();
+          UI.toast(`Monthly order limit reached (${limit} orders). Upgrade to Bronze or Platinum for unlimited orders.`, 'warn');
+          saveBtn.disabled = false;
+          saveBtn.textContent = '✅ Create Order';
+          return;
+        }
+      }
+
       const created = await SF.addOrder(order);
 
       UI.toast(`Order ${created.id} created for ${customerName}!`, 'success');
