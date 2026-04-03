@@ -69,34 +69,38 @@ const Components = (() => {
   // ─── Orders Components ──────────────────────────────────────────
 
   function OrderRow(o) {
-    // Future-proofing fields: order source, tracking ID
+    // data-label attributes on each <td> power the CSS card layout on
+    // mobile (≤480px) — desktop table ignores them completely.
+    // The first <td> merges Order ID + Customer avatar/name so the card
+    // has a natural header row matching #orders-tbody td:first-child CSS.
     const sourceBadge = o.source
-      ? `<span class="badge badge-muted" style="margin-top:4px;font-size:10px">${o.source}</span>`
+      ? `<span class="badge badge-muted" style="font-size:10px;margin-left:4px">${o.source}</span>`
       : "";
 
     return `
-      <tr>
-        <td class="fw-700 text-accent">
-          <div>${o.id}</div>
-          ${sourceBadge}
-        </td>
+      <tr onclick="Modals.viewOrder('${o.id}')" style="cursor:pointer">
+        <!-- First cell: Order ID + Customer — becomes card header on mobile -->
         <td>
-          <div class="customer-name-cell">
-            <div class="customer-avatar" style="width:30px;height:30px;font-size:11px">${initials(o.customerName)}</div>
-            <span>${o.customerName}</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="customer-avatar" style="width:34px;height:34px;font-size:12px;flex-shrink:0">${initials(o.customerName)}</div>
+            <div>
+              <div class="fw-700 text-accent" style="font-size:13px;line-height:1.3">${o.id}${sourceBadge}</div>
+              <div style="font-size:12px;color:var(--text-secondary);margin-top:1px">${o.customerName}</div>
+            </div>
           </div>
         </td>
-        <td style="font-size:12px;color:var(--text-secondary)">
+        <!-- Remaining cells: labelled for mobile card pseudo-elements -->
+        <td data-label="Items" style="font-size:12px;color:var(--text-secondary)">
           ${o.items.map((i) => i.name).join(", ")}
         </td>
-        <td class="fw-700">${formatCurrency(o.total)}</td>
-        <td>${UI.orderStatusBadge(o.status)}</td>
-        <td>${UI.paymentBadge(o.payment)}</td>
-        <td>${formatDate(o.date)}</td>
+        <td data-label="Total" class="fw-700">${formatCurrency(o.total)}</td>
+        <td data-label="Delivery">${UI.orderStatusBadge(o.status)}</td>
+        <td data-label="Payment">${UI.paymentBadge(o.payment)}</td>
+        <td data-label="Date">${formatDate(o.date)}</td>
         <td>
           <div class="action-btns">
-            <button class="action-btn action-btn-edit" onclick="Modals.viewOrder('${o.id}')">👁️ View</button>
-            <button class="action-btn action-btn-edit" onclick="Modals.showInvoice('${o.id}')">🧾</button>
+            <button class="action-btn action-btn-edit" onclick="event.stopPropagation();Modals.viewOrder('${o.id}')">👁️ View</button>
+            <button class="action-btn action-btn-edit" onclick="event.stopPropagation();Modals.showInvoice('${o.id}')">🧾</button>
           </div>
         </td>
       </tr>
