@@ -139,13 +139,18 @@ const SF = (() => {
   function _profileToJS(row) {
     if (!row) return null;
     return {
-      name: row.name || "",
-      store: row.store || "",
-      instagram: row.instagram || "",
-      phone: row.phone || "",
-      email: row.email || "",
-      upiId: row.upi_id || "",
-      autoEmail: row.auto_email || false,
+      name:          row.name          || "",
+      store:         row.store         || "",
+      instagram:     row.instagram     || "",
+      phone:         row.phone         || "",
+      email:         row.email         || "",
+      upiId:         row.upi_id        || "",
+      autoEmail:     row.auto_email    || false,
+      // ── Subscription fields ──────────────────────────────────
+      plan:          row.plan          || "free",
+      planExpiresAt: row.plan_expires_at || null,
+      trialUsed:     row.trial_used    || false,
+      logoUrl:       row.logo_url      || null,
     };
   }
 
