@@ -321,16 +321,14 @@ button,
 }
 
 /* ══════════════════════════════════════════════════════════════
-   5. TABLES — horizontal scroll on tablet, cards on phone
+   5. TABLES — cards on mobile, products scroll horizontally
 ══════════════════════════════════════════════════════════════ */
 
-/* ── 5a. Tablet (481–768px): horizontal scroll ──────────────── */
+/* ── 5a. Products: horizontal scroll on tablet + phone ───────── */
 @media (max-width: 768px) {
-  /* Allow the table wrapper to scroll without causing page overflow */
-  .table-wrapper {
+  #page-products .table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    /* Subtle fade on right edge signals scrollability */
     mask-image: linear-gradient(
       to right,
       black calc(100% - 24px),
@@ -341,42 +339,55 @@ button,
       black calc(100% - 24px),
       transparent 100%
     );
-    border-radius: 0 0 var(--radius-md) var(--radius-md);
-    /* Ensure it doesn't add its own horizontal overflow to the page */
     max-width: 100%;
   }
 
-  /* Once we have the mask for scrollability hint, 
-     remove the mask when table fits (handled per breakpoint below) */
-
-  .table {
-    min-width: 560px; /* tablet threshold: table scrolls before squashing */
+  #page-products .table {
+    min-width: 520px;
   }
 
-  .table th,
-  .table td {
+  #page-products .table th,
+  #page-products .table td {
     padding: 10px 12px;
     font-size: 12.5px;
+    white-space: nowrap;
   }
 
-  .table th {
+  #page-products .table th {
     font-size: 10px;
     letter-spacing: 0.4px;
   }
 }
 
-/* ── 5b. Phone (≤ 480px): stacked card layout for Orders ─────── */
+/* ── 5b. Orders → card layout at ≤768px ───────────────────────── */
 /*
-   On very small screens the orders and products tables are replaced
-   by native-feeling cards. We hide the <thead> and repaint each
-   <tr> as a flex card using data attributes set in Components.
-   Products table stays scrollable (fewer columns needed at a glance).
+   CRITICAL: cancel min-width + switch table/tbody to display:block.
+   Without this, the browser keeps the table layout engine active and
+   the rows never become block-level cards.
 */
+@media (max-width: 768px) {
+  #page-orders .table-wrapper {
+    overflow-x: visible;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
 
-@media (max-width: 480px) {
-  /* ─── ORDERS table → card stack ──────────────────────────── */
+  #page-orders .table {
+    min-width: unset !important;
+    width: 100%;
+    display: block;
+  }
 
-  #orders-tbody .table-row-card,
+  #page-orders .table thead {
+    display: none;
+  }
+
+  #page-orders .table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  /* Each order row → self-contained card */
   #orders-tbody tr {
     display: block;
     background: var(--bg-card);
@@ -386,6 +397,7 @@ button,
     margin-bottom: 10px;
     cursor: pointer;
     transition: var(--transition);
+    width: 100%;
   }
 
   #orders-tbody tr:hover {
@@ -393,24 +405,19 @@ button,
     background: var(--bg-card-hover);
   }
 
-  /* Hide table header row entirely — cards are self-labelled */
-  #page-orders .table thead {
-    display: none;
-  }
-
-  /* Each <td> becomes a block; we use data-label for labelling */
+  /* All cells: flex row, label left, value right */
   #orders-tbody td {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 5px 0;
-    border: none;
+    border: none !important;
     font-size: 13px;
-    /* Prevent the bottom-border from appearing between card cells */
-    border-bottom: none !important;
+    gap: 8px;
+    width: 100%;
   }
 
-  /* Label column (set via CSS attr() from data-label on <td>) */
+  /* data-label pseudo-element for labelled cells */
   #orders-tbody td::before {
     content: attr(data-label);
     font-size: 10px;
@@ -419,25 +426,29 @@ button,
     letter-spacing: 0.5px;
     color: var(--text-muted);
     flex-shrink: 0;
-    margin-right: 10px;
-    min-width: 72px;
+    min-width: 68px;
   }
 
-  /* The first cell (Order ID + Customer) spans full width as header */
+  /* First cell = card header (Order ID + avatar + customer name) */
   #orders-tbody td:first-child {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding-bottom: 10px;
+    padding-bottom: 12px;
     border-bottom: 1px solid var(--border) !important;
     margin-bottom: 8px;
+    gap: 0;
+    justify-content: flex-start;
   }
 
   #orders-tbody td:first-child::before {
-    display: none; /* no label for the header cell */
+    display: none;
   }
 
-  /* Actions cell: full-width, centred buttons */
+  /* Items cell: wraps onto multiple lines */
+  #orders-tbody td[data-label="Items"] {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  /* Actions cell: buttons pinned to bottom right */
   #orders-tbody td:last-child {
     justify-content: flex-end;
     padding-top: 10px;
@@ -450,84 +461,39 @@ button,
     display: none;
   }
 
-  /* Action buttons inside card — bigger on mobile */
+  /* Action buttons: bigger tap targets */
   #orders-tbody .action-btn {
-    padding: 8px 14px;
-    font-size: 12.5px;
-    min-height: 36px;
-  }
-
-  /* Items column: allow wrapping */
-  #orders-tbody td[data-label="Items"] {
-    flex-wrap: wrap;
-    align-items: flex-start;
-  }
-
-  /* ─── PRODUCTS table → card stack ─────────────────────────── */
-
-  #products-tbody tr {
-    display: block;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 14px 14px;
-    margin-bottom: 10px;
-    transition: var(--transition);
-  }
-
-  #page-products .table thead {
-    display: none;
-  }
-
-  #products-tbody td {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 5px 0;
-    border: none;
-    border-bottom: none !important;
+    padding: 9px 16px;
     font-size: 13px;
+    min-height: 40px;
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+/* ── 5c. Customers → card layout at ≤768px ─────────────────────── */
+@media (max-width: 768px) {
+  #page-customers .table-wrapper {
+    overflow-x: visible;
+    mask-image: none;
+    -webkit-mask-image: none;
   }
 
-  #products-tbody td::before {
-    content: attr(data-label);
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    flex-shrink: 0;
-    margin-right: 10px;
-    min-width: 72px;
+  #page-customers .table {
+    min-width: unset !important;
+    width: 100%;
+    display: block;
   }
 
-  /* Product name cell: full row header */
-  #products-tbody td:first-child {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border) !important;
-    margin-bottom: 8px;
-  }
-
-  #products-tbody td:first-child::before {
+  #page-customers .table thead {
     display: none;
   }
 
-  /* Actions cell */
-  #products-tbody td:last-child {
-    justify-content: flex-end;
-    padding-top: 10px;
-    border-top: 1px solid var(--border) !important;
-    margin-top: 6px;
+  #page-customers .table tbody {
+    display: block;
+    width: 100%;
   }
-
-  #products-tbody td:last-child::before {
-    display: none;
-  }
-
-  /* ─── CUSTOMERS table → card stack ──────────────────────── */
 
   #customers-tbody tr {
     display: block;
@@ -538,10 +504,12 @@ button,
     margin-bottom: 10px;
     cursor: pointer;
     transition: var(--transition);
+    width: 100%;
   }
 
-  #page-customers .table thead {
-    display: none;
+  #customers-tbody tr:hover {
+    border-color: var(--border-active);
+    background: var(--bg-card-hover);
   }
 
   #customers-tbody td {
@@ -549,9 +517,10 @@ button,
     align-items: center;
     justify-content: space-between;
     padding: 5px 0;
-    border: none;
-    border-bottom: none !important;
+    border: none !important;
     font-size: 13px;
+    gap: 8px;
+    width: 100%;
   }
 
   #customers-tbody td::before {
@@ -562,7 +531,6 @@ button,
     letter-spacing: 0.5px;
     color: var(--text-muted);
     flex-shrink: 0;
-    margin-right: 10px;
     min-width: 72px;
   }
 
@@ -573,29 +541,11 @@ button,
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border) !important;
     margin-bottom: 8px;
+    justify-content: flex-start;
   }
 
   #customers-tbody td:first-child::before {
     display: none;
-  }
-
-  /* Remove the fade mask on phone — cards don't need it */
-  .table-wrapper {
-    mask-image: none;
-    -webkit-mask-image: none;
-    overflow-x: visible;
-  }
-
-  /* The <table> itself should also flow naturally */
-  .table {
-    min-width: unset;
-    width: 100%;
-    display: block;
-  }
-
-  .table tbody {
-    display: block;
-    width: 100%;
   }
 }
 
