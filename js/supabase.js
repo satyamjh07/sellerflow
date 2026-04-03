@@ -98,7 +98,7 @@ const Auth = (() => {
     const { data, error } = await _supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + window.location.pathname,
+        redirectTo: `${window.location.origin}/dashboard`,
         queryParams: {
           // Request offline access so Google sends a refresh token
           access_type: 'offline',
