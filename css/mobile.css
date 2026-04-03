@@ -448,6 +448,15 @@ button,
     flex-wrap: wrap;
   }
 
+  /* Prevent value text from pushing card content past viewport edge */
+  #orders-tbody td[data-label] > *:not(.action-btns) {
+    min-width: 0;
+    max-width: 58%;
+    text-align: right;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
   /* Actions cell: sits at the bottom, buttons right-aligned */
   #orders-tbody td:last-child {
     justify-content: flex-end;
@@ -591,7 +600,7 @@ button,
   .table-wrapper {
     mask-image: none;
     -webkit-mask-image: none;
-    overflow-x: visible;
+    overflow-x: hidden;
   }
 
   /* The <table> itself should also flow naturally */
