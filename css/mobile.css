@@ -375,14 +375,19 @@ button,
 
 @media (max-width: 480px) {
   /* ─── ORDERS table → card stack ──────────────────────────── */
+  /*
+     Each <tr> becomes a self-contained card. The first <td> (Order ID +
+     Customer avatar) is the visual card header — no ::before label.
+     All other <td>s show a data-label prefix on the left and the value
+     on the right, matching a native-app order summary card feel.
+  */
 
-  #orders-tbody .table-row-card,
   #orders-tbody tr {
     display: block;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    padding: 14px 16px;
+    padding: 14px 14px;
     margin-bottom: 10px;
     cursor: pointer;
     transition: var(--transition);
@@ -393,12 +398,12 @@ button,
     background: var(--bg-card-hover);
   }
 
-  /* Hide table header row entirely — cards are self-labelled */
+  /* Hide the desktop table header — cards are self-labelled */
   #page-orders .table thead {
     display: none;
   }
 
-  /* Each <td> becomes a block; we use data-label for labelling */
+  /* All cells: label left, value right */
   #orders-tbody td {
     display: flex;
     align-items: center;
@@ -406,11 +411,11 @@ button,
     padding: 5px 0;
     border: none;
     font-size: 13px;
-    /* Prevent the bottom-border from appearing between card cells */
     border-bottom: none !important;
+    gap: 8px;
   }
 
-  /* Label column (set via CSS attr() from data-label on <td>) */
+  /* data-label pseudo-element: shown for all non-header, non-action cells */
   #orders-tbody td::before {
     content: attr(data-label);
     font-size: 10px;
@@ -419,25 +424,31 @@ button,
     letter-spacing: 0.5px;
     color: var(--text-muted);
     flex-shrink: 0;
-    margin-right: 10px;
-    min-width: 72px;
+    min-width: 68px;
   }
 
-  /* The first cell (Order ID + Customer) spans full width as header */
+  /* First cell: avatar + order ID + customer — full-width card header */
   #orders-tbody td:first-child {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding-bottom: 10px;
+    padding-bottom: 12px;
     border-bottom: 1px solid var(--border) !important;
     margin-bottom: 8px;
+    gap: 0; /* inner div handles gap */
   }
 
+  /* No label prefix on the header cell */
   #orders-tbody td:first-child::before {
-    display: none; /* no label for the header cell */
+    display: none;
   }
 
-  /* Actions cell: full-width, centred buttons */
+  /* Items column: allow text to wrap naturally */
+  #orders-tbody td[data-label="Items"] {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  /* Actions cell: sits at the bottom, buttons right-aligned */
   #orders-tbody td:last-child {
     justify-content: flex-end;
     padding-top: 10px;
@@ -446,21 +457,18 @@ button,
     gap: 8px;
   }
 
+  /* No label on the actions cell */
   #orders-tbody td:last-child::before {
     display: none;
   }
 
-  /* Action buttons inside card — bigger on mobile */
+  /* Bigger tap targets for View / Invoice buttons inside the card */
   #orders-tbody .action-btn {
-    padding: 8px 14px;
-    font-size: 12.5px;
-    min-height: 36px;
-  }
-
-  /* Items column: allow wrapping */
-  #orders-tbody td[data-label="Items"] {
-    flex-wrap: wrap;
-    align-items: flex-start;
+    padding: 9px 16px;
+    font-size: 13px;
+    min-height: 40px;
+    flex: 1;
+    justify-content: center;
   }
 
   /* ─── PRODUCTS table → card stack ─────────────────────────── */
