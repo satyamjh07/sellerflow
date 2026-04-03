@@ -303,6 +303,11 @@ const Pages = (() => {
 
     const autoEmailToggle = document.getElementById('settings-auto-email');
     if (autoEmailToggle) autoEmailToggle.checked = !!user.autoEmail;
+
+    // Render subscription / plan section
+    if (typeof Billing !== 'undefined') {
+      await Billing.renderSubscriptionSection(user);
+    }
   }
 
   return { dashboard, products, orders, customers, billing, settings };
