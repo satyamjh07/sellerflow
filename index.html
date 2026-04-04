@@ -512,6 +512,9 @@
             <!-- Plan expiry warning banner — rendered by Billing.init() -->
             <div id="plan-banner-container"></div>
 
+            <!-- Profile completion reminder — rendered by ProfileReminder.render() -->
+            <div id="profile-reminder-container"></div>
+
             <div class="stats-grid">
               <div class="stat-card">
                 <div class="stat-top">
@@ -902,6 +905,20 @@
                     type="text"
                     id="settings-upi"
                     placeholder="yourname@upi"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">
+                    GST Number
+                    <span style="font-size:10px;font-weight:400;color:var(--text-muted);margin-left:6px;text-transform:none;letter-spacing:0">(optional — shown on invoices)</span>
+                  </label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    id="settings-gst"
+                    placeholder="e.g. 09ABCDE1234F1Z5"
+                    maxlength="15"
+                    style="text-transform:uppercase;letter-spacing:0.5px"
                   />
                 </div>
 
@@ -1585,6 +1602,7 @@
     <script src="js/ui.js"></script>          <!-- UI utilities             -->
     <script src="js/billing.js"></script>     <!-- Subscription system      -->
     <script src="js/analytics.js"></script>   <!-- Analytics engine         -->
+    <script src="js/profile-reminder.js"></script> <!-- Profile completion reminder -->
     <script src="js/pages.js"></script>       <!-- Async page renderers     -->
     <script src="js/modals.js"></script>      <!-- Async modal handlers     -->
     <script src="js/app.js"></script>         <!-- Entry point              -->
