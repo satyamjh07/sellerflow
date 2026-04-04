@@ -67,7 +67,7 @@ const Auth = (() => {
   async function signUp(email, password, name, store) {
   // Derive a stable redirect origin that works in all environments.
   // Never append pathname — it breaks on GitHub Pages subdirectory deploys.
-  const redirectTo = window.location.origin + '/';
+  const redirectTo = window.location.origin + window.location.pathname;
 
   const { data, error } = await _supabase.auth.signUp({
     email,
