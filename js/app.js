@@ -458,14 +458,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (settingsPasswordRow) settingsPasswordRow.style.display = Auth.isGoogleUser() ? 'none' : '';
 
     // ── Billing: init plan state, check expiry, schedule reminders ──
-    // MUST be awaited so _currentPlan is set before any page renders.
-    // Previously fire-and-forget caused race: settings/dashboard rendered
-    // with stale _currentPlan = 'free' before the DB fetch completed.
-    try {
-      await Billing.init();
-    } catch (err) {
+    // Non-blocking — runs in the background so app loads instantly.
+    Billing.init().catch(err => {
       console.warn('[App] Billing.init non-fatal:', err.message);
-    }
+    });
 
     UI.updateBadges();
     await UI.navigate('dashboard');
@@ -671,6 +667,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('qa-invoices').addEventListener('click',  () => UI.navigate('billing'));
   document.getElementById('qa-customers').addEventListener('click', () => UI.navigate('customers'));
+
+  // Analytics refresh button
+  const analyticsRefreshBtn = document.getElementById('analytics-refresh-btn');
+  if (analyticsRefreshBtn) {
+    analyticsRefreshBtn.addEventListener('click', async () => {
+      analyticsRefreshBtn.textContent = '⏳ Loading…';
+      analyticsRefreshBtn.disabled = true;
+      await Pages.analytics();
+      analyticsRefreshBtn.textContent = '🔄 Refresh';
+      analyticsRefreshBtn.disabled = false;
+    });
+  }
 
 
   // ══════════════════════════════════════════════════════════════
