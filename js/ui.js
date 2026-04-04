@@ -201,12 +201,14 @@ const UI = (() => {
   }
 
   // ─── Status Badges ────────────────────────────────────────────
+  // out_for_delivery added to match the new status option in ViewOrderContent
   function orderStatusBadge(status) {
     const map = {
-      processing: ["badge-info",    "🔄 Processing"],
-      shipped:    ["badge-cyan",    "🚚 Shipped"],
-      delivered:  ["badge-success", "✅ Delivered"],
-      cancelled:  ["badge-danger",  "❌ Cancelled"],
+      processing:       ["badge-info",    "🔄 Processing"],
+      shipped:          ["badge-cyan",    "🚚 Shipped"],
+      out_for_delivery: ["badge-warn",    "📦 Out for Delivery"],
+      delivered:        ["badge-success", "✅ Delivered"],
+      cancelled:        ["badge-danger",  "❌ Cancelled"],
     };
     const [cls, label] = map[status] || ["badge-muted", status];
     return `<span class="badge ${cls}">${label}</span>`;
