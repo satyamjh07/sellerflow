@@ -463,6 +463,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.warn('[App] Billing.init non-fatal:', err.message);
     });
 
+    // ── Profile completion reminder (non-blocking) ────────────────
+    if (typeof ProfileReminder !== 'undefined' && user) {
+      ProfileReminder.render(user);
+    }
+
     UI.updateBadges();
     await UI.navigate('dashboard');
   }
@@ -550,6 +555,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       email:     document.getElementById('settings-email').value.trim(),
       phone:     document.getElementById('settings-phone').value.trim(),
       upiId:     document.getElementById('settings-upi').value.trim(),
+      gstNumber: (document.getElementById('settings-gst')?.value || '').trim().toUpperCase(),
       autoEmail: autoEmailToggle ? autoEmailToggle.checked : false,
     };
 
@@ -563,6 +569,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('sidebar-user-store').textContent = updates.store || 'My Store';
       document.getElementById('sidebar-avatar-initials').textContent = SF.initials(updates.name);
       UI.toast('Settings saved!', 'success');
+
+      // Re-evaluate profile completion reminder after save
+      if (typeof ProfileReminder !== 'undefined') {
+        ProfileReminder.render(updates);
+      }
     } catch (err) {
       UI.toast(err.message || 'Failed to save settings', 'error');
     } finally {
