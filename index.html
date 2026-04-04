@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hisaab Mitra</title>
+    <title>SellerFlow — Instagram Seller Dashboard</title>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/mobile.css" />
 
@@ -198,7 +198,7 @@
   <div class="login-card">
     <div class="login-logo">
       <div class="login-logo-icon">🛍️</div>
-      <div class="login-logo-text">Hisaab Mitra</div>
+      <div class="login-logo-text">SellerFlow</div>
     </div>
 
     <!-- Auth Tabs (hidden on verify/forgot/reset screens) -->
@@ -211,7 +211,7 @@
     <!-- ══ LOGIN FORM ══════════════════════════════════════════ -->
     <div id="auth-login-form">
       <h1 class="login-title">Welcome back</h1>
-      <p class="login-subtitle">Sign in to manage your store</p>
+      <p class="login-subtitle">Sign in to manage your Instagram store</p>
 
       <!-- Google OAuth -->
       <button class="btn-google" type="button">
@@ -245,7 +245,7 @@
     <!-- ══ SIGNUP FORM ══════════════════════════════════════════ -->
     <div id="auth-signup-form" style="display:none">
       <h1 class="login-title">Start for free</h1>
-      <p class="login-subtitle">Your seller account, ready in seconds</p>
+      <p class="login-subtitle">Your seller dashboard, ready in seconds</p>
 
       <!-- Google OAuth -->
       <button class="btn-google" type="button">
@@ -391,14 +391,14 @@
   </div><!-- /login-card -->
 </div><!-- /login-page -->
 
-    <!-- ──   APP SHELL
+     APP SHELL
 ══════════════════════════════════════════════ -->
     <div id="app">
       <!-- ── Sidebar ─────────────────────────────── -->
       <aside class="sidebar">
         <div class="sidebar-header">
           <div class="sidebar-logo-icon">🛍️</div>
-          <div class="sidebar-logo-text">Hisaab Mitra</div>
+          <div class="sidebar-logo-text">SellerFlow</div>
         </div>
 
         <nav class="sidebar-nav">
@@ -428,6 +428,10 @@
           <div class="nav-section-label" style="margin-top: 8px">Finance</div>
           <div class="nav-item" data-page="billing">
             <span class="nav-icon">🧾</span> Billing
+          </div>
+          <div class="nav-item" data-page="analytics">
+            <span class="nav-icon">📊</span> Analytics
+            <span class="nav-badge" id="badge-analytics" style="display:none;background:var(--accent);color:#fff;font-size:9px">PRO</span>
           </div>
 
           <div class="nav-section-label" style="margin-top: 8px">Account</div>
@@ -1083,6 +1087,23 @@
             </div>
           </div>
           <!-- /settings -->
+
+          <!-- ══ ANALYTICS ════════════════════════════════ -->
+          <div class="page" id="page-analytics">
+            <div class="page-header">
+              <div class="page-header-left">
+                <h2>Analytics</h2>
+                <p>Business intelligence &amp; growth insights for your store</p>
+              </div>
+              <div class="page-header-actions">
+                <button class="btn btn-secondary btn-sm" id="analytics-refresh-btn">
+                  🔄 Refresh
+                </button>
+              </div>
+            </div>
+            <div id="analytics-content"></div>
+          </div>
+          <!-- /analytics -->
         </div>
         <!-- /page-content -->
       </main>
@@ -1563,6 +1584,7 @@
     <script src="js/components.js"></script>  <!-- Pure HTML renderers      -->
     <script src="js/ui.js"></script>          <!-- UI utilities             -->
     <script src="js/billing.js"></script>     <!-- Subscription system      -->
+    <script src="js/analytics.js"></script>   <!-- Analytics engine         -->
     <script src="js/pages.js"></script>       <!-- Async page renderers     -->
     <script src="js/modals.js"></script>      <!-- Async modal handlers     -->
     <script src="js/app.js"></script>         <!-- Entry point              -->
