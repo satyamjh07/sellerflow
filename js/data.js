@@ -135,6 +135,13 @@ const SF = (() => {
       source:          row.source           || "",
       notes:           row.notes            || "",
       date:            row.order_date       || row.created_at?.slice(0, 10) || "",
+      // ── Notification tracking fields ───────────────────────
+      // lastFollowupSentAt: ISO string or null — set by NotificationService
+      // deliveryEmailSentStatuses: string[] — statuses already emailed
+      lastFollowupSentAt:          row.last_followup_sent_at          || null,
+      deliveryEmailSentStatuses:   Array.isArray(row.delivery_email_sent_statuses)
+                                     ? row.delivery_email_sent_statuses
+                                     : [],
     };
   }
 
