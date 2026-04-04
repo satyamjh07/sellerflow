@@ -301,8 +301,18 @@ const Pages = (() => {
     document.getElementById('settings-phone').value     = user.phone     || '';
     document.getElementById('settings-upi').value       = user.upiId     || '';
 
+    // GST Number — coerce to uppercase for display
+    const gstEl = document.getElementById('settings-gst');
+    if (gstEl) gstEl.value = (user.gstNumber || '').toUpperCase();
+
     const autoEmailToggle = document.getElementById('settings-auto-email');
     if (autoEmailToggle) autoEmailToggle.checked = !!user.autoEmail;
+
+    // Re-render profile reminder whenever settings page opens
+    // so the checklist reflects the current saved state immediately.
+    if (typeof ProfileReminder !== 'undefined') {
+      ProfileReminder.render(user);
+    }
 
     // Render subscription / plan section
     if (typeof Billing !== 'undefined') {
