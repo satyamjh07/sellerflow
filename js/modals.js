@@ -1,5 +1,12 @@
 // SellerFlow — Modals Module (Async / Supabase Edition)
 // All data interactions are now async. UI feedback via UI.toast().
+//
+// NOTIFICATION ADDITIONS (vs original):
+//   viewOrder()         — passes customerEmail to ViewOrderContent,
+//                         wires delivery status select onChange to
+//                         trigger NotificationService delivery emails
+//   sendFollowupEmail() — new public function, called by the follow-up
+//                         button injected into ViewOrderContent
 // ================================================================
 
 const Modals = (() => {
@@ -18,7 +25,6 @@ const Modals = (() => {
   }
 
   async function editProduct(id) {
-    // Fetch fresh from DB (not cache) so editing reflects latest stock
     const products = await SF.getProducts();
     const p = products.find(x => x.id === id);
     if (!p) { UI.toast('Product not found', 'error'); return; }
@@ -97,7 +103,6 @@ const Modals = (() => {
     renderOrderItems();
     await _populateProductDropdown();
     await _populateCustomerDropdown();
-    // Reset new-customer fields
     const ncf = document.getElementById('new-customer-fields');
     if (ncf) ncf.style.display = 'none';
     UI.openModal('modal-order');
@@ -214,15 +219,15 @@ const Modals = (() => {
 
     try {
       if (customerSel === 'new') {
-        const name    = document.getElementById('new-customer-name').value.trim();
-        const insta   = document.getElementById('new-customer-insta').value.trim();
-        const phone   = document.getElementById('new-customer-phone').value.trim();
-        const email   = document.getElementById('new-customer-email').value.trim();
-        const address = document.getElementById('new-customer-address').value.trim();
-        const landmark= document.getElementById('new-customer-landmark').value.trim();
-        const city    = document.getElementById('new-customer-city').value.trim();
-        const state   = document.getElementById('new-customer-state').value.trim();
-        const pincode = document.getElementById('new-customer-pincode').value.trim();
+        const name     = document.getElementById('new-customer-name').value.trim();
+        const insta    = document.getElementById('new-customer-insta').value.trim();
+        const phone    = document.getElementById('new-customer-phone').value.trim();
+        const email    = document.getElementById('new-customer-email').value.trim();
+        const address  = document.getElementById('new-customer-address').value.trim();
+        const landmark = document.getElementById('new-customer-landmark').value.trim();
+        const city     = document.getElementById('new-customer-city').value.trim();
+        const state    = document.getElementById('new-customer-state').value.trim();
+        const pincode  = document.getElementById('new-customer-pincode').value.trim();
 
         if (!name) { UI.toast('Please enter customer name', 'error'); return; }
 
@@ -239,6 +244,7 @@ const Modals = (() => {
 
         customerId   = nc.id;
         customerName = nc.name;
+        var shippingAddress = [address, landmark, city, state, pincode].filter(Boolean).join(', ');
 
       } else if (customerSel) {
         const customers = await SF.getCustomers();
@@ -246,24 +252,12 @@ const Modals = (() => {
         if (!cust) { UI.toast('Customer not found', 'error'); return; }
         customerId   = cust.id;
         customerName = cust.name;
-
-        // Build shipping address from saved profile
-        const parts = [cust.address, cust.landmark, cust.city, cust.state, cust.pincode].filter(Boolean);
+        const parts  = [cust.address, cust.landmark, cust.city, cust.state, cust.pincode].filter(Boolean);
         var shippingAddress = parts.join(', ');
 
       } else {
         UI.toast('Please select or create a customer', 'error');
         return;
-      }
-
-      // For new customers the shipping address is built from the form fields
-      if (customerSel === 'new') {
-        const addr    = document.getElementById('new-customer-address').value.trim();
-        const lm      = document.getElementById('new-customer-landmark').value.trim();
-        const city    = document.getElementById('new-customer-city').value.trim();
-        const state   = document.getElementById('new-customer-state').value.trim();
-        const pincode = document.getElementById('new-customer-pincode').value.trim();
-        var shippingAddress = [addr, lm, city, state, pincode].filter(Boolean).join(', ');
       }
 
       const payment = document.getElementById('order-payment-status').value;
@@ -283,7 +277,7 @@ const Modals = (() => {
         shippingAddress: shippingAddress || '',
       };
 
-      // ── Order limit gate (Free plan: 20/month) ────────────────
+      // ── Order limit gate ──────────────────────────────────────
       if (typeof Billing !== 'undefined') {
         const stats = await SF.getDashStats();
         if (Billing.isOrderLimitReached(stats.totalOrders)) {
@@ -296,49 +290,33 @@ const Modals = (() => {
       }
 
       const created = await SF.addOrder(order);
-
       UI.toast(`Order ${created.id} created for ${customerName}!`, 'success');
       UI.closeModal('modal-order');
 
-      // ─── Auto Email Confirmation (non-blocking) ────────────────────────────
-      // Runs in setTimeout(0) so it is fully outside this try/catch.
-      // A broken email config will NEVER block order creation or show
-      // a false "order failed" error. The order is already saved at this point.
+      // ─── Auto Email Confirmation (non-blocking) ───────────────
       setTimeout(async () => {
         try {
           const user = await SF.getUser();
-          if (!user?.autoEmail) return; // Toggle is OFF in Settings — skip
-
-          // Re-fetch customer by ID so newly-created customers are found too
-          const allCustomers = await SF.getCustomers();
+          if (!user?.autoEmail) return;
+          const allCustomers  = await SF.getCustomers();
           const savedCustomer = allCustomers.find(c => c.id === customerId);
-
-          if (!savedCustomer?.email) {
-            console.info(`[SellerFlow] Email skipped for ${created.id} — no email on file for customer.`);
-            return;
-          }
-
-          // Build the full self-contained invoice HTML (email-safe, table-based)
+          if (!savedCustomer?.email) return;
           const invoiceHTML = Components.generateInvoiceEmailHTML(created, savedCustomer, user);
-
           await emailjs.send('service_5k8qt0o', 'template_x6h0iqc', {
             to_email:     savedCustomer.email,
             to_name:      customerName,
             order_id:     created.id,
             order_total:  SF.formatCurrency(created.total),
             store_name:   user.store || 'SellerFlow Store',
-            invoice_html: invoiceHTML,   // ← full rendered invoice injected here
+            invoice_html: invoiceHTML,
           });
-
           UI.toast(`Confirmation email sent to ${savedCustomer.email} 📧`, 'success');
         } catch (emailErr) {
-          // Email errors are non-fatal — warn without surfacing as an order error
           console.error('[SellerFlow] EmailJS send failed:', emailErr);
           UI.toast('Order saved! (Email delivery failed — check browser Console)', 'warn');
         }
       }, 0);
 
-      // Refresh affected pages
       await Promise.all([Pages.orders(), Pages.dashboard(), UI.updateBadges()]);
 
     } catch (err) {
@@ -350,14 +328,34 @@ const Modals = (() => {
   }
 
   // ─── View / Edit Order ────────────────────────────────────────
+  //
+  // NOTIFICATIONS INTEGRATION
+  //   1. Fetches the customer record to get their email address.
+  //   2. Passes customerEmail to ViewOrderContent so the follow-up
+  //      button renders only when an email address exists.
+  //   3. After rendering, wires the delivery status <select> with an
+  //      onChange handler that fires delivery status emails automatically.
+  //
   async function viewOrder(id) {
     const orders = await SF.getOrders();
     const o = orders.find(x => x.id === id);
     if (!o) { UI.toast('Order not found', 'error'); return; }
 
-    const content = document.getElementById('view-order-content');
-    content.innerHTML = Components.ViewOrderContent(o);
+    // Fetch customer for email address (needed by follow-up button and
+    // delivery email trigger)
+    const customers    = await SF.getCustomers();
+    const customer     = customers.find(c => c.id === o.customerId) || null;
+    const customerEmail = customer?.email || '';
 
+    const content = document.getElementById('view-order-content');
+    // Pass customerEmail so ViewOrderContent can decide whether to show
+    // the follow-up button and delivery email confirmation
+    content.innerHTML = Components.ViewOrderContent(o, customerEmail);
+
+    // ── Wire delivery status select for auto-email on change ────
+    _wireDeliveryStatusChange(o, customer);
+
+    // ── Wire Update button ──────────────────────────────────────
     document.getElementById('view-order-update-btn').onclick = async () => {
       const delivery = document.getElementById('update-delivery-status').value;
       const payment  = document.getElementById('update-payment-status').value;
@@ -379,9 +377,171 @@ const Modals = (() => {
     UI.openModal('modal-view-order');
   }
 
+  // ── Wire delivery status <select> ─────────────────────────────
+  //
+  // Listens for changes to the delivery status dropdown.
+  // On each change:
+  //   1. Immediately saves the new status to Supabase
+  //   2. If the transition warrants a notification email AND the
+  //      customer has an email AND it hasn't already been sent for
+  //      this status → fires the notification
+  //
+  // TRANSITIONS THAT TRIGGER EMAIL:
+  //   any → shipped           → 'shipped'
+  //   any → out_for_delivery  → 'out_for_delivery'
+  //   any → delivered         → 'delivered'
+  //
+  // The deduplication check lives inside NotificationService so even
+  // if this handler fires twice (e.g. double-click) only one email
+  // is dispatched.
+  //
+  function _wireDeliveryStatusChange(order, customer) {
+    const sel = document.getElementById('update-delivery-status');
+    if (!sel) return;
+
+    // Map DB status values to NotificationService event types
+    const DELIVERY_EMAIL_MAP = {
+      shipped:          'shipped',
+      out_for_delivery: 'out_for_delivery',
+      delivered:        'delivered',
+    };
+
+    sel.addEventListener('change', async () => {
+      const newStatus = sel.value;
+      const eventType = DELIVERY_EMAIL_MAP[newStatus];
+
+      // ── Save status immediately ──────────────────────────────
+      try {
+        await SF.updateOrder(order.id, { status: newStatus });
+      } catch (err) {
+        UI.toast('Failed to save status: ' + (err.message || ''), 'error');
+        // Revert the select to previous value
+        sel.value = sel.dataset.originalStatus || order.status;
+        return;
+      }
+
+      // ── Update the data-original-status so next change is accurate
+      sel.dataset.originalStatus = newStatus;
+
+      // ── Send notification if this transition triggers one ────
+      if (!eventType) return;           // processing / cancelled — no email
+      if (!customer?.email) return;     // no customer email — skip silently
+
+      if (typeof NotificationService === 'undefined') return;
+
+      // Re-fetch the order to get the latest delivery_email_sent_statuses
+      const freshOrders = await SF.getOrders();
+      const freshOrder  = freshOrders.find(x => x.id === order.id) || order;
+
+      const user = await SF.getUser();
+      const result = await NotificationService.sendOrderEmail(
+        eventType,
+        freshOrder,
+        customer,
+        user,
+      );
+
+      if (result.success) {
+        const labels = { shipped: 'Shipped', out_for_delivery: 'Out for delivery', delivered: 'Delivered' };
+        UI.toast(`📧 Customer notified: ${labels[eventType] || newStatus}`, 'success');
+      } else if (result.error?.includes('already sent')) {
+        // Silent — duplicate guard fired. Status was already updated.
+      } else if (result.error) {
+        console.warn('[Modals] Delivery email skipped:', result.error);
+      }
+    });
+  }
+
+
+  // ─── Send Follow-up Email ─────────────────────────────────────
+  //
+  // Called by the inline onclick on the follow-up button rendered inside
+  // ViewOrderContent. Handles its own loading/success/error UI states.
+  //
+  async function sendFollowupEmail(orderId) {
+    // ── Plan gate (UI check — NotificationService also checks) ──
+    if (typeof NotificationService !== 'undefined' && !NotificationService.canSendFollowup()) {
+      UI.toast('Upgrade to Bronze or Platinum to send payment follow-ups.', 'warn');
+      return;
+    }
+
+    const btn     = document.getElementById('followup-send-btn');
+    const btnIcon = document.getElementById('followup-btn-icon');
+    const btnText = document.getElementById('followup-btn-text');
+    if (!btn) return;
+
+    // ── Loading state ─────────────────────────────────────────
+    btn.disabled = true;
+    if (btnIcon) btnIcon.innerHTML = '<span class="sf-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle"></span>';
+    if (btnText) btnText.textContent = 'Sending…';
+
+    try {
+      const [orders, customers] = await Promise.all([
+        SF.getOrders(),
+        SF.getCustomers(),
+      ]);
+      const order    = orders.find(x => x.id === orderId);
+      const customer = order ? customers.find(c => c.id === order.customerId) : null;
+      const user     = await SF.getUser();
+
+      if (!order) {
+        UI.toast('Order not found.', 'error');
+        return;
+      }
+
+      if (!customer?.email) {
+        UI.toast('No email address on file for this customer.', 'warn');
+        return;
+      }
+
+      const result = await NotificationService.sendOrderEmail(
+        'payment_followup',
+        order,
+        customer,
+        user,
+      );
+
+      if (result.success) {
+        UI.toast(`📧 Follow-up sent to ${customer.email}!`, 'success');
+
+        // ── Update the "last sent" timestamp in the modal ──────
+        const lastSentEl = document.getElementById('followup-last-sent');
+        if (lastSentEl) {
+          lastSentEl.textContent = `Last sent: ${SF.formatDate(new Date().toISOString())}`;
+          lastSentEl.style.display = '';
+        }
+
+        // ── Animate button to "Sent" state ─────────────────────
+        btn.style.background = 'var(--success)';
+        if (btnIcon) btnIcon.textContent = '✅';
+        if (btnText) btnText.textContent = 'Follow-up Sent!';
+
+        // Reset after 4 seconds so it can be used again
+        setTimeout(() => {
+          btn.style.background = 'var(--warn)';
+          if (btnIcon) btnIcon.textContent = '📧';
+          if (btnText) btnText.textContent = 'Send Follow-up Email';
+          btn.disabled = false;
+        }, 4000);
+
+      } else {
+        UI.toast(result.error || 'Failed to send follow-up.', 'error');
+        if (btnIcon) btnIcon.textContent = '📧';
+        if (btnText) btnText.textContent = 'Send Follow-up Email';
+        btn.disabled = false;
+      }
+
+    } catch (err) {
+      UI.toast(err.message || 'Failed to send follow-up.', 'error');
+      if (btnIcon) btnIcon.textContent = '📧';
+      if (btnText) btnText.textContent = 'Send Follow-up Email';
+      btn.disabled = false;
+    }
+  }
+
+
   // ─── Invoice Preview ──────────────────────────────────────────
   async function showInvoice(id) {
-    // Show modal immediately with a loading spinner
     document.getElementById('invoice-preview-body').innerHTML = `
       <div style="display:flex;align-items:center;justify-content:center;padding:60px">
         <div class="sf-spinner"></div>
@@ -389,8 +549,8 @@ const Modals = (() => {
     UI.openModal('modal-invoice');
 
     try {
-      const orders = await SF.getOrders();
-      const o = orders.find(x => x.id === id);
+      const orders    = await SF.getOrders();
+      const o         = orders.find(x => x.id === id);
       if (!o) { UI.toast('Order not found', 'error'); UI.closeModal('modal-invoice'); return; }
 
       const user      = await SF.getUser();
@@ -443,27 +603,6 @@ const Modals = (() => {
       };
 
       // ── Download PDF ───────────────────────────────────────────
-      //
-      // WHY PRINT WINDOW INSTEAD OF html2canvas / html2pdf:
-      // ─────────────────────────────────────────────────────────
-      // html2canvas rasterises the DOM to a <canvas> bitmap. It CANNOT
-      // load external stylesheets (CORS + async timing), so the invoice
-      // classes (invoice-header, invoice-parties, invoice-table, etc.)
-      // render unstyled — the flex/grid layout collapses and the left
-      // column disappears entirely. This is the root cause of the bug.
-      //
-      // The browser's native print engine has no such limitation:
-      //   • It renders HTML exactly as it would on screen
-      //   • Supports all CSS (flex, grid, custom properties, fonts)
-      //   • Produces a true vector PDF — not a blurry JPEG screenshot
-      //   • Works identically on Chrome, Safari, Firefox, Edge
-      //   • No third-party library needed
-      //
-      // APPROACH: open a hidden <iframe>, write a self-contained HTML
-      // document that includes ALL invoice CSS inlined in a <style> tag
-      // (no external file dependency), then call iframe.contentWindow.print().
-      // The iframe is removed after the print dialog closes.
-      //
       document.getElementById('invoice-download-btn').onclick = () => {
         _printInvoice(o, user || {});
       };
@@ -474,249 +613,61 @@ const Modals = (() => {
     }
   }
 
-  // ─── Print Invoice (PDF export pipeline) ─────────────────────
-  //
-  // Renders the invoice into a dedicated hidden iframe that owns its
-  // own document. All CSS is inlined — zero dependency on style.css.
-  // Calls iframe.contentWindow.print() to open the browser print dialog
-  // where the user selects "Save as PDF".
-  //
-  // Layout: identical to the in-app modal preview because the same
-  // InvoiceTemplate HTML string is used, just with the styles embedded.
-  //
+  // ─── Print Invoice ────────────────────────────────────────────
   function _printInvoice(o, user) {
-    // ── Build the invoice HTML from the existing template ───────
     const invoiceHTML = Components.InvoiceTemplate(o, user);
 
-    // ── All invoice CSS — inlined so no external file is needed ─
-    // CSS variables resolved to literal values so they work in a
-    // detached document that doesn't have :root defined.
     const invoiceCSS = `
       @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
-      @import url('https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap');
-
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-      body {
-        font-family: 'DM Sans', Arial, sans-serif;
-        background: #ffffff;
-        color: #1a1a1a;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-
-      /* ── Page setup ──────────────────────────────────────────── */
-      @page {
-        size: A4 portrait;
-        margin: 14mm 16mm;
-      }
-
-      /* ── Invoice wrapper ─────────────────────────────────────── */
-      .invoice-wrapper {
-        background: #ffffff;
-        color: #1a1a1a;
-        border-radius: 12px;
-        padding: 40px;
-        font-family: 'DM Sans', Arial, sans-serif;
-        width: 100%;
-        max-width: 100%;
-      }
-
-      /* ── Header: brand left, meta right ─────────────────────── */
-      .invoice-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 32px;
-        padding-bottom: 24px;
-        border-bottom: 2px solid #f0f0f0;
-      }
-
-      .invoice-brand .brand-name {
-        font-family: 'Clash Display', 'DM Sans', Arial, sans-serif;
-        font-size: 24px;
-        font-weight: 700;
-        color: #6366f1;
-        letter-spacing: -0.5px;
-      }
-      .invoice-brand p {
-        font-size: 12px;
-        color: #888888;
-        margin-top: 2px;
-      }
-
+      body { font-family: 'DM Sans', Arial, sans-serif; background: #ffffff; color: #1a1a1a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      @page { size: A4 portrait; margin: 14mm 16mm; }
+      .invoice-wrapper { background: #ffffff; color: #1a1a1a; border-radius: 12px; padding: 40px; font-family: 'DM Sans', Arial, sans-serif; width: 100%; }
+      .invoice-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px solid #f0f0f0; }
+      .invoice-brand .brand-name { font-size: 24px; font-weight: 700; color: #6366f1; letter-spacing: -0.5px; }
       .invoice-meta { text-align: right; }
-      .invoice-number {
-        font-family: 'Clash Display', 'DM Sans', Arial, sans-serif;
-        font-size: 20px;
-        font-weight: 800;
-        color: #1a1a1a;
-        letter-spacing: -0.5px;
-      }
-      .invoice-meta p { font-size: 12px; color: #888888; margin-top: 3px; }
-
-      /* ── Status badge ────────────────────────────────────────── */
-      .invoice-status-banner {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 14px;
-        border-radius: 99px;
-        font-size: 12px;
-        font-weight: 700;
-        margin-top: 8px;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      .invoice-status-paid    { background: #d1fae5 !important; color: #059669 !important; }
-      .invoice-status-pending { background: #fef3c7 !important; color: #d97706 !important; }
-
-      /* ── From / Bill To ──────────────────────────────────────── */
-      .invoice-parties {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-        margin-bottom: 28px;
-      }
-      .invoice-party-label {
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        font-weight: 700;
-        color: #999999;
-        margin-bottom: 8px;
-      }
-      .invoice-party-name {
-        font-size: 16px;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin-bottom: 3px;
-      }
-      .invoice-party p {
-        font-size: 12px;
-        color: #666666;
-        line-height: 1.6;
-      }
-
-      /* ── Items table ─────────────────────────────────────────── */
-      .invoice-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 24px;
-      }
-      .invoice-table th {
-        background: #f8f8f8 !important;
-        padding: 10px 14px;
-        text-align: left;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #888888;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      .invoice-table td {
-        padding: 12px 14px;
-        font-size: 13px;
-        color: #444444;
-        border-bottom: 1px solid #f0f0f0;
-      }
-      .invoice-table tr:last-child td { border-bottom: none; }
-
-      /* ── Totals ──────────────────────────────────────────────── */
-      .invoice-totals {
-        display: flex;
-        justify-content: flex-end;
-      }
+      .invoice-number { font-size: 20px; font-weight: 800; color: #1a1a1a; letter-spacing: -0.5px; }
+      .invoice-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+      .invoice-party-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: #999; margin-bottom: 8px; }
+      .invoice-party-name { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; }
+      .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+      .invoice-table th { background: #f8f8f8 !important; padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #888; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .invoice-table td { padding: 12px 14px; font-size: 13px; color: #444; border-bottom: 1px solid #f0f0f0; }
+      .invoice-totals { display: flex; justify-content: flex-end; }
       .invoice-totals-inner { width: 240px; }
-      .invoice-total-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 5px 0;
-        font-size: 13px;
-        color: #666666;
-      }
-      .invoice-total-row.grand {
-        border-top: 2px solid #e0e0e0;
-        margin-top: 6px;
-        padding-top: 10px;
-        font-size: 16px;
-        font-weight: 800;
-        color: #1a1a1a;
-      }
-
-      /* ── Footer ──────────────────────────────────────────────── */
-      .invoice-footer {
-        margin-top: 32px;
-        padding-top: 20px;
-        border-top: 1px solid #f0f0f0;
-        text-align: center;
-        font-size: 11px;
-        color: #bbbbbb;
-      }
-
-      /* ── Resolve CSS vars used in InvoiceTemplate inline styles ─ */
-      /* (InvoiceTemplate uses var(--text-primary) etc. in item rows) */
-      :root {
-        --text-primary: #1a1a1a;
-        --text-muted:   #888888;
-      }
+      .invoice-total-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; color: #666; }
+      .invoice-total-row.grand { border-top: 2px solid #e0e0e0; margin-top: 6px; padding-top: 10px; font-size: 16px; font-weight: 800; color: #1a1a1a; }
+      .invoice-footer { margin-top: 32px; padding-top: 20px; border-top: 1px solid #f0f0f0; text-align: center; font-size: 11px; color: #bbb; }
+      .invoice-status-paid    { background: #d1fae5 !important; color: #059669 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .invoice-status-pending { background: #fef3c7 !important; color: #d97706 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      :root { --text-primary: #1a1a1a; --text-muted: #888; }
     `;
 
-    // ── Create hidden iframe ─────────────────────────────────────
     const iframe = document.createElement('iframe');
-    iframe.style.cssText = [
-      'position:fixed',
-      'top:0', 'left:0',
-      'width:0', 'height:0',
-      'border:none',
-      'visibility:hidden',
-    ].join(';');
+    iframe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;border:none;visibility:hidden';
     document.body.appendChild(iframe);
 
     const doc = iframe.contentDocument || iframe.contentWindow.document;
     doc.open();
-    doc.write(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Invoice ${o.id}</title>
-  <style>${invoiceCSS}</style>
-</head>
-<body>
-  ${invoiceHTML}
-</body>
-</html>`);
+    doc.write(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Invoice ${o.id}</title><style>${invoiceCSS}</style></head><body>${invoiceHTML}</body></html>`);
     doc.close();
 
-    // ── Wait for fonts + layout, then print ─────────────────────
-    // document.fonts.ready ensures web fonts are loaded before print
-    // so character widths are calculated correctly.
     const win = iframe.contentWindow;
-
     const doPrint = () => {
       win.focus();
       win.print();
-      // Remove iframe after a short delay — long enough for the
-      // print dialog to open; the dialog keeps a reference to the
-      // document independently so removing the iframe is safe.
       setTimeout(() => {
-        if (document.body.contains(iframe)) {
-          document.body.removeChild(iframe);
-        }
+        if (document.body.contains(iframe)) document.body.removeChild(iframe);
       }, 1000);
     };
 
-    if (win.document.fonts && win.document.fonts.ready) {
+    if (win.document.fonts?.ready) {
       win.document.fonts.ready.then(doPrint);
     } else {
-      // Fallback for browsers without FontFaceSet API
       setTimeout(doPrint, 400);
     }
 
-    UI.toast('Print dialog opening — choose "Save as PDF" to download 🖨️', 'info');
+    UI.toast('Print dialog opening — choose "Save as PDF" 🖨️', 'info');
   }
 
   function _fallbackCopy(text) {
@@ -731,7 +682,6 @@ const Modals = (() => {
 
   // ─── View Customer ────────────────────────────────────────────
   async function viewCustomer(id) {
-    // Show modal immediately with loading
     document.getElementById('view-customer-content').innerHTML = `
       <div style="display:flex;align-items:center;justify-content:center;padding:60px">
         <div class="sf-spinner"></div>
@@ -760,5 +710,6 @@ const Modals = (() => {
     openAddProduct, editProduct, saveProduct, deleteProduct,
     openCreateOrder, handleCustomerSelectChange, addOrderItem, removeOrderItem, saveOrder,
     viewOrder, showInvoice, viewCustomer,
+    sendFollowupEmail,   // ← new: called from follow-up button onclick
   };
 })();
