@@ -444,24 +444,28 @@ const Modals = (() => {
 
       // ── Download PDF ───────────────────────────────────────────
       //
-      // WHY IFRAME + html2pdf.js (not window.print, not off-screen clone):
-      // ─────────────────────────────────────────────────────────────────
-      // window.print() opens a dialog the user must manually dismiss,
-      // and on Android/iOS in-app browsers it produces blank white pages.
+      // WHY PRINT WINDOW INSTEAD OF html2canvas / html2pdf:
+      // ─────────────────────────────────────────────────────────
+      // html2canvas rasterises the DOM to a <canvas> bitmap. It CANNOT
+      // load external stylesheets (CORS + async timing), so the invoice
+      // classes (invoice-header, invoice-parties, invoice-table, etc.)
+      // render unstyled — the flex/grid layout collapses and the left
+      // column disappears entirely. This is the root cause of the bug.
       //
-      // Off-screen clones at left:-9999px are cropped by html2canvas
-      // because it captures from viewport (0,0) — left column disappears.
+      // The browser's native print engine has no such limitation:
+      //   • It renders HTML exactly as it would on screen
+      //   • Supports all CSS (flex, grid, custom properties, fonts)
+      //   • Produces a true vector PDF — not a blurry JPEG screenshot
+      //   • Works identically on Chrome, Safari, Firefox, Edge
+      //   • No third-party library needed
       //
-      // SOLUTION: inject the invoice into a visibility:hidden <iframe>
-      // at position (0,0). The iframe has its own document with (0,0)
-      // origin, so html2canvas captures the full width correctly.
-      // html2pdf generates a Blob → we trigger <a download> for a real
-      // one-click save with no dialog on desktop; iOS opens in new tab
-      // where the seller can Share → Save to Files.
+      // APPROACH: open a hidden <iframe>, write a self-contained HTML
+      // document that includes ALL invoice CSS inlined in a <style> tag
+      // (no external file dependency), then call iframe.contentWindow.print().
+      // The iframe is removed after the print dialog closes.
       //
-      const dlBtn = document.getElementById('invoice-download-btn');
-      dlBtn.onclick = async () => {
-        await _downloadInvoicePDF(o, user || {});
+      document.getElementById('invoice-download-btn').onclick = () => {
+        _printInvoice(o, user || {});
       };
 
     } catch (err) {
@@ -470,163 +474,249 @@ const Modals = (() => {
     }
   }
 
-  // ─── PDF Download (iframe + html2pdf.js pipeline) ─────────────
+  // ─── Print Invoice (PDF export pipeline) ─────────────────────
   //
-  // Renders a complete, self-contained HTML document in a hidden iframe
-  // (same document approach as _printInvoice but uses html2pdf.js to
-  // produce a Blob instead of calling window.print).
+  // Renders the invoice into a dedicated hidden iframe that owns its
+  // own document. All CSS is inlined — zero dependency on style.css.
+  // Calls iframe.contentWindow.print() to open the browser print dialog
+  // where the user selects "Save as PDF".
   //
-  // The invoice CSS is inlined — zero dependency on style.css. The
-  // InvoiceTemplate already uses 100% inline styles for all colours
-  // and layout, so the PDF captures perfectly on first try.
+  // Layout: identical to the in-app modal preview because the same
+  // InvoiceTemplate HTML string is used, just with the styles embedded.
   //
-  async function _downloadInvoicePDF(o, user) {
-    if (typeof html2pdf === 'undefined') {
-      // Fallback to print dialog if the CDN script didn't load
-      UI.toast('PDF library not loaded. Opening print dialog instead.', 'warn');
-      _printFallback(o, user);
-      return;
-    }
+  function _printInvoice(o, user) {
+    // ── Build the invoice HTML from the existing template ───────
+    const invoiceHTML = Components.InvoiceTemplate(o, user);
 
-    const dlBtn = document.getElementById('invoice-download-btn');
-    if (dlBtn) {
-      dlBtn.disabled = true;
-      dlBtn.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px"></span>Generating…';
-    }
+    // ── All invoice CSS — inlined so no external file is needed ─
+    // CSS variables resolved to literal values so they work in a
+    // detached document that doesn't have :root defined.
+    const invoiceCSS = `
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
+      @import url('https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap');
 
-    // ── 1. Build the iframe ──────────────────────────────────────
-    // visibility:hidden keeps it invisible but still fully laid out.
-    // top:0; left:0 puts the document origin at (0,0) so html2canvas
-    // captures from the correct starting position.
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;top:0;left:0;width:794px;height:1px;border:none;visibility:hidden;z-index:-9999';
-    document.body.appendChild(iframe);
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    try {
-      const invoiceHTML = Components.InvoiceTemplate(o, user);
-      const filename    = `invoice-${o.id}.pdf`;
-
-      // ── 2. Write a complete self-contained document ──────────────
-      // All invoice CSS inlined — no external stylesheet dependency.
-      // CSS variables resolved to literals so they work in the isolated
-      // iframe document that doesn't inherit :root from the dark theme.
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-      iframeDoc.open();
-      iframeDoc.write(`<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:Arial,Helvetica,sans-serif;background:#fff;color:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  table{border-collapse:collapse}
-  td,th{vertical-align:top}
-  p{margin:0}
-  img{max-width:100%;display:block}
-  /* Resolve any CSS vars that survive from InvoiceTemplate inline styles */
-  :root{--text-primary:#1a1a1a;--text-muted:#888;--text-secondary:#666;--accent:#6366F1;--bg-input:#f8f8f8;--border:rgba(0,0,0,0.08)}
-</style>
-</head>
-<body>${invoiceHTML}</body>
-</html>`);
-      iframeDoc.close();
-
-      // ── 3. Wait for layout to settle ─────────────────────────────
-      await new Promise(resolve => setTimeout(resolve, 150));
-
-      const invoiceEl = iframeDoc.getElementById('invoice-print-area')
-                     || iframeDoc.body.firstElementChild;
-      if (!invoiceEl) throw new Error('Invoice element not found in iframe');
-
-      // ── 4. Generate PDF Blob via html2pdf ────────────────────────
-      // html2canvas runs in the iframe's own window context so its
-      // (0,0) is the top-left of the invoice — no left-column cropping.
-      const blob = await html2pdf()
-        .set({
-          margin:      [10, 10, 10, 10],
-          filename,
-          image:       { type: 'jpeg', quality: 0.98 },
-          html2canvas: {
-            scale:           2,          // retina sharpness
-            useCORS:         true,
-            backgroundColor: '#ffffff',
-            logging:         false,
-            scrollX:         0,
-            scrollY:         0,
-            windowWidth:     794,
-            windowHeight:    iframeDoc.body.scrollHeight || 1123,
-          },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['avoid-all', 'css'] },
-        })
-        .from(invoiceEl, 'element')
-        .output('blob');
-
-      // ── 5. Trigger download ──────────────────────────────────────
-      const blobUrl = URL.createObjectURL(blob);
-      const anchor  = document.createElement('a');
-      anchor.href     = blobUrl;
-      anchor.download = filename;
-      anchor.style.display = 'none';
-      document.body.appendChild(anchor);
-
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      if (isIOS) {
-        // iOS Safari: <a download> not supported — open in new tab
-        // User can tap Share → Save to Files to keep the PDF
-        window.open(blobUrl, '_blank');
-        UI.toast('PDF opened — tap Share to save it 📄', 'info');
-      } else {
-        anchor.click();
-        UI.toast(`invoice-${o.id}.pdf downloaded ✅`, 'success');
+      body {
+        font-family: 'DM Sans', Arial, sans-serif;
+        background: #ffffff;
+        color: #1a1a1a;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
 
-      document.body.removeChild(anchor);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
-
-    } catch (err) {
-      console.error('[SellerFlow] PDF generation failed:', err);
-      UI.toast('PDF generation failed — opening print dialog instead', 'warn');
-      _printFallback(o, user);
-    } finally {
-      // Always clean up iframe and restore button
-      if (document.body.contains(iframe)) document.body.removeChild(iframe);
-      if (dlBtn) {
-        dlBtn.disabled = false;
-        dlBtn.innerHTML = '⬇️ Download PDF';
+      /* ── Page setup ──────────────────────────────────────────── */
+      @page {
+        size: A4 portrait;
+        margin: 14mm 16mm;
       }
-    }
-  }
 
-  // ─── Print fallback (when html2pdf.js fails or isn't loaded) ──
-  // Opens the browser's native print dialog. Better than nothing on
-  // rare edge cases (offline, CDN blocked, very old browser).
-  function _printFallback(o, user) {
+      /* ── Invoice wrapper ─────────────────────────────────────── */
+      .invoice-wrapper {
+        background: #ffffff;
+        color: #1a1a1a;
+        border-radius: 12px;
+        padding: 40px;
+        font-family: 'DM Sans', Arial, sans-serif;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      /* ── Header: brand left, meta right ─────────────────────── */
+      .invoice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 32px;
+        padding-bottom: 24px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .invoice-brand .brand-name {
+        font-family: 'Clash Display', 'DM Sans', Arial, sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        color: #6366f1;
+        letter-spacing: -0.5px;
+      }
+      .invoice-brand p {
+        font-size: 12px;
+        color: #888888;
+        margin-top: 2px;
+      }
+
+      .invoice-meta { text-align: right; }
+      .invoice-number {
+        font-family: 'Clash Display', 'DM Sans', Arial, sans-serif;
+        font-size: 20px;
+        font-weight: 800;
+        color: #1a1a1a;
+        letter-spacing: -0.5px;
+      }
+      .invoice-meta p { font-size: 12px; color: #888888; margin-top: 3px; }
+
+      /* ── Status badge ────────────────────────────────────────── */
+      .invoice-status-banner {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 99px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-top: 8px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .invoice-status-paid    { background: #d1fae5 !important; color: #059669 !important; }
+      .invoice-status-pending { background: #fef3c7 !important; color: #d97706 !important; }
+
+      /* ── From / Bill To ──────────────────────────────────────── */
+      .invoice-parties {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 28px;
+      }
+      .invoice-party-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+        color: #999999;
+        margin-bottom: 8px;
+      }
+      .invoice-party-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 3px;
+      }
+      .invoice-party p {
+        font-size: 12px;
+        color: #666666;
+        line-height: 1.6;
+      }
+
+      /* ── Items table ─────────────────────────────────────────── */
+      .invoice-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+      }
+      .invoice-table th {
+        background: #f8f8f8 !important;
+        padding: 10px 14px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #888888;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .invoice-table td {
+        padding: 12px 14px;
+        font-size: 13px;
+        color: #444444;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .invoice-table tr:last-child td { border-bottom: none; }
+
+      /* ── Totals ──────────────────────────────────────────────── */
+      .invoice-totals {
+        display: flex;
+        justify-content: flex-end;
+      }
+      .invoice-totals-inner { width: 240px; }
+      .invoice-total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        font-size: 13px;
+        color: #666666;
+      }
+      .invoice-total-row.grand {
+        border-top: 2px solid #e0e0e0;
+        margin-top: 6px;
+        padding-top: 10px;
+        font-size: 16px;
+        font-weight: 800;
+        color: #1a1a1a;
+      }
+
+      /* ── Footer ──────────────────────────────────────────────── */
+      .invoice-footer {
+        margin-top: 32px;
+        padding-top: 20px;
+        border-top: 1px solid #f0f0f0;
+        text-align: center;
+        font-size: 11px;
+        color: #bbbbbb;
+      }
+
+      /* ── Resolve CSS vars used in InvoiceTemplate inline styles ─ */
+      /* (InvoiceTemplate uses var(--text-primary) etc. in item rows) */
+      :root {
+        --text-primary: #1a1a1a;
+        --text-muted:   #888888;
+      }
+    `;
+
+    // ── Create hidden iframe ─────────────────────────────────────
     const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;border:none;visibility:hidden';
+    iframe.style.cssText = [
+      'position:fixed',
+      'top:0', 'left:0',
+      'width:0', 'height:0',
+      'border:none',
+      'visibility:hidden',
+    ].join(';');
     document.body.appendChild(iframe);
 
     const doc = iframe.contentDocument || iframe.contentWindow.document;
     doc.open();
-    doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}:root{--text-primary:#1a1a1a;--text-muted:#888;--text-secondary:#666;--accent:#6366F1;--bg-input:#f8f8f8;--border:rgba(0,0,0,0.08)}table{border-collapse:collapse}td,th{vertical-align:top}p{margin:0}@page{size:A4 portrait;margin:14mm 16mm}</style>
-</head><body>${Components.InvoiceTemplate(o, user)}</body></html>`);
+    doc.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Invoice ${o.id}</title>
+  <style>${invoiceCSS}</style>
+</head>
+<body>
+  ${invoiceHTML}
+</body>
+</html>`);
     doc.close();
 
+    // ── Wait for fonts + layout, then print ─────────────────────
+    // document.fonts.ready ensures web fonts are loaded before print
+    // so character widths are calculated correctly.
     const win = iframe.contentWindow;
+
     const doPrint = () => {
       win.focus();
       win.print();
-      setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 1000);
+      // Remove iframe after a short delay — long enough for the
+      // print dialog to open; the dialog keeps a reference to the
+      // document independently so removing the iframe is safe.
+      setTimeout(() => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+      }, 1000);
     };
 
-    if (win.document.fonts?.ready) {
+    if (win.document.fonts && win.document.fonts.ready) {
       win.document.fonts.ready.then(doPrint);
     } else {
+      // Fallback for browsers without FontFaceSet API
       setTimeout(doPrint, 400);
     }
 
-    UI.toast('Opening print dialog — choose "Save as PDF" 🖨️', 'info');
+    UI.toast('Print dialog opening — choose "Save as PDF" to download 🖨️', 'info');
   }
 
   function _fallbackCopy(text) {
