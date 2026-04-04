@@ -310,5 +310,16 @@ const Pages = (() => {
     }
   }
 
-  return { dashboard, products, orders, customers, billing, settings };
+  // ─── Analytics ────────────────────────────────────────────────
+  async function analytics() {
+    const container = document.getElementById('analytics-content');
+    if (!container) return;
+    if (typeof Analytics !== 'undefined') {
+      await Analytics.render(container);
+    } else {
+      container.innerHTML = '<div class="an-error">Analytics module not loaded.</div>';
+    }
+  }
+
+  return { dashboard, products, orders, customers, billing, settings, analytics };
 })();
