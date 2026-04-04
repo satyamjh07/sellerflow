@@ -65,21 +65,24 @@ const Auth = (() => {
   // After signup Supabase sends a confirmation email (if enabled).
   // The caller checks data.session: null = verification pending.
   async function signUp(email, password, name, store) {
-    const { data, error } = await _supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        // Passed to the DB trigger handle_new_user() for profile bootstrap
-        data: { name, store },
-        // Redirect URL shown in the verification email — change to your domain
-        emailRedirectTo: window.location.origin + window.location.pathname,
-      },
-    });
-    if (error) throw error;
-    _session = data.session;
-    _user    = data.user;
-    return data;
-  }
+  // Derive a stable redirect origin that works in all environments.
+  // Never append pathname — it breaks on GitHub Pages subdirectory deploys.
+  const redirectTo = window.location.origin + '/';
+
+  const { data, error } = await _supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { name, store },
+      emailRedirectTo: redirectTo,
+    },
+  });
+  if (error) throw error;
+  _session = data.session;
+  _user    = data.user;
+  return data;
+}
+
 
   // ── Email / Password Sign In ──────────────────────────────────────
   async function signIn(email, password) {
@@ -98,7 +101,7 @@ const Auth = (() => {
     const { data, error } = await _supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}`,
+        redirectTo: window.location.origin + window.location.pathname,
         queryParams: {
           // Request offline access so Google sends a refresh token
           access_type: 'offline',
@@ -177,8 +180,8 @@ const Auth = (() => {
     return identities.some(i => i.provider === 'google');
   }
 
-  // Public API
   return {
+  // Public API
     init,
     signUp,
     signIn,
