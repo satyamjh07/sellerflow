@@ -125,6 +125,7 @@ const UI = (() => {
       customers: "Customers",
       billing:   "Billing & Invoices",
       settings:  "Settings",
+      analytics: "Analytics",
     };
     const titleEl = document.getElementById("topbar-title");
     if (titleEl) titleEl.textContent = titles[page] || "SellerFlow";
