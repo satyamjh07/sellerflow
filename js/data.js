@@ -13,36 +13,60 @@
 // ================================================================
 
 const SF = (() => {
+
+  // ─── Profile field map — single source of truth ───────────────
+  // Format: [jsKey, dbColumn, defaultValue, transformFn]
+  //
+  // To add a new profile field (e.g. "address"):
+  //   1. Add one line here: ['address', 'address', '', v => v || '']
+  //   2. Add the column in Supabase: ALTER TABLE profiles ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '';
+  //   3. Add the input in index.html settings form.
+  //   4. Read it in pages.js settings() with: document.getElementById('settings-address').value = user.address || '';
+  //   Done. _profileToJS and saveUser both update automatically.
+  //
+  const PROFILE_FIELDS = [
+    // [jsKey,       dbColumn,     default, transformFn]
+    ['name',         'name',         '',    v => v || ''],
+    ['store',        'store',        '',    v => v || ''],
+    ['instagram',    'instagram',    '',    v => v || ''],
+    ['phone',        'phone',        '',    v => v || ''],
+    ['email',        'email',        '',    v => v || ''],
+    ['upiId',        'upi_id',       '',    v => v || ''],
+    ['autoEmail',    'auto_email',   false, v => !!v],
+    ['gstNumber',    'gst_number',   '',    v => (v || '').toUpperCase().trim()],
+  ];
+
   // ─── Column mappers ──────────────────────────────────────────
+
   // Products: DB → JS
   function _productToJS(row) {
     if (!row) return null;
     return {
-      id: row.id,
-      name: row.name,
-      sku: row.sku || "",
-      category: row.category || "",
-      price: Number(row.price) || 0,
-      stock: row.stock || 0,
+      id:                row.id,
+      name:              row.name,
+      sku:               row.sku               || "",
+      category:          row.category          || "",
+      price:             Number(row.price)     || 0,
+      stock:             row.stock             || 0,
       lowStockThreshold: row.low_stock_threshold || 5,
-      emoji: row.emoji || "📦",
-      image: row.image || null,
-      variant: row.variant || null,
+      emoji:             row.emoji             || "📦",
+      image:             row.image             || null,
+      variant:           row.variant           || null,
     };
   }
 
   // Products: JS → DB (omit id/user_id — handled separately)
   function _productToDB(p) {
     return {
-      name: p.name,
-      sku: p.sku || "",
-      category: p.category || "",
-      price: p.price || 0,
-      stock: p.stock || 0,
+      name:               p.name,
+      sku:                p.sku               || "",
+      category:           p.category          || "",
+      price:              p.price             || 0,
+      stock:              p.stock             || 0,
       low_stock_threshold: p.lowStockThreshold || 5,
-      emoji: p.emoji || "📦",
-      image: p.image || null,
-      variant: p.variant || null,
+      emoji:              p.emoji             || "📦",
+      image:              p.image             || null,
+      variant:            p.variant           || null,
     };
   }
 
@@ -50,45 +74,45 @@ const SF = (() => {
   function _customerToJS(row) {
     if (!row) return null;
     return {
-      id: row.id,
-      name: row.name,
-      instagram: row.instagram || "",
-      phone: row.phone || "",
-      email: row.email || "",
-      city: row.city || "",
-      state: row.state || "",
-      address: row.address || "",
-      landmark: row.landmark || "",
-      pincode: row.pincode || "",
-      whatsapp: row.whatsapp || "",
-      notes: row.notes || "",
+      id:          row.id,
+      name:        row.name,
+      instagram:   row.instagram   || "",
+      phone:       row.phone       || "",
+      email:       row.email       || "",
+      city:        row.city        || "",
+      state:       row.state       || "",
+      address:     row.address     || "",
+      landmark:    row.landmark    || "",
+      pincode:     row.pincode     || "",
+      whatsapp:    row.whatsapp    || "",
+      notes:       row.notes       || "",
       repeatScore: row.repeat_score || null,
       totalOrders: row.total_orders || 0,
-      totalSpent: Number(row.total_spent) || 0,
-      firstOrder: row.first_order || null,
-      lastOrder: row.last_order || null,
+      totalSpent:  Number(row.total_spent) || 0,
+      firstOrder:  row.first_order || null,
+      lastOrder:   row.last_order  || null,
     };
   }
 
   // Customers: JS → DB
   function _customerToDB(c) {
     return {
-      name: c.name,
-      instagram: c.instagram || "",
-      phone: c.phone || "",
-      email: c.email || "",
-      city: c.city || "",
-      state: c.state || "",
-      address: c.address || "",
-      landmark: c.landmark || "",
-      pincode: c.pincode || "",
-      whatsapp: c.whatsapp || "",
-      notes: c.notes || "",
-      repeat_score: c.repeatScore || null,
-      total_orders: c.totalOrders || 0,
-      total_spent: c.totalSpent || 0,
-      first_order: c.firstOrder || null,
-      last_order: c.lastOrder || null,
+      name:         c.name,
+      instagram:    c.instagram    || "",
+      phone:        c.phone        || "",
+      email:        c.email        || "",
+      city:         c.city         || "",
+      state:        c.state        || "",
+      address:      c.address      || "",
+      landmark:     c.landmark     || "",
+      pincode:      c.pincode      || "",
+      whatsapp:     c.whatsapp     || "",
+      notes:        c.notes        || "",
+      repeat_score: c.repeatScore  || null,
+      total_orders: c.totalOrders  || 0,
+      total_spent:  c.totalSpent   || 0,
+      first_order:  c.firstOrder   || null,
+      last_order:   c.lastOrder    || null,
     };
   }
 
@@ -96,62 +120,63 @@ const SF = (() => {
   function _orderToJS(row) {
     if (!row) return null;
     return {
-      id: row.id,
-      customerId: row.customer_id || null,
-      customerName: row.customer_name || "",
-      items: Array.isArray(row.items) ? row.items : [],
-      total: Number(row.total) || 0,
-      discount: Number(row.discount) || 0,
-      coupon: row.coupon || "",
-      status: row.status || "processing",
-      payment: row.payment || "pending",
+      id:              row.id,
+      customerId:      row.customer_id      || null,
+      customerName:    row.customer_name    || "",
+      items:           Array.isArray(row.items) ? row.items : [],
+      total:           Number(row.total)    || 0,
+      discount:        Number(row.discount) || 0,
+      coupon:          row.coupon           || "",
+      status:          row.status           || "processing",
+      payment:         row.payment          || "pending",
       shippingAddress: row.shipping_address || "",
-      trackingId: row.tracking_id || "",
+      trackingId:      row.tracking_id      || "",
       deliveryPartner: row.delivery_partner || "",
-      source: row.source || "",
-      notes: row.notes || "",
-      date: row.order_date || row.created_at?.slice(0, 10) || "",
+      source:          row.source           || "",
+      notes:           row.notes            || "",
+      date:            row.order_date       || row.created_at?.slice(0, 10) || "",
     };
   }
 
   // Orders: JS → DB
   function _orderToDB(o) {
     return {
-      id: o.id,
-      customer_id: o.customerId || null,
-      customer_name: o.customerName || "",
-      items: o.items || [],
-      total: o.total || 0,
-      discount: o.discount || 0,
-      coupon: o.coupon || "",
-      status: o.status || "processing",
-      payment: o.payment || "pending",
+      id:               o.id,
+      customer_id:      o.customerId      || null,
+      customer_name:    o.customerName    || "",
+      items:            o.items           || [],
+      total:            o.total           || 0,
+      discount:         o.discount        || 0,
+      coupon:           o.coupon          || "",
+      status:           o.status          || "processing",
+      payment:          o.payment         || "pending",
       shipping_address: o.shippingAddress || "",
-      tracking_id: o.trackingId || "",
+      tracking_id:      o.trackingId      || "",
       delivery_partner: o.deliveryPartner || "",
-      source: o.source || "",
-      notes: o.notes || "",
-      order_date: o.date || new Date().toISOString().slice(0, 10),
+      source:           o.source          || "",
+      notes:            o.notes           || "",
+      order_date:       o.date            || new Date().toISOString().slice(0, 10),
     };
   }
 
   // Profiles: DB → JS
+  // Derived from PROFILE_FIELDS — do not add fields here manually.
+  // Subscription/billing fields are read-only from saveUser and handled separately.
   function _profileToJS(row) {
     if (!row) return null;
-    return {
-      name:          row.name          || "",
-      store:         row.store         || "",
-      instagram:     row.instagram     || "",
-      phone:         row.phone         || "",
-      email:         row.email         || "",
-      upiId:         row.upi_id        || "",
-      autoEmail:     row.auto_email    || false,
-      // ── Subscription fields ──────────────────────────────────
-      plan:          row.plan          || "free",
+    const out = {
+      // Subscription fields — read-only, never written by saveUser
+      plan:          row.plan            || "free",
       planExpiresAt: row.plan_expires_at || null,
-      trialUsed:     row.trial_used    || false,
-      logoUrl:       row.logo_url      || null,
+      trialUsed:     row.trial_used      || false,
+      logoUrl:       row.logo_url        || null,
     };
+    PROFILE_FIELDS.forEach(([jsKey, dbCol, def]) => {
+      out[jsKey] = row[dbCol] !== undefined && row[dbCol] !== null
+        ? row[dbCol]
+        : def;
+    });
+    return out;
   }
 
   // ─── Error helper ─────────────────────────────────────────────
@@ -174,18 +199,17 @@ const SF = (() => {
     return _profileToJS(data);
   }
 
+  // Saves editable profile fields from the settings form.
+  // Subscription fields (plan, logo_url, etc.) are never touched here —
+  // those are managed exclusively by billing.js.
+  // Derived from PROFILE_FIELDS — do not add fields here manually.
   async function saveUser(updates) {
     const uid = Auth.getUserId();
     if (!uid) return;
-    const dbRow = {
-      name: updates.name || "",
-      store: updates.store || "",
-      instagram: updates.instagram || "",
-      phone: updates.phone || "",
-      email: updates.email || "",
-      upi_id: updates.upiId || "",
-      auto_email: updates.autoEmail || false,
-    };
+    const dbRow = {};
+    PROFILE_FIELDS.forEach(([jsKey, dbCol, def, transform]) => {
+      dbRow[dbCol] = transform(updates[jsKey] !== undefined ? updates[jsKey] : def);
+    });
     const { error } = await _supabase
       .from("profiles")
       .update(dbRow)
@@ -224,7 +248,7 @@ const SF = (() => {
       .from("products")
       .update(_productToDB(updates))
       .eq("id", id)
-      .eq("user_id", uid); // RLS belt-and-suspenders
+      .eq("user_id", uid);
     if (error) _throw(error, "updateProduct");
   }
 
@@ -241,7 +265,6 @@ const SF = (() => {
   // Decrease stock by qty (used after order creation)
   async function decreaseStock(productId, qty) {
     const uid = Auth.getUserId();
-    // Use Supabase RPC or fetch-then-update
     const { data: current, error: fetchErr } = await _supabase
       .from("products")
       .select("stock")
@@ -274,14 +297,7 @@ const SF = (() => {
 
   // Generates a unique, human-readable order ID.
   //
-  // Previous approach: COUNT existing rows → ORD-{count+1}
-  // Problem: COUNT is not atomic. If two orders are created at the
-  // same time, both see the same count and generate the same ID,
-  // causing a duplicate-key violation on the orders_pkey constraint.
-  // Deleting orders also breaks the sequence (count drops, ID repeats).
-  //
-  // New approach: date prefix + 4-char random alphanumeric suffix.
-  //   Format: ORD-YYYYMMDD-XXXX   e.g. ORD-20250402-K7M2
+  // Format: ORD-YYYYMMDD-XXXX   e.g. ORD-20250402-K7M2
   //   • Date prefix keeps IDs chronologically sortable at a glance.
   //   • 4-char base-36 suffix = 1,679,616 combinations per day —
   //     collision probability per order ≈ 1 in 840,000. Safe for
@@ -289,30 +305,23 @@ const SF = (() => {
   //   • Entirely client-side and synchronous — no extra DB round-trip.
   //   • Does not depend on row count, so deletions never cause repeats.
   //
-  // If you later need strictly sequential display numbers (e.g. invoice #42),
-  // store a separate `display_number` using a Postgres sequence or an
-  // auto-increment column — keep it independent of the primary key.
-  //
   function _generateOrderId() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const date = `${year}${month}${day}`;
-
-    // 4 random base-36 chars (0-9, A-Z), uppercased
+    const now    = new Date();
+    const year   = now.getFullYear();
+    const month  = String(now.getMonth() + 1).padStart(2, "0");
+    const day    = String(now.getDate()).padStart(2, "0");
+    const date   = `${year}${month}${day}`;
     const suffix = Math.random()
       .toString(36)
       .slice(2, 6)
       .toUpperCase()
       .padEnd(4, "0");
-
     return `ORD-${date}-${suffix}`;
   }
 
   async function addOrder(o) {
-    const uid = Auth.getUserId();
-    const id = _generateOrderId(); // sync, no DB call, no race condition
+    const uid  = Auth.getUserId();
+    const id   = _generateOrderId();
     const date = new Date().toISOString().slice(0, 10);
 
     const row = {
@@ -327,7 +336,7 @@ const SF = (() => {
       .single();
     if (error) _throw(error, "addOrder");
 
-    // Decrease stock for each item (fire-and-forget in parallel)
+    // Decrease stock for each item (parallel, non-blocking to order creation)
     await Promise.all(
       (o.items || []).map((item) => decreaseStock(item.productId, item.qty)),
     );
@@ -339,16 +348,13 @@ const SF = (() => {
   }
 
   async function updateOrder(id, updates) {
-    const uid = Auth.getUserId();
-    // Build a partial DB object — only pass what's changed
+    const uid     = Auth.getUserId();
     const partial = {};
-    if (updates.status !== undefined) partial.status = updates.status;
-    if (updates.payment !== undefined) partial.payment = updates.payment;
-    if (updates.trackingId !== undefined)
-      partial.tracking_id = updates.trackingId;
-    if (updates.deliveryPartner !== undefined)
-      partial.delivery_partner = updates.deliveryPartner;
-    if (updates.notes !== undefined) partial.notes = updates.notes;
+    if (updates.status          !== undefined) partial.status           = updates.status;
+    if (updates.payment         !== undefined) partial.payment          = updates.payment;
+    if (updates.trackingId      !== undefined) partial.tracking_id      = updates.trackingId;
+    if (updates.deliveryPartner !== undefined) partial.delivery_partner = updates.deliveryPartner;
+    if (updates.notes           !== undefined) partial.notes            = updates.notes;
 
     const { error } = await _supabase
       .from("orders")
@@ -385,11 +391,11 @@ const SF = (() => {
     const uid = Auth.getUserId();
     const row = {
       ..._customerToDB(c),
-      user_id: uid,
+      user_id:      uid,
       total_orders: 0,
-      total_spent: 0,
-      first_order: null,
-      last_order: null,
+      total_spent:  0,
+      first_order:  null,
+      last_order:   null,
     };
     const { data, error } = await _supabase
       .from("customers")
@@ -410,11 +416,10 @@ const SF = (() => {
     if (error) _throw(error, "updateCustomer");
   }
 
-  // Find existing by instagram handle or name, or create new
+  // Find existing customer by instagram handle or name, or create new
   async function findOrCreateCustomer(name, instagram) {
-    const uid = Auth.getUserId();
-    // Try to find by instagram first, then by name
-    let query = _supabase.from("customers").select("*").eq("user_id", uid);
+    const uid   = Auth.getUserId();
+    let query   = _supabase.from("customers").select("*").eq("user_id", uid);
 
     if (instagram) {
       query = query.eq("instagram", instagram);
@@ -430,18 +435,17 @@ const SF = (() => {
     return await addCustomer({
       name,
       instagram: instagram || "",
-      phone: "",
-      email: "",
-      city: "",
+      phone:     "",
+      email:     "",
+      city:      "",
     });
   }
 
-  // Called internally after addOrder
+  // Called internally after addOrder — updates customer lifetime stats
   async function _updateCustomerAfterOrder(order) {
     const uid = Auth.getUserId();
     if (!order.customerId) return;
 
-    // Fetch current customer stats
     const { data: cust, error } = await _supabase
       .from("customers")
       .select("total_orders, total_spent, first_order")
@@ -458,9 +462,9 @@ const SF = (() => {
       .from("customers")
       .update({
         total_orders: (cust.total_orders || 0) + 1,
-        total_spent: Number(cust.total_spent || 0) + Number(order.total || 0),
-        last_order: today,
-        first_order: cust.first_order || today,
+        total_spent:  Number(cust.total_spent || 0) + Number(order.total || 0),
+        last_order:   today,
+        first_order:  cust.first_order || today,
       })
       .eq("id", order.customerId)
       .eq("user_id", uid);
@@ -475,14 +479,14 @@ const SF = (() => {
     const orders = await getOrders();
 
     // Build monthly revenue for last 12 months
-    const now = new Date();
-    const months = [];
+    const now        = new Date();
+    const months     = [];
     const revByMonth = {};
     const ordByMonth = {};
 
     for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const d     = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key   = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       const label = d.toLocaleString("default", { month: "short" });
       months.push(label);
       revByMonth[key] = 0;
@@ -498,24 +502,22 @@ const SF = (() => {
     });
 
     // Category distribution from products
-    const products = await getProducts();
+    const products  = await getProducts();
     const catTotals = {};
     products.forEach((p) => {
       catTotals[p.category] = (catTotals[p.category] || 0) + 1;
     });
-    const total = Object.values(catTotals).reduce((s, v) => s + v, 0) || 1;
+    const total     = Object.values(catTotals).reduce((s, v) => s + v, 0) || 1;
     const catLabels = Object.keys(catTotals);
-    const catData = catLabels.map((k) =>
-      Math.round((catTotals[k] / total) * 100),
-    );
+    const catData   = catLabels.map((k) => Math.round((catTotals[k] / total) * 100));
 
     return {
       months,
       monthlyRevenue: Object.values(revByMonth),
-      monthlyOrders: Object.values(ordByMonth),
+      monthlyOrders:  Object.values(ordByMonth),
       topCategories: {
         labels: catLabels.length ? catLabels : ["No data"],
-        data: catData.length ? catData : [100],
+        data:   catData.length   ? catData   : [100],
       },
     };
   }
@@ -530,50 +532,42 @@ const SF = (() => {
       getCustomers(),
     ]);
 
-    const month = new Date().toISOString().slice(0, 7);
+    const month      = new Date().toISOString().slice(0, 7);
     const monthOrders = orders.filter((o) => (o.date || "").startsWith(month));
-    const revenue = monthOrders
+    const revenue    = monthOrders
       .filter((o) => o.payment === "paid")
       .reduce((s, o) => s + o.total, 0);
-    const pending = orders.filter((o) => o.payment === "pending").length;
-    const lowStock = products.filter(
-      (p) => p.stock <= p.lowStockThreshold,
-    ).length;
+    const pending    = orders.filter((o) => o.payment === "pending").length;
+    const lowStock   = products.filter((p) => p.stock <= p.lowStockThreshold).length;
     const repeatCusts = customers.filter((c) => c.totalOrders >= 2).length;
     const allRevenue = orders
       .filter((o) => o.payment === "paid")
       .reduce((s, o) => s + o.total, 0);
 
     return {
-      totalRevenue: revenue,
-      totalOrders: monthOrders.length,
+      totalRevenue:    revenue,
+      totalOrders:     monthOrders.length,
       pendingPayments: pending,
-      lowStockCount: lowStock,
+      lowStockCount:   lowStock,
       repeatCustomers: repeatCusts,
-      totalCustomers: customers.length,
+      totalCustomers:  customers.length,
       allRevenue,
       // Pass through raw lists so callers don't re-fetch
-      _orders: orders,
-      _products: products,
+      _orders:    orders,
+      _products:  products,
       _customers: customers,
     };
   }
 
-  // ─── Utilities (sync — no DB needed) ─────────────────────────
-
-  // ─── Reset Account ────────────────────────────────────────────────────────
-  // Deletes all orders, customers, and products belonging to this user from
-  // Supabase. The user's profile (name, store, settings) is preserved.
-  // Runs each table delete sequentially so if one fails the error surfaces
-  // clearly. Safe to retry — repeated calls just delete zero rows.
-  //
+  // ─── Reset Account ────────────────────────────────────────────
+  // Deletes all orders, customers, and products for this user.
+  // Profile row and login are preserved. Safe to retry.
   async function resetAccount() {
     const uid = Auth.getUserId();
     if (!uid) throw new Error("Not authenticated");
 
-    // Delete in dependency order: orders first, then customers, then products
-    // (orders reference customers; deleting customers first could cause FK issues
-    //  depending on your Supabase cascade config)
+    // Delete in dependency order: orders first (references customers),
+    // then customers, then products.
     const tables = ["orders", "customers", "products"];
     for (const table of tables) {
       const { error } = await _supabase.from(table).delete().eq("user_id", uid);
@@ -581,46 +575,39 @@ const SF = (() => {
     }
   }
 
-  // ─── Delete Account ───────────────────────────────────────────────────────
-  // 1. Wipes all user data (calls resetAccount)
+  // ─── Delete Account ───────────────────────────────────────────
+  // 1. Wipes all business data (resetAccount)
   // 2. Deletes the profile row
-  // 3. Calls Supabase's auth.admin.deleteUser via an RPC function
-  //    (requires a Postgres function `delete_own_account()` — see note below)
+  // 3. Deletes the auth.users row via RPC
   //
-  // ── Supabase setup required ───────────────────────────────────────────────
-  // Run this once in your Supabase SQL editor:
+  // Requires this Postgres function in Supabase SQL editor (one-time):
   //
-  //   create or replace function delete_own_account()
-  //   returns void language plpgsql security definer as $$
-  //   begin
-  //     delete from auth.users where id = auth.uid();
-  //   end;
+  //   CREATE OR REPLACE FUNCTION delete_own_account()
+  //   RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
+  //   BEGIN
+  //     DELETE FROM auth.users WHERE id = auth.uid();
+  //   END;
   //   $$;
-  //
-  // This is necessary because the client-side JS SDK cannot delete auth.users
-  // rows directly — only a security-definer Postgres function can do it.
   //
   async function deleteAccount() {
     const uid = Auth.getUserId();
     if (!uid) throw new Error("Not authenticated");
 
-    // Step 1: wipe all business data
     await resetAccount();
 
-    // Step 2: delete the profile row
     const { error: profileErr } = await _supabase
       .from("profiles")
       .delete()
       .eq("id", uid);
     if (profileErr) _throw(profileErr, "deleteAccount:profile");
 
-    // Step 3: delete the auth.users row via RPC
     const { error: rpcErr } = await _supabase.rpc("delete_own_account");
     if (rpcErr) _throw(rpcErr, "deleteAccount:auth");
 
-    // Step 4: sign out locally (session is now invalid anyway)
     await Auth.signOut();
   }
+
+  // ─── Utilities (sync) ─────────────────────────────────────────
 
   function formatCurrency(n) {
     return "₹" + Number(n).toLocaleString("en-IN");
@@ -629,9 +616,9 @@ const SF = (() => {
   function formatDate(d) {
     if (!d) return "—";
     return new Date(d).toLocaleDateString("en-IN", {
-      day: "numeric",
+      day:   "numeric",
       month: "short",
-      year: "numeric",
+      year:  "numeric",
     });
   }
 
