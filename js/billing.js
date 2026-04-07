@@ -686,7 +686,7 @@ const Billing = (() => {
     });
 
     const upgradeCards = upgradePlans.map(p => `
-      <div class="sub-upgrade-card" style="border-color:${p.color};--plan-color:${p.color}">
+      <div class="sub-upgrade-card" data-plan-id="${p.id}" style="border-color:${p.color};--plan-color:${p.color}">
         <div class="sub-upgrade-badge" style="background:${p.colorDim};color:${p.color}">${p.badge}</div>
         <div class="sub-upgrade-price">${p.priceText}</div>
         <ul class="sub-upgrade-features">
@@ -782,78 +782,175 @@ const Billing = (() => {
   }
 
   // ─── Internal: handle upgrade button click ───────────────────
-  // Phase 1: show payment instructions modal
-  function _handleUpgradeClick(planId) {
+  // Checks for an existing pending request first so we can show
+  // "Verification Pending" instead of re-opening the modal.
+  async function _handleUpgradeClick(planId) {
     const plan = PLANS[planId];
     if (!plan) return;
-    _showPaymentModal(plan);
+
+    // Disable the clicked button immediately to prevent double-clicks
+    const btn = document.querySelector(`.sub-upgrade-btn[onclick*="${planId}"]`);
+    if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
+
+    try {
+      const uid     = Auth.getUserId();
+      const pending = uid ? await _getPendingRequest(uid, planId) : null;
+
+      if (pending) {
+        // Already submitted — show pending state instead of re-opening modal
+        _showPendingBadge(planId, pending.created_at);
+      } else {
+        _showUpgradeModal(plan);
+      }
+    } catch (err) {
+      console.warn('[Billing] _handleUpgradeClick:', err);
+      _showUpgradeModal(plan); // fallback: show modal even if DB check failed
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = `Upgrade to ${plan.name} →`; }
+    }
   }
 
-  // ─── Internal: payment instructions modal ────────────────────
-  // Phase 1 semi-manual flow. Phase 2: replace body with PhonePe SDK call.
-  function _showPaymentModal(plan) {
-    // Remove any existing modal
-    document.getElementById('payment-modal')?.remove();
+  // ─── Internal: check for existing pending request ─────────────
+  async function _getPendingRequest(uid, planId) {
+    const { data } = await _supabase
+      .from('subscription_requests')
+      .select('id, created_at, status')
+      .eq('user_id', uid)
+      .eq('plan_name', planId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return data || null;
+  }
+
+  // ─── Internal: show "Verification Pending" in place of button ──
+  function _showPendingBadge(planId, createdAt) {
+    // Find and update the upgrade card for this plan
+    const card = document.querySelector(`.sub-upgrade-card[data-plan-id="${planId}"]`);
+    const btn  = card?.querySelector('.sub-upgrade-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.className = 'btn sub-upgrade-btn sub-upgrade-btn-pending';
+      btn.textContent = '⏳ Verification Pending';
+      btn.style.cssText = 'background:#F59E0B;color:#fff;cursor:default;opacity:1';
+    }
+
+    const fmt = createdAt
+      ? new Date(createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+      : '';
+
+    UI.toast(
+      `Your ${PLANS[planId]?.name} upgrade request is under review${fmt ? ` (submitted ${fmt})` : ''}. We'll activate within 2 hours.`,
+      'info'
+    );
+  }
+
+  // ─── Internal: NEW upgrade modal — QR + screenshot upload ──────
+  //
+  // PHASE 1 UPGRADE FLOW:
+  //   1. Seller sees the plan's Google Pay QR image + amount
+  //   2. Seller pays and uploads a screenshot from their gallery
+  //   3. Screenshot is stored in Supabase Storage:
+  //        subscription-proofs/{uid}/{timestamp}.{ext}
+  //   4. A row is inserted into subscription_requests table
+  //   5. Admin notification email is sent via EmailJS with:
+  //        - seller name, email, store, plan, amount
+  //        - screenshot public URL (no attachment needed)
+  //   6. Upgrade button switches to "Verification Pending" state
+  //   7. Admin reviews screenshot and manually updates plan in Supabase
+  //
+  // FUTURE PHASE 2: Replace step 1-4 with Razorpay/PhonePe SDK call.
+  //   The _handleUpgradeClick entry-point and _showPendingBadge remain unchanged.
+  //
+  // QR IMAGES: Host your Google Pay QR at a stable public URL and set
+  // the constants below. Use any image CDN or Supabase storage.
+  //
+  const QR_IMAGES = {
+    bronze:   'bronze_plan.jfif',   // ← replace with your QR URL
+    platinum: 'platinum_plan.jfif', // ← replace with your QR URL
+  };
+
+  // Admin email — receives notification for every upgrade request.
+  // Must be an email registered as a recipient in your EmailJS template.
+  const ADMIN_EMAIL = 'hisaabmitra@gmail.com'; // ← replace with your admin email
+
+  function _showUpgradeModal(plan) {
+    document.getElementById('upgrade-modal')?.remove();
+
+    const qrUrl  = QR_IMAGES[plan.id] || '';
+    const hasQR  = !!qrUrl && !qrUrl.includes('your-cdn.com');
 
     const modal = document.createElement('div');
-    modal.id = 'payment-modal';
+    modal.id        = 'upgrade-modal';
     modal.className = 'modal-overlay open';
     modal.innerHTML = `
-      <div class="modal" style="max-width:440px">
+      <div class="modal upgrade-modal-inner" style="max-width:460px">
         <div class="modal-header">
           <div class="modal-title">Upgrade to ${plan.name}</div>
-          <button class="modal-close" onclick="document.getElementById('payment-modal').remove()">✕</button>
+          <button class="modal-close" onclick="document.getElementById('upgrade-modal').remove()">✕</button>
         </div>
 
+        <!-- Plan summary pill -->
         <div class="payment-plan-summary">
           <div class="payment-plan-badge" style="background:${plan.colorDim};color:${plan.color}">${plan.badge}</div>
           <div class="payment-plan-price">${plan.priceText}</div>
         </div>
 
-        <div class="payment-instructions">
-          <div class="payment-step">
-            <div class="payment-step-num">1</div>
-            <div>
-              <div class="payment-step-title">Pay via UPI</div>
-              <div class="payment-step-desc">Send <strong>₹${plan.price}</strong> to:</div>
-              <div class="payment-upi-id" id="payment-upi-display" onclick="Billing._copyUPI()">
-                sellerflow@upi
-                <span class="payment-copy-hint">tap to copy</span>
-              </div>
-            </div>
+        <!-- Step 1: QR code or fallback UPI text -->
+        <div class="upg-step">
+          <div class="upg-step-num" style="background:${plan.colorDim};color:${plan.color}">1</div>
+          <div class="upg-step-body">
+            <div class="upg-step-title">Pay ₹${plan.price} via Google Pay</div>
+            <div class="upg-step-desc">Scan the QR code with any UPI app</div>
+            ${hasQR ? `
+              <div class="upg-qr-wrap">
+                <img src="${qrUrl}" alt="Google Pay QR for ₹${plan.price}"
+                     class="upg-qr-img"
+                     onerror="this.parentElement.innerHTML='<div class=upg-qr-fallback>QR unavailable — pay to: <strong>hisaabmitra@upi</strong></div>'">
+                <div class="upg-qr-amount">₹${plan.price}</div>
+              </div>` : `
+              <div class="upg-qr-fallback">
+                Pay via UPI: <strong style="color:var(--accent)">hisaabmitra@upi</strong>
+              </div>`}
           </div>
-          <div class="payment-step">
-            <div class="payment-step-num">2</div>
-            <div>
-              <div class="payment-step-title">Note your Transaction ID</div>
-              <div class="payment-step-desc">After payment, note the UPI transaction/reference ID from your payment app.</div>
+        </div>
+
+        <!-- Step 2: Screenshot upload -->
+        <div class="upg-step">
+          <div class="upg-step-num" style="background:${plan.colorDim};color:${plan.color}">2</div>
+          <div class="upg-step-body">
+            <div class="upg-step-title">Upload Payment Screenshot</div>
+            <div class="upg-step-desc">Take a screenshot of your payment confirmation</div>
+            <div class="upg-upload-area" id="upg-upload-area" onclick="document.getElementById('upg-screenshot-input').click()">
+              <div class="upg-upload-icon">📸</div>
+              <div class="upg-upload-label">Tap to select screenshot</div>
+              <div class="upg-upload-hint">JPG or PNG · max 5 MB</div>
             </div>
-          </div>
-          <div class="payment-step">
-            <div class="payment-step-num">3</div>
-            <div>
-              <div class="payment-step-title">Send payment proof</div>
-              <div class="payment-step-desc">
-                DM us on Instagram 
-                <a href="https://instagram.com/sellerflow.in" target="_blank" style="color:var(--accent)">@sellerflow.in</a>
-                with your Transaction ID and registered email. We'll activate your plan within 2 hours.
-              </div>
+            <input type="file" id="upg-screenshot-input" accept="image/jpeg,image/png,image/webp"
+              style="display:none" onchange="Billing._handleScreenshotSelect(this, '${plan.id}')">
+            <div id="upg-preview-wrap" style="display:none">
+              <img id="upg-preview-img" class="upg-preview-img" alt="Payment screenshot">
+              <button class="upg-remove-btn" onclick="Billing._clearScreenshot()">✕ Remove</button>
             </div>
           </div>
         </div>
 
-        <div class="payment-txn-row">
-          <input class="form-input" type="text" id="payment-txn-input"
-            placeholder="Enter Transaction ID (optional)">
-          <button class="btn btn-primary" style="width:100%;margin-top:10px"
-            onclick="Billing._handlePaymentConfirm('${plan.id}')">
-            ✅ I've Paid — Notify Team
-          </button>
+        <!-- Step 3: Submit -->
+        <div class="upg-step" style="border-bottom:none;padding-bottom:0">
+          <div class="upg-step-num" style="background:${plan.colorDim};color:${plan.color}">3</div>
+          <div class="upg-step-body">
+            <div class="upg-step-title">Submit for Verification</div>
+            <div class="upg-step-desc">We'll review and activate your plan within 2 hours</div>
+            <button class="btn btn-primary upg-submit-btn" id="upg-submit-btn"
+              onclick="Billing._submitUpgradeRequest('${plan.id}')" disabled>
+              Submit Request →
+            </button>
+          </div>
         </div>
 
-        <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:14px">
-          Your plan will be activated manually within 2 hours after verification.<br>
-          Questions? DM <a href="https://instagram.com/sellerflow.in" target="_blank" style="color:var(--accent)">@sellerflow.in</a>
+        <p class="upg-footer-note">
+          🔒 Your screenshot is stored securely. We'll notify you once verified.
         </p>
       </div>`;
 
@@ -863,45 +960,277 @@ const Billing = (() => {
     });
   }
 
-  // ─── Internal: copy UPI ID ────────────────────────────────────
-  function _copyUPI() {
-    const upi = 'sellerflow@upi';
-    navigator.clipboard?.writeText(upi).then(() => {
-      UI.toast('UPI ID copied!', 'success');
-    }).catch(() => UI.toast('UPI: sellerflow@upi', 'info'));
-  }
+  // ─── Internal: screenshot file selected ──────────────────────
+  // Updates the preview image and enables the submit button.
+  function _handleScreenshotSelect(input, planId) {
+    const file = input?.files?.[0];
+    if (!file) return;
 
-  // ─── Internal: "I've paid" confirmation ──────────────────────
-  async function _handlePaymentConfirm(planId) {
-    const txnInput = document.getElementById('payment-txn-input');
-    const txnId    = txnInput?.value.trim() || '(not provided)';
-
-    // Send a notification email to the seller's account (acts as a paper trail)
-    try {
-      const profile = await _getRawProfile();
-      if (profile?.email && typeof emailjs !== 'undefined') {
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-          customer_name:  profile.name  || 'Seller',
-          customer_email: profile.email,
-          order_id:       `UPGRADE-${planId.toUpperCase()}`,
-          store_name:     profile.store || 'SellerFlow Store',
-          total:          `₹${PLANS[planId]?.price || 0}`,
-          payment_status: `Plan upgrade request: ${planId}`,
-          invoice_html:   `<p style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#374151">
-            Hi ${profile.name || 'Seller'},<br><br>
-            We've received your upgrade request for the <strong>${PLANS[planId]?.name}</strong> plan.<br>
-            Transaction ID: <strong>${txnId}</strong><br><br>
-            Your plan will be activated within 2 hours after verification.<br><br>
-            Thank you for choosing SellerFlow! 🙏
-          </p>`,
-        });
-      }
-    } catch (e) {
-      console.warn('[Billing] Payment confirm email failed:', e);
+    // Validate size (5 MB max for screenshots)
+    if (file.size > 5 * 1024 * 1024) {
+      UI.toast('Screenshot must be under 5 MB.', 'error');
+      input.value = '';
+      return;
     }
 
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = e => {
+      const previewImg  = document.getElementById('upg-preview-img');
+      const previewWrap = document.getElementById('upg-preview-wrap');
+      const uploadArea  = document.getElementById('upg-upload-area');
+      const submitBtn   = document.getElementById('upg-submit-btn');
+
+      if (previewImg)  previewImg.src = e.target.result;
+      if (previewWrap) previewWrap.style.display = 'flex';
+      if (uploadArea)  uploadArea.style.display  = 'none';
+      if (submitBtn)   submitBtn.disabled         = false;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ─── Internal: clear screenshot selection ─────────────────────
+  function _clearScreenshot() {
+    const input      = document.getElementById('upg-screenshot-input');
+    const previewWrap = document.getElementById('upg-preview-wrap');
+    const uploadArea  = document.getElementById('upg-upload-area');
+    const submitBtn   = document.getElementById('upg-submit-btn');
+
+    if (input)       input.value = '';
+    if (previewWrap) previewWrap.style.display = 'none';
+    if (uploadArea)  uploadArea.style.display  = '';
+    if (submitBtn)   submitBtn.disabled         = true;
+  }
+
+  // ─── Internal: submit upgrade request ────────────────────────
+  async function _submitUpgradeRequest(planId) {
+    const plan  = PLANS[planId];
+    if (!plan) return;
+
+    const uid   = Auth.getUserId();
+    if (!uid) { UI.toast('Not authenticated. Please log in again.', 'error'); return; }
+
+    const input = document.getElementById('upg-screenshot-input');
+    const file  = input?.files?.[0];
+    if (!file) { UI.toast('Please select a payment screenshot first.', 'error'); return; }
+
+    // ── Show loading state on submit button ──────────────────
+    const submitBtn = document.getElementById('upg-submit-btn');
+    if (submitBtn) {
+      submitBtn.disabled   = true;
+      submitBtn.innerHTML  = '<span style="display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px"></span>Uploading…';
+    }
+
+    try {
+      // ── 1. Upload screenshot to Supabase Storage ─────────────
+      //
+      // Path: subscription-proofs/{uid}/{timestamp}.{ext}
+      // Bucket must be PUBLIC for the URL to be accessible by admin.
+      //
+      const ext       = file.name.split('.').pop().toLowerCase() || 'jpg';
+      const timestamp = Date.now();
+      const path      = `${uid}/${timestamp}.${ext}`;
+
+      const { error: uploadErr } = await _supabase.storage
+        .from('subscription-proofs')
+        .upload(path, file, {
+          upsert:      false,
+          contentType: file.type,
+          cacheControl: '3600',
+        });
+
+      if (uploadErr) {
+        console.error('[Billing] Screenshot upload error:', uploadErr);
+        // Provide specific error guidance
+        if (uploadErr.statusCode === '403' || uploadErr.message?.includes('security')) {
+          UI.toast(
+            'Upload blocked — run the storage RLS SQL for "subscription-proofs" bucket. See billing.js header.',
+            'error'
+          );
+        } else if (uploadErr.message?.includes('bucket') || uploadErr.message?.includes('not found')) {
+          UI.toast(
+            'Bucket "subscription-proofs" not found. Create it in Supabase → Storage (set to Public).',
+            'error'
+          );
+        } else {
+          UI.toast(`Upload failed: ${uploadErr.message || 'Unknown error'}`, 'error');
+        }
+        return;
+      }
+
+      // ── 2. Get public URL ─────────────────────────────────────
+      const { data: urlData } = _supabase.storage
+        .from('subscription-proofs')
+        .getPublicUrl(path);
+
+      const screenshotUrl = urlData?.publicUrl || null;
+      if (!screenshotUrl) {
+        UI.toast('Could not get screenshot URL. Make sure the bucket is set to Public.', 'error');
+        return;
+      }
+
+      // ── 3. Insert row into subscription_requests ──────────────
+      //
+      // SQL to create this table (run once in Supabase SQL editor):
+      //
+      //   CREATE TABLE IF NOT EXISTS public.subscription_requests (
+      //     id             UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+      //     user_id        UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+      //     plan_name      TEXT        NOT NULL,
+      //     amount         NUMERIC     NOT NULL,
+      //     screenshot_url TEXT        NOT NULL,
+      //     status         TEXT        NOT NULL DEFAULT 'pending',
+      //     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      //   );
+      //
+      //   ALTER TABLE public.subscription_requests ENABLE ROW LEVEL SECURITY;
+      //
+      //   CREATE POLICY "Users manage own requests"
+      //   ON public.subscription_requests FOR ALL
+      //   USING (auth.uid() = user_id);
+      //
+      const { error: dbErr } = await _supabase
+        .from('subscription_requests')
+        .insert({
+          user_id:        uid,
+          plan_name:      planId,
+          amount:         plan.price,
+          screenshot_url: screenshotUrl,
+          status:         'pending',
+        });
+
+      if (dbErr) {
+        console.error('[Billing] subscription_requests insert error:', dbErr);
+        UI.toast(
+          `Failed to save request: ${dbErr.message}. Make sure you ran the subscription_requests table SQL.`,
+          'error'
+        );
+        return;
+      }
+
+      // ── 4. Send admin notification email via EmailJS ──────────
+      //
+      // Email contains the screenshot URL — no file attachment needed.
+      // The admin clicks the link to view the screenshot in their browser.
+      //
+      // EmailJS template variables used:
+      //   customer_name    — seller's name
+      //   customer_email   — ADMIN email (so admin receives this)
+      //   order_id         — "SUB-REQUEST-BRONZE" etc. (for subject line)
+      //   store_name       — seller's store name
+      //   total            — plan price string
+      //   payment_status   — human summary line
+      //   invoice_html     — full email body HTML (no attachment)
+      //
+      await _sendUpgradeRequestEmail(planId, screenshotUrl);
+
+      // ── 5. Success UX ─────────────────────────────────────────
+      document.getElementById('upgrade-modal')?.remove();
+      UI.toast(`Request submitted! We'll activate ${plan.name} within 2 hours. 🎉`, 'success');
+
+      // Re-render subscription section to show pending badge
+      const profile = await SF.getUser();
+      await renderSubscriptionSection(profile);
+
+    } catch (err) {
+      console.error('[Billing] _submitUpgradeRequest failed:', err);
+      UI.toast('Something went wrong. Please try again.', 'error');
+    } finally {
+      if (submitBtn && document.contains(submitBtn)) {
+        submitBtn.disabled  = false;
+        submitBtn.innerHTML = 'Submit Request →';
+      }
+    }
+  }
+
+  // ─── Internal: send admin notification email ──────────────────
+  async function _sendUpgradeRequestEmail(planId, screenshotUrl) {
+    if (typeof emailjs === 'undefined') return;
+    if (EMAILJS_SERVICE_ID.startsWith('YOUR_') || EMAILJS_TEMPLATE_ID.startsWith('YOUR_')) return;
+
+    try {
+      const profile   = await _getRawProfile();
+      const plan      = PLANS[planId] || {};
+      const sellerName  = profile?.name  || 'Unknown Seller';
+      const sellerEmail = profile?.email || 'No email';
+      const storeName   = profile?.store || 'Unknown Store';
+      const now         = new Date().toLocaleString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      });
+
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        // customer_email is used as the TO address in the EmailJS template.
+        // Point it at your admin email so YOU receive this notification.
+        customer_name:  'Hisaab Mitra Admin',
+        customer_email: ADMIN_EMAIL,
+        order_id:       `SUB-REQUEST-${planId.toUpperCase()}`,
+        store_name:     storeName,
+        total:          `₹${plan.price || 0}`,
+        payment_status: `New ${plan.name} upgrade request — ₹${plan.price}`,
+        invoice_html: `
+          <div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;color:#1a1a1a;max-width:520px">
+            <h2 style="font-size:18px;color:#6366F1;margin:0 0 16px">🔔 New Subscription Upgrade Request</h2>
+            <table style="width:100%;border-collapse:collapse;font-size:14px">
+              <tr style="border-bottom:1px solid #e5e7eb">
+                <td style="padding:10px 0;color:#6b7280;width:140px">Seller Name</td>
+                <td style="padding:10px 0;font-weight:600">${sellerName}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e5e7eb">
+                <td style="padding:10px 0;color:#6b7280">Seller Email</td>
+                <td style="padding:10px 0;font-weight:600">${sellerEmail}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e5e7eb">
+                <td style="padding:10px 0;color:#6b7280">Store Name</td>
+                <td style="padding:10px 0;font-weight:600">${storeName}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e5e7eb">
+                <td style="padding:10px 0;color:#6b7280">Plan Selected</td>
+                <td style="padding:10px 0;font-weight:600">${plan.name} — ₹${plan.price}/month</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e5e7eb">
+                <td style="padding:10px 0;color:#6b7280">Submitted At</td>
+                <td style="padding:10px 0;font-weight:600">${now}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 0;color:#6b7280">Screenshot</td>
+                <td style="padding:10px 0">
+                  <a href="${screenshotUrl}" target="_blank"
+                     style="color:#6366F1;font-weight:600;text-decoration:underline">
+                    View Payment Screenshot →
+                  </a>
+                </td>
+              </tr>
+            </table>
+            <div style="margin-top:24px;padding:14px 18px;background:#EEF2FF;border-radius:8px;font-size:13px;color:#4338CA">
+              ⚡ To activate: update <code>profiles.plan = '${planId}'</code> and
+              <code>profiles.plan_expires_at</code> for user with email
+              <strong>${sellerEmail}</strong> in Supabase, then update
+              <code>subscription_requests.status = 'approved'</code>.
+            </div>
+          </div>`,
+      });
+    } catch (err) {
+      // Email failure is non-fatal — request is already saved in DB
+      console.warn('[Billing] Admin notification email failed:', err);
+    }
+  }
+
+  // ─── Internal: copy UPI ID ────────────────────────────────────
+  function _copyUPI() {
+    const upi = 'hisaabmitra@upi';
+    navigator.clipboard?.writeText(upi).then(() => {
+      UI.toast('UPI ID copied!', 'success');
+    }).catch(() => UI.toast('UPI: hisaabmitra@upi', 'info'));
+  }
+
+  // ─── Internal: "I've paid" confirmation (legacy — kept for compat)
+  async function _handlePaymentConfirm(planId) {
+    // This function is now superseded by _submitUpgradeRequest.
+    // Kept here so any existing onclick references don't break.
     document.getElementById('payment-modal')?.remove();
-    UI.toast('Payment noted! We\'ll activate your plan within 2 hours. 🙏', 'success');
+    document.getElementById('upgrade-modal')?.remove();
+    UI.toast('Please use the new upgrade flow in Settings → Subscription.', 'info');
   }
 
   // ─── Internal: logo upload handler ──────────────────────────
@@ -994,10 +1323,13 @@ const Billing = (() => {
     deleteLogo,
     getLogoUrl,
     renderSubscriptionSection,
-    // Internal handlers exposed for inline onclick use
+    // Upgrade flow — exposed for inline onclick use in dynamically rendered HTML
     _handleTrialActivate,
     _handleUpgradeClick,
-    _handlePaymentConfirm,
+    _handleScreenshotSelect,
+    _clearScreenshot,
+    _submitUpgradeRequest,
+    _handlePaymentConfirm,   // kept for backward-compat; now a no-op redirect
     _handleLogoUpload,
     _handleDeleteLogo,
     _copyUPI,
