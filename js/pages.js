@@ -318,6 +318,9 @@ const Pages = (() => {
     if (typeof Billing !== 'undefined') {
       await Billing.renderSubscriptionSection(user);
     }
+    if (typeof ThemeManager !== 'undefined') {
+  ThemeManager.renderToggle();
+}
   }
 
   // ─── Analytics ────────────────────────────────────────────────
