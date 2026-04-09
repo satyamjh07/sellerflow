@@ -32,7 +32,7 @@ const Pages = (() => {
     const recentEl = document.getElementById('recent-orders-list');
     const recent   = orders.slice(0, 6);
     if (recent.length === 0) {
-      recentEl.innerHTML = UI.emptyState('📦', 'No orders yet', 'Create your first order to see activity here');
+      recentEl.innerHTML = UI.emptyState(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;opacity:0.4"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`, 'No orders yet', 'Create your first order to see activity here');
     } else {
       recentEl.innerHTML = recent.map(o => `
         <div class="recent-order-item">
@@ -51,14 +51,14 @@ const Pages = (() => {
     const lowStockEl = document.getElementById('low-stock-list');
     const low        = products.filter(p => p.stock <= p.lowStockThreshold);
     if (low.length === 0) {
-      lowStockEl.innerHTML = `<div class="text-muted" style="font-size:13px;padding:16px;text-align:center">✅ All products are well-stocked!</div>`;
+      lowStockEl.innerHTML = `<div class="text-muted" style="font-size:13px;padding:16px;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><polyline points="20 6 9 17 4 12"/></svg> All products are well-stocked!</div>`;
     } else {
       lowStockEl.innerHTML = low.map(p => `
         <div class="low-stock-alert">
           <div class="lsa-icon">${p.emoji || '📦'}</div>
           <div class="lsa-info">
             <div class="lsa-name">${p.name}</div>
-            <div class="lsa-stock">⚠️ Only ${p.stock} left in stock</div>
+            <div class="lsa-stock"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Only ${p.stock} left in stock</div>
           </div>
           <button class="lsa-btn" onclick="UI.navigate('products')">Restock</button>
         </div>
@@ -177,7 +177,7 @@ const Pages = (() => {
     }
 
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6">${UI.emptyState('📦', 'No products found', 'Add your first product or clear your filters')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6">${UI.emptyState(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;opacity:0.4"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`, 'No products found', 'Add your first product or clear your filters')}</td></tr>`;
     } else {
       tbody.innerHTML = list.map(p => Components.ProductRow(p)).join('');
     }
@@ -219,7 +219,7 @@ const Pages = (() => {
     if (orderFilter === 'cancelled') list = list.filter(o => o.status === 'cancelled');
 
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8">${UI.emptyState('📋', 'No orders found', 'Create a new order or change your filter')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8">${UI.emptyState(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;opacity:0.4"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`, 'No orders found', 'Create a new order or change your filter')}</td></tr>`;
     } else {
       tbody.innerHTML = list.map(o => Components.OrderRow(o)).join('');
     }
@@ -251,7 +251,7 @@ const Pages = (() => {
     if (badge) badge.textContent = `${list.length} customer${list.length !== 1 ? 's' : ''}`;
 
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6">${UI.emptyState('👤', 'No customers found', 'Customers are created automatically when you add orders')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6">${UI.emptyState(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;opacity:0.4"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`, 'No customers found', 'Customers are created automatically when you add orders')}</td></tr>`;
     } else {
       tbody.innerHTML = list.map(c => Components.CustomerRow(c)).join('');
     }
@@ -273,12 +273,12 @@ const Pages = (() => {
     document.getElementById('billing-total-invoices').textContent = orderList.length;
 
     if (orderList.length === 0) {
-      container.innerHTML = UI.emptyState('🧾', 'No invoices yet', 'Orders will appear here automatically');
+      container.innerHTML = UI.emptyState(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;opacity:0.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`, 'No invoices yet', 'Orders will appear here automatically');
     } else {
       container.innerHTML = orderList.map(o => `
         <div class="billing-card" onclick="Modals.showInvoice('${o.id}')">
           <div class="billing-order-num">${o.id}</div>
-          <div class="billing-customer">👤 ${o.customerName}</div>
+          <div class="billing-customer">${o.customerName}</div>
           <div class="billing-amount">${SF.formatCurrency(o.total)}</div>
           <div class="billing-footer">
             <span class="billing-date">📅 ${SF.formatDate(o.date)}</span>
@@ -318,9 +318,6 @@ const Pages = (() => {
     if (typeof Billing !== 'undefined') {
       await Billing.renderSubscriptionSection(user);
     }
-    if (typeof ThemeManager !== 'undefined') {
-  ThemeManager.renderToggle();
-}
   }
 
   // ─── Analytics ────────────────────────────────────────────────
