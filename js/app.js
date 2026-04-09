@@ -37,9 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ─── 4. Listen for sign-out ────────────────────────────────────
   window.addEventListener("sf:signed-out", () => {
-    const appEl = document.getElementById("app");
-    appEl.classList.remove("active");
-    appEl.style.display = "none";
+    document.getElementById("app").classList.remove("active");
     _showScreen("login");
     UI.toast("You have been signed out.", "info");
   });
@@ -554,9 +552,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function _bootApp(authUser) {
     document.getElementById("login-page").style.display = "none";
-    const appEl = document.getElementById("app");
-    appEl.style.display = "";
-    appEl.classList.add("active");
+    document.getElementById("app").classList.add("active");
 
     const userForSidebar = await SF.getUser();
     const displayName = userForSidebar?.name || authUser?.email?.split("@")[0] || "Seller";
