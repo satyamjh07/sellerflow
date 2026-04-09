@@ -88,7 +88,7 @@ const Billing = (() => {
     free: {
       id:        'free',
       name:      'Free',
-      badge:     '⚪ Free',
+      badge:     'Free',
       price:     0,
       priceText: 'Always free',
       color:     '#6B7280',
@@ -108,7 +108,7 @@ const Billing = (() => {
     trial: {
       id:        'trial',
       name:      'Trial',
-      badge:     '🧪 Trial',
+      badge:     'Trial',
       price:     0,
       priceText: 'Free · 30 minutes',
       color:     '#8B5CF6',
@@ -131,7 +131,7 @@ const Billing = (() => {
     bronze: {
       id:        'bronze',
       name:      'Bronze',
-      badge:     '🥉 Bronze',
+      badge:     'Bronze',
       price:     49,
       priceText: '₹49 / month',
       color:     '#D97706',
@@ -152,7 +152,7 @@ const Billing = (() => {
     platinum: {
       id:        'platinum',
       name:      'Platinum',
-      badge:     '🥇 Platinum',
+      badge:     'Platinum',
       price:     199,
       priceText: '₹199 / month',
       color:     '#6366F1',
@@ -178,6 +178,10 @@ const Billing = (() => {
   // Reuse the same service/template IDs already configured in ui.js
   const EMAILJS_SERVICE_ID  = 'service_5k8qt0o';
   const EMAILJS_TEMPLATE_ID = 'template_x6h0iqc';
+  // Dedicated template for admin upgrade-request notifications.
+  // Create this template in EmailJS dashboard (see setup guide).
+  // Template "To" must be hardcoded to hisaabmitra@gmail.com.
+  const EMAILJS_UPGRADE_TEMPLATE_ID = 'template_u0etbcl'; // ← paste your new template ID here
 
   // ─── In-memory state ─────────────────────────────────────────
   // Loaded once at boot via init(), refreshed after plan changes.
@@ -319,9 +323,9 @@ const Billing = (() => {
   function _showExpiryToast(label, msBeforeExpiry) {
     const planName = PLANS[_currentPlan]?.name || 'plan';
     if (label === '10min') {
-      UI.toast(`⏰ Your ${planName} expires in 10 minutes! Upgrade to keep access.`, 'warn');
+      UI.toast(`Your ${planName} expires in 10 minutes! Upgrade to keep access.`, 'warn');
     } else if (label === '3days') {
-      UI.toast(`📅 Your ${planName} expires in 3 days. Renew now to avoid interruption.`, 'warn');
+      UI.toast(`Your ${planName} expires in 3 days. Renew now to avoid interruption.`, 'warn');
     }
   }
 
@@ -370,7 +374,7 @@ const Billing = (() => {
     container.innerHTML = `
       <div class="plan-banner ${bannerCls}">
         <span class="plan-banner-icon">
-          ${urgency === 'danger' ? '🔴' : urgency === 'warn' ? '⚠️' : 'ℹ️'}
+          ${urgency === 'danger' ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ef4444" stroke="none" style="width:12px;height:12px"><circle cx="12" cy="12" r="10"/></svg>` : urgency === 'warn' ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`}
         </span>
         <span class="plan-banner-text">
           <strong>${planMeta.name}</strong> expires in <strong>${timeStr}</strong>.
@@ -396,9 +400,9 @@ const Billing = (() => {
       const planMeta = PLANS[planId] || PLANS.free;
 
       const subjects = {
-        '10min':   `⏰ Your SellerFlow ${planMeta.name} expires in 10 minutes`,
-        '3days':   `📅 Your SellerFlow ${planMeta.name} renews in 3 days`,
-        'expired': `🔔 Your SellerFlow ${planMeta.name} has expired`,
+        '10min':   `Your SellerFlow ${planMeta.name} expires in 10 minutes`,
+        '3days':   `Your SellerFlow ${planMeta.name} renews in 3 days`,
+        'expired': `Your SellerFlow ${planMeta.name} has expired`,
       };
 
       const bodies = {
@@ -456,7 +460,7 @@ const Billing = (() => {
     _scheduleExpiryReminders();
     _renderPlanBanner();
 
-    UI.toast('🧪 Trial activated! You have 30 minutes of full Platinum access.', 'success');
+    UI.toast('Trial activated! You have 30 minutes of full Platinum access.', 'success');
     return true;
   }
 
@@ -667,13 +671,13 @@ const Billing = (() => {
       const fmt     = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       expiryHtml = `
         <div class="sub-expiry ${expired ? 'sub-expiry-expired' : ''}">
-          ${expired ? '❌ Expired' : `⏳ Active until ${fmt}`}
+          ${expired ? 'Expired' : `Active until ${fmt}`}
         </div>`;
     }
 
     // ── Feature list ──────────────────────────────────────────
     const featureList = plan.features.map(f =>
-      `<li class="sub-feature-item">✅ ${f}</li>`
+      `<li class="sub-feature-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><polyline points="20 6 9 17 4 12"/></svg> ${f}</li>`
     ).join('');
 
     // ── Upgrade options ───────────────────────────────────────
@@ -705,7 +709,7 @@ const Billing = (() => {
     // ── Logo section (Platinum/Trial only) ───────────────────
     const logoHtml = `
       <div class="sub-logo-section">
-        <div class="sub-section-title">🖼️ Store Logo</div>
+        <div class="sub-section-title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Store Logo</div>
         <div class="sub-section-desc">
           ${canUploadLogo()
             ? 'Upload your store logo — it appears on invoices and emails.'
@@ -715,13 +719,13 @@ const Billing = (() => {
           <div class="sub-logo-preview" id="sub-logo-preview">
             ${logoUrl
               ? `<img src="${logoUrl}" alt="Store Logo" class="sub-logo-img" id="current-logo-img">
-                 <button class="btn btn-sm btn-danger sub-logo-delete" onclick="Billing._handleDeleteLogo()">🗑️ Remove</button>`
+                 <button class="btn btn-sm btn-danger sub-logo-delete" onclick="Billing._handleDeleteLogo()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Remove</button>`
               : `<div class="sub-logo-placeholder">No logo uploaded</div>`
             }
           </div>
           <div class="sub-logo-upload-row">
             <label class="btn btn-secondary btn-sm sub-logo-label" for="logo-file-input">
-              📁 Choose Image
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg> Choose Image
             </label>
             <input type="file" id="logo-file-input" accept="image/jpeg,image/png,image/webp,image/gif"
               style="display:none" onchange="Billing._handleLogoUpload(this)">
@@ -729,7 +733,7 @@ const Billing = (() => {
           </div>
         ` : `
           <div class="sub-logo-locked">
-            <span class="sub-lock-icon">🔒</span>
+            <span class="sub-lock-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
             <span>Upgrade to Platinum to upload your logo</span>
             <button class="btn btn-sm sub-upgrade-inline-btn" onclick="Billing._handleUpgradeClick('platinum')">
               Upgrade →
@@ -754,11 +758,11 @@ const Billing = (() => {
       </div>
 
       ${upgradeCards.length > 0 ? `
-        <div class="sub-section-title" style="margin-top:24px;margin-bottom:14px">⬆️ Available Plans</div>
+        <div class="sub-section-title" style="margin-top:24px;margin-bottom:14px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg> Available Plans</div>
         <div class="sub-upgrade-grid">${upgradeCards}</div>
       ` : `
         <div class="sub-active-msg">
-          🎉 You're on the <strong>${plan.name}</strong> plan. Enjoying full access!
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg> You're on the <strong>${plan.name}</strong> plan. Enjoying full access!
         </div>
       `}
 
@@ -832,7 +836,7 @@ const Billing = (() => {
     if (btn) {
       btn.disabled = true;
       btn.className = 'btn sub-upgrade-btn sub-upgrade-btn-pending';
-      btn.textContent = '⏳ Verification Pending';
+      btn.textContent = 'Verification Pending';
       btn.style.cssText = 'background:#F59E0B;color:#fff;cursor:default;opacity:1';
     }
 
@@ -867,8 +871,8 @@ const Billing = (() => {
   // the constants below. Use any image CDN or Supabase storage.
   //
   const QR_IMAGES = {
-    bronze:   'bronze_plan.jfif',   // ← replace with your QR URL
-    platinum: 'platinum_plan.jfif', // ← replace with your QR URL
+    bronze:   '../bronze plan.jfif',   // ← replace with your QR URL
+    platinum: '../platinum plan.jfif',  // ← replace with your QR URL
   };
 
   // Admin email — receives notification for every upgrade request.
@@ -923,7 +927,7 @@ const Billing = (() => {
             <div class="upg-step-title">Upload Payment Screenshot</div>
             <div class="upg-step-desc">Take a screenshot of your payment confirmation</div>
             <div class="upg-upload-area" id="upg-upload-area" onclick="document.getElementById('upg-screenshot-input').click()">
-              <div class="upg-upload-icon">📸</div>
+              <div class="upg-upload-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
               <div class="upg-upload-label">Tap to select screenshot</div>
               <div class="upg-upload-hint">JPG or PNG · max 5 MB</div>
             </div>
@@ -950,7 +954,7 @@ const Billing = (() => {
         </div>
 
         <p class="upg-footer-note">
-          🔒 Your screenshot is stored securely. We'll notify you once verified.
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Your screenshot is stored securely. We'll notify you once verified.
         </p>
       </div>`;
 
@@ -1126,7 +1130,7 @@ const Billing = (() => {
 
       // ── 5. Success UX ─────────────────────────────────────────
       document.getElementById('upgrade-modal')?.remove();
-      UI.toast(`Request submitted! We'll activate ${plan.name} within 2 hours. 🎉`, 'success');
+      UI.toast(`Request submitted! We'll activate ${plan.name} within 2 hours.`, 'success');
 
       // Re-render subscription section to show pending badge
       const profile = await SF.getUser();
@@ -1146,11 +1150,11 @@ const Billing = (() => {
   // ─── Internal: send admin notification email ──────────────────
   async function _sendUpgradeRequestEmail(planId, screenshotUrl) {
     if (typeof emailjs === 'undefined') return;
-    if (EMAILJS_SERVICE_ID.startsWith('YOUR_') || EMAILJS_TEMPLATE_ID.startsWith('YOUR_')) return;
+    if (EMAILJS_SERVICE_ID.startsWith('YOUR_') || EMAILJS_UPGRADE_TEMPLATE_ID.startsWith('template_REPLACE')) return;
 
     try {
-      const profile   = await _getRawProfile();
-      const plan      = PLANS[planId] || {};
+      const profile     = await _getRawProfile();
+      const plan        = PLANS[planId] || {};
       const sellerName  = profile?.name  || 'Unknown Seller';
       const sellerEmail = profile?.email || 'No email';
       const storeName   = profile?.store || 'Unknown Store';
@@ -1159,56 +1163,18 @@ const Billing = (() => {
         hour: '2-digit', minute: '2-digit',
       });
 
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        // customer_email is used as the TO address in the EmailJS template.
-        // Point it at your admin email so YOU receive this notification.
-        customer_name:  'Hisaab Mitra Admin',
-        customer_email: ADMIN_EMAIL,
-        order_id:       `SUB-REQUEST-${planId.toUpperCase()}`,
+      // Uses the dedicated upgrade-request template whose "To" is
+      // hardcoded to hisaabmitra@gmail.com in the EmailJS dashboard.
+      // Variable names match that template exactly.
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_UPGRADE_TEMPLATE_ID, {
+        seller_name:    sellerName,
+        seller_email:   sellerEmail,
         store_name:     storeName,
-        total:          `₹${plan.price || 0}`,
-        payment_status: `New ${plan.name} upgrade request — ₹${plan.price}`,
-        invoice_html: `
-          <div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;color:#1a1a1a;max-width:520px">
-            <h2 style="font-size:18px;color:#6366F1;margin:0 0 16px">🔔 New Subscription Upgrade Request</h2>
-            <table style="width:100%;border-collapse:collapse;font-size:14px">
-              <tr style="border-bottom:1px solid #e5e7eb">
-                <td style="padding:10px 0;color:#6b7280;width:140px">Seller Name</td>
-                <td style="padding:10px 0;font-weight:600">${sellerName}</td>
-              </tr>
-              <tr style="border-bottom:1px solid #e5e7eb">
-                <td style="padding:10px 0;color:#6b7280">Seller Email</td>
-                <td style="padding:10px 0;font-weight:600">${sellerEmail}</td>
-              </tr>
-              <tr style="border-bottom:1px solid #e5e7eb">
-                <td style="padding:10px 0;color:#6b7280">Store Name</td>
-                <td style="padding:10px 0;font-weight:600">${storeName}</td>
-              </tr>
-              <tr style="border-bottom:1px solid #e5e7eb">
-                <td style="padding:10px 0;color:#6b7280">Plan Selected</td>
-                <td style="padding:10px 0;font-weight:600">${plan.name} — ₹${plan.price}/month</td>
-              </tr>
-              <tr style="border-bottom:1px solid #e5e7eb">
-                <td style="padding:10px 0;color:#6b7280">Submitted At</td>
-                <td style="padding:10px 0;font-weight:600">${now}</td>
-              </tr>
-              <tr>
-                <td style="padding:10px 0;color:#6b7280">Screenshot</td>
-                <td style="padding:10px 0">
-                  <a href="${screenshotUrl}" target="_blank"
-                     style="color:#6366F1;font-weight:600;text-decoration:underline">
-                    View Payment Screenshot →
-                  </a>
-                </td>
-              </tr>
-            </table>
-            <div style="margin-top:24px;padding:14px 18px;background:#EEF2FF;border-radius:8px;font-size:13px;color:#4338CA">
-              ⚡ To activate: update <code>profiles.plan = '${planId}'</code> and
-              <code>profiles.plan_expires_at</code> for user with email
-              <strong>${sellerEmail}</strong> in Supabase, then update
-              <code>subscription_requests.status = 'approved'</code>.
-            </div>
-          </div>`,
+        plan_name:      plan.name  || planId,
+        plan_id:        planId,
+        amount:         plan.price || 0,
+        submitted_at:   now,
+        screenshot_url: screenshotUrl || 'Not provided',
       });
     } catch (err) {
       // Email failure is non-fatal — request is already saved in DB
@@ -1243,7 +1209,7 @@ const Billing = (() => {
     const preview     = document.getElementById('sub-logo-preview');
 
     if (uploadLabel) {
-      uploadLabel.textContent = '⏳ Uploading…';
+      uploadLabel.textContent = 'Uploading…';
       uploadLabel.style.pointerEvents = 'none';
     }
     if (preview) {
