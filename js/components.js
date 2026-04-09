@@ -23,7 +23,7 @@ const Components = (() => {
 
     const visual = p.image
       ? `<img src="${p.image}" alt="${p.name}" style="width:36px;height:36px;border-radius:8px;object-fit:cover" />`
-      : `<div class="product-img">${p.emoji || "📦"}</div>`;
+      : `<div class="product-img">${p.emoji || '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;opacity:0.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>'}</div>`;
 
     const variantHtml = p.variant
       ? `<div class="text-muted" style="font-size:11px;margin-top:2px">${p.variant}</div>`
@@ -50,8 +50,8 @@ const Components = (() => {
         <td class="text-muted" style="font-size:12px">${p.lowStockThreshold || 5}</td>
         <td>
           <div class="action-btns">
-            <button class="action-btn action-btn-edit" onclick="Modals.editProduct('${p.id}')">✏️ Edit</button>
-            <button class="action-btn action-btn-del" onclick="Modals.deleteProduct('${p.id}')">🗑️</button>
+            <button class="action-btn action-btn-edit" onclick="Modals.editProduct('${p.id}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>
+            <button class="action-btn action-btn-del" onclick="Modals.deleteProduct('${p.id}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
           </div>
         </td>
       </tr>
@@ -86,8 +86,8 @@ const Components = (() => {
         <td>${formatDate(o.date)}</td>
         <td>
           <div class="action-btns">
-            <button class="action-btn action-btn-edit" onclick="Modals.viewOrder('${o.id}')">👁️ View</button>
-            <button class="action-btn action-btn-edit" onclick="Modals.showInvoice('${o.id}')">🧾</button>
+            <button class="action-btn action-btn-edit" onclick="Modals.viewOrder('${o.id}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View</button>
+            <button class="action-btn action-btn-edit" onclick="Modals.showInvoice('${o.id}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button>
           </div>
         </td>
       </tr>
@@ -128,7 +128,7 @@ const Components = (() => {
         <div id="followup-section"
           style="margin-top:18px;padding:14px 16px;background:var(--warn-dim);border:1px solid rgba(245,158,11,0.25);border-radius:var(--radius-md)">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-            <span style="font-size:15px">⏳</span>
+            <span style="display:inline-flex;align-items:center"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
             <div>
               <div style="font-size:13px;font-weight:700;color:var(--text-primary)">Payment Pending</div>
               <div style="font-size:11px;color:var(--text-muted);margin-top:1px">
@@ -157,7 +157,7 @@ const Components = (() => {
               font-family:var(--font-body);
             "
           >
-            <span id="followup-btn-icon">📧</span>
+            <span id="followup-btn-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
             <span id="followup-btn-text">Send Follow-up Email</span>
           </button>
           ${lastSentHtml}
@@ -277,11 +277,11 @@ const Components = (() => {
   function CustomerRow(c) {
     const isRepeat = c.totalOrders >= 2;
     const typeBadge = isRepeat
-      ? `<span class="badge badge-success">⭐ Repeat</span>`
+      ? `<span class="badge badge-success"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Repeat</span>`
       : `<span class="badge badge-muted">New</span>`;
 
     const whatsappIcon = c.whatsapp
-      ? `<span style="color:#25D366;font-size:12px;margin-left:4px" title="WhatsApp connected">💬</span>`
+      ? `<span style="color:#25D366;display:inline-flex;align-items:center;margin-left:4px" title="WhatsApp connected"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px;color:#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></span>`
       : "";
 
     const scoreBadge = c.repeatScore
@@ -320,7 +320,7 @@ const Components = (() => {
           <div style="font-size:13px;color:var(--text-secondary)">${c.instagram || ""} · ${c.city || ""}</div>
           ${c.whatsapp ? `<div style="font-size:12px;color:#10B981;margin-top:2px">WhatsApp: ${c.whatsapp}</div>` : ""}
         </div>
-        ${c.totalOrders >= 2 ? `<span class="badge badge-success" style="margin-left:auto;text-align:right">⭐ Repeat Customer<br><small style="font-weight:normal;opacity:0.8">Score: ${c.repeatScore || "Good"}</small></span>` : ""}
+        ${c.totalOrders >= 2 ? `<span class="badge badge-success" style="margin-left:auto;text-align:right"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Repeat Customer<br><small style="font-weight:normal;opacity:0.8">Score: ${c.repeatScore || "Good"}</small></span>` : ""}
       </div>
 
       <div class="mobile-grid-1" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
@@ -371,7 +371,7 @@ const Components = (() => {
                 <div style="font-weight:700">${formatCurrency(o.total)}</div>
                 <div>${UI.paymentBadge(o.payment)}</div>
               </div>
-              <button class="action-btn action-btn-edit" onclick="UI.closeModal('modal-view-customer');Modals.showInvoice('${o.id}')">🧾</button>
+              <button class="action-btn action-btn-edit" onclick="UI.closeModal('modal-view-customer');Modals.showInvoice('${o.id}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button>
             </div>
           `).join("")
       }
@@ -419,7 +419,7 @@ const Components = (() => {
 
     const brandBlock = showLogo
       ? `<img src="${logoUrl}" alt="${user.store || 'Store Logo'}" style="max-height:56px;max-width:200px;object-fit:contain;margin-bottom:6px;display:block">`
-      : `<div style="font-size:22px;font-weight:700;color:${C.accent};letter-spacing:-0.5px;margin-bottom:4px">🛍️ ${user.store || "SellerFlow Store"}</div>`;
+      : `<div style="font-size:22px;font-weight:700;color:${C.accent};letter-spacing:-0.5px;margin-bottom:4px">${user.store || "SellerFlow Store"}</div>`;
 
     const itemRows = o.items.map((item, i) => `
       <tr style="background:${i % 2 === 0 ? C.white : C.light}">
@@ -436,7 +436,7 @@ const Components = (() => {
     const statusStyle = isPaid
       ? `background:${C.greenBg};color:${C.green}`
       : `background:${C.amberBg};color:${C.amber}`;
-    const statusLabel = isPaid ? "✅ PAID" : "⏳ PAYMENT PENDING";
+    const statusLabel = isPaid ? "PAID" : "PAYMENT PENDING";
 
     const brandingFooter = showBranding
       ? `<p style="margin:6px 0 0;font-size:10px">Generated by <a href="https://sellerflow.in" style="color:${C.accent};text-decoration:none">SellerFlow</a> • sellerflow.in</p>`
@@ -525,7 +525,7 @@ const Components = (() => {
         </table>
 
         <div style="margin-top:32px;padding-top:20px;border-top:1px solid ${C.border};text-align:center;font-size:11px;color:#bbbbbb">
-          <p style="margin:0 0 4px">Thank you for shopping with us! 💜</p>
+          <p style="margin:0 0 4px">Thank you for shopping with us!</p>
           <p style="margin:0 0 4px">Pay via UPI: <strong style="color:${C.mid}">${user.upiId || "upi@bank"}</strong> | Questions? DM us on Instagram</p>
           ${brandingFooter}
         </div>
@@ -551,7 +551,7 @@ const Components = (() => {
 
     const badgeBg    = isPaid ? C.greenDim : C.amberDim;
     const badgeColor = isPaid ? C.green    : C.amber;
-    const badgeText  = isPaid ? "✅ PAID"  : "⏳ PAYMENT PENDING";
+    const badgeText  = isPaid ? "PAID"  : "PAYMENT PENDING";
 
     const itemRows = (o.items || []).map((item, i) => `
       <tr style="border-bottom:1px solid ${C.border}">
@@ -577,14 +577,14 @@ const Components = (() => {
       : "";
 
     const notesBlock = o.notes
-      ? `<p style="margin:6px 0 0;font-size:12px;color:${C.textMuted}">📝 Note: ${o.notes}</p>`
+      ? `<p style="margin:6px 0 0;font-size:12px;color:${C.textMuted}">Note: ${o.notes}</p>`
       : "";
 
     const upiBlock = upiId
       ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:20px">
            <tr>
              <td style="background:${C.indigoDim};border-radius:10px;padding:14px 18px;text-align:center">
-               <p style="margin:0;font-size:13px;color:${C.indigo};font-weight:600">💳 Pay via UPI</p>
+               <p style="margin:0;font-size:13px;color:${C.indigo};font-weight:600">Pay via UPI</p>
                <p style="margin:6px 0 0;font-size:16px;font-weight:700;color:${C.textPrimary};letter-spacing:0.5px">${upiId}</p>
              </td>
            </tr>
@@ -603,7 +603,7 @@ const Components = (() => {
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td style="vertical-align:top">
-                  <p style="margin:0;font-size:22px;font-weight:700;color:#fff">🛍️ ${storeName}</p>
+                  <p style="margin:0;font-size:22px;font-weight:700;color:#fff">${storeName}</p>
                   ${user.instagram ? `<p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8)">${user.instagram}</p>` : ""}
                   ${user.phone    ? `<p style="margin:2px 0 0;font-size:13px;color:rgba(255,255,255,0.8)">${user.phone}</p>` : ""}
                   ${user.gstNumber ? `<p style="margin:4px 0 0;font-size:11px;color:rgba(255,255,255,0.7)"><span style="font-weight:700">GSTIN:</span> ${user.gstNumber}</p>` : ""}
@@ -687,7 +687,7 @@ const Components = (() => {
         <tr><td style="padding:0 32px">${upiBlock}</td></tr>
         <tr>
           <td style="padding:28px 32px;text-align:center;border-top:1px solid ${C.border}">
-            <p style="margin:0;font-size:20px">💜</p>
+            
             <p style="margin:8px 0 0;font-size:15px;font-weight:700;color:${C.textPrimary}">Thank you for shopping with us!</p>
             <p style="margin:6px 0 0;font-size:13px;color:${C.textMuted}">Questions? DM us on Instagram or reply to this email.</p>
             <p style="margin:20px 0 0;font-size:11px;color:${C.textLight}">Generated by <strong>SellerFlow</strong></p>
