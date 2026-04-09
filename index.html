@@ -1,9 +1,20 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SellerFlow — Instagram Seller Dashboard</title>
+    <!-- Prevent flash of wrong theme: apply saved theme before render -->
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem('sf-theme') || 'dark';
+          document.documentElement.setAttribute('data-theme', t);
+        } catch(e) {}
+      })();
+    </script>
+   <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/mobileux.css" />
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -13,20 +24,6 @@
 
     <!-- EmailJS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-
-    <!-- MUST be first — prevents theme flash -->
-<script>
-  (function(){
-    var t = localStorage.getItem('hm-theme');
-    document.documentElement.setAttribute('data-theme', ['dark','light'].includes(t) ? t : 'dark');
-  })();
-</script>
-
-<!-- Remove old font imports from style.css — they're in theme.css now -->
-<link rel="stylesheet" href="css/theme.css" />
-<!-- Keep style.css only for invoice/billing/analytics/subscription sections -->
-<!-- <link rel="stylesheet" href="css/style.css" /> -->
-<!-- <link rel="stylesheet" href="css/mobile.css" /> -->
 
     <style>
       /* ─── Loading overlay ─────────────────────────────── */
@@ -195,6 +192,80 @@
           -webkit-print-color-adjust: exact; print-color-adjust: exact;
         }
       }
+
+      /* ─── SVG Icon Alignment ──────────────────────────── */
+      .sf-icon, .nav-icon svg, .stat-icon svg, .qa-icon svg,
+      .badge svg, .filter-tab svg, .btn svg, .action-btn svg,
+      .topbar-btn svg, .modal-close svg, .toast-icon svg {
+        display: inline-flex;
+        vertical-align: middle;
+        flex-shrink: 0;
+      }
+      .nav-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+      }
+      .stat-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .qa-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+      }
+      .filter-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .btn svg, .action-btn svg {
+        vertical-align: middle;
+        margin-bottom: 1px;
+      }
+      .an-sug-icon svg {
+        display: block;
+      }
+      .an-upgrade-icon svg {
+        display: block;
+        margin: 0 auto;
+      }
+      .auth-screen-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+      }
+      .auth-screen-icon svg {
+        stroke: var(--accent);
+      }
+      .login-logo-icon svg {
+        stroke: var(--accent);
+      }
+      .sidebar-logo-icon svg {
+        stroke: var(--accent);
+      }
+      .settings-section h3 span {
+        display: inline-flex;
+        align-items: center;
+        vertical-align: middle;
+        margin-right: 4px;
+      }
+      .settings-section h3 span svg {
+        stroke: var(--accent);
+      }
+      .sub-lock-icon svg {
+        vertical-align: middle;
+      }
+      .plan-banner-icon svg {
+        display: block;
+      }
     </style>
   </head>
   <body>
@@ -209,7 +280,7 @@
 
   <div class="login-card">
     <div class="login-logo">
-      <div class="login-logo-icon">🛍️</div>
+      <div class="login-logo-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
       <div class="login-logo-text">SellerFlow</div>
     </div>
 
@@ -296,7 +367,7 @@
 
     <!-- ══ EMAIL VERIFICATION PENDING ══════════════════════════ -->
     <div id="auth-verify-email-screen" style="display:none">
-      <span class="auth-screen-icon">📬</span>
+      <span class="auth-screen-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
       <div class="auth-screen-title">Check your inbox</div>
       <div class="auth-screen-subtitle">
         We sent a confirmation link to<br>
@@ -309,11 +380,9 @@
       <input type="hidden" id="resend-email-input" />
 
       <div class="verify-action-row">
-        <button class="btn btn-verify-check" id="check-verified-btn">
-          ✅ I've Verified — Open Dashboard
+        <button class="btn btn-verify-check" id="check-verified-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:6px"><polyline points="20 6 9 17 4 12"/></svg>I've Verified — Open Dashboard
         </button>
-        <button class="btn btn-secondary" id="resend-verification-btn">
-          📧 Resend Verification Email
+        <button class="btn btn-secondary" id="resend-verification-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:6px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Resend Verification Email
         </button>
       </div>
 
@@ -325,7 +394,7 @@
 
     <!-- ══ FORGOT PASSWORD ══════════════════════════════════════ -->
     <div id="auth-forgot-password-screen" style="display:none">
-      <span class="auth-screen-icon">🔑</span>
+      <span class="auth-screen-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></span>
       <div class="auth-screen-title">Reset your password</div>
       <div class="auth-screen-subtitle">
         Enter your account email and we'll send you a secure reset link.
@@ -337,13 +406,13 @@
           <label class="form-label" for="forgot-email-input">Email Address</label>
           <input class="form-input" type="email" id="forgot-email-input" placeholder="you@store.com" autocomplete="email" />
         </div>
-        <button class="btn btn-primary btn-full" id="forgot-password-btn">📧 Send Reset Email</button>
+        <button class="btn btn-primary btn-full" id="forgot-password-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:6px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Send Reset Email</button>
       </div>
 
       <!-- Success state (hidden until email sent) -->
       <div id="forgot-password-success" style="display:none">
         <div class="auth-success-box">
-          <span class="success-icon">✉️</span>
+          <span class="success-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
           <p>Reset link sent to<br><strong id="forgot-success-email"></strong></p>
           <p style="margin-top:8px;font-size:12px">Click the link in the email to set a new password. Check spam if you don't see it within 2 minutes.</p>
         </div>
@@ -357,7 +426,7 @@
 
     <!-- ══ RESET PASSWORD (lands here from email link) ══════════ -->
     <div id="auth-reset-password-screen" style="display:none">
-      <span class="auth-screen-icon">🔐</span>
+      <span class="auth-screen-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
       <div class="auth-screen-title">Set a new password</div>
       <div class="auth-screen-subtitle">
         Choose a strong password for your SellerFlow account.
@@ -373,13 +442,13 @@
           <label class="form-label" for="reset-password-confirm">Confirm New Password</label>
           <input class="form-input" type="password" id="reset-password-confirm" placeholder="Re-enter new password" autocomplete="new-password" />
         </div>
-        <button class="btn btn-primary btn-full" id="reset-password-btn">🔐 Set New Password</button>
+        <button class="btn btn-primary btn-full" id="reset-password-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:6px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Set New Password</button>
       </div>
 
       <!-- Success state -->
       <div id="reset-password-success" style="display:none">
         <div class="auth-success-box">
-          <span class="success-icon">🎉</span>
+          <span class="success-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span>
           <p><strong style="color:var(--success)">Password updated!</strong></p>
           <p style="margin-top:6px">Redirecting you to your dashboard…</p>
         </div>
@@ -395,9 +464,9 @@
     <div id="auth-feature-strip">
       <div class="divider" style="margin:20px 0 14px"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
-        <div style="font-size:11px;color:var(--text-muted)"><div style="font-size:18px;margin-bottom:4px">📦</div>Manage Orders</div>
-        <div style="font-size:11px;color:var(--text-muted)"><div style="font-size:18px;margin-bottom:4px">🧾</div>Auto Invoices</div>
-        <div style="font-size:11px;color:var(--text-muted)"><div style="font-size:18px;margin-bottom:4px">📊</div>Analytics</div>
+        <div style="font-size:11px;color:var(--text-muted)"><div style="margin-bottom:6px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>Manage Orders</div>
+        <div style="font-size:11px;color:var(--text-muted)"><div style="margin-bottom:6px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>Auto Invoices</div>
+        <div style="font-size:11px;color:var(--text-muted)"><div style="margin-bottom:6px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>Analytics</div>
       </div>
     </div>
   </div><!-- /login-card -->
@@ -405,21 +474,21 @@
 
  <!--    APP SHELL
 ══════════════════════════════════════════════ -->
-    <div id="app" style="display:none">
+    <div id="app">
       <!-- ── Sidebar ─────────────────────────────── -->
       <aside class="sidebar">
         <div class="sidebar-header">
-          <div class="sidebar-logo-icon">🛍️</div>
+          <div class="sidebar-logo-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
           <div class="sidebar-logo-text">SellerFlow</div>
         </div>
 
         <nav class="sidebar-nav">
           <div class="nav-section-label">Main</div>
           <div class="nav-item active" data-page="dashboard">
-            <span class="nav-icon">📊</span> Dashboard
+            <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span> Dashboard
           </div>
           <div class="nav-item" data-page="products">
-            <span class="nav-icon">📦</span> Products
+            <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span> Products
             <span
               class="nav-badge warn"
               id="badge-lowstock"
@@ -428,27 +497,27 @@
             >
           </div>
           <div class="nav-item" data-page="orders">
-            <span class="nav-icon">🛒</span> Orders
+            <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span> Orders
             <span class="nav-badge" id="badge-pending" style="display: none"
               >0</span
             >
           </div>
           <div class="nav-item" data-page="customers">
-            <span class="nav-icon">👥</span> Customers
+            <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Customers
           </div>
 
           <div class="nav-section-label" style="margin-top: 8px">Finance</div>
           <div class="nav-item" data-page="billing">
-            <span class="nav-icon">🧾</span> Billing
+            <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span> Billing
           </div>
           <div class="nav-item" data-page="analytics">
-            <span class="nav-icon">📊</span> Analytics
+            <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span> Analytics
             <span class="nav-badge" id="badge-analytics" style="display:none;background:var(--accent);color:#fff;font-size:9px">PRO</span>
           </div>
 
           <div class="nav-section-label" style="margin-top: 8px">Account</div>
           <div class="nav-item" data-page="settings">
-            <span class="nav-icon">⚙️</span> Settings
+            <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span> Settings
           </div>
         </nav>
 
@@ -463,7 +532,7 @@
                 Priya Boutique
               </div>
             </div>
-            <div class="sidebar-user-chevron">↗</div>
+            <div class="sidebar-user-chevron"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></div>
           </div>
         </div>
       </aside>
@@ -475,13 +544,11 @@
       <main class="main">
         <!-- Topbar -->
         <header class="topbar">
-          <button class="topbar-mobile-menu" id="mobile-menu-btn">☰</button>
+          <button class="topbar-mobile-menu" id="mobile-menu-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
           <div class="topbar-title" id="topbar-title">Dashboard</div>
-<button class="topbar-btn" onclick="ThemeManager.toggle()" title="Toggle theme">
-  <span id="topbar-theme-icon">☀️</span>
-</button>
+
           <div class="topbar-search">
-            <span class="topbar-search-icon">🔍</span>
+            <span class="topbar-search-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
             <input
               type="text"
               id="topbar-search-input"
@@ -497,8 +564,21 @@
             >
               ➕
             </button>
-            <button class="topbar-btn" title="Notifications">
-              🔔
+            <!-- Theme Toggle -->
+            <button
+              class="theme-toggle"
+              id="theme-toggle-btn"
+              onclick="ThemeManager.toggle()"
+              title="Toggle light/dark mode"
+              aria-label="Toggle light/dark mode"
+            >
+              <div class="theme-toggle-track">
+                <span class="theme-toggle-icon moon">🌙</span>
+                <span class="theme-toggle-icon sun">☀️</span>
+              </div>
+              <div class="theme-toggle-thumb"></div>
+            </button>
+            <button class="topbar-btn" title="Notifications"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               <span class="notif-dot"></span>
             </button>
           </div>
@@ -510,7 +590,7 @@
           <div class="page active" id="page-dashboard">
             <div class="page-header">
               <div class="page-header-left">
-                <h2>Good morning ☀️</h2>
+                <h2>Good morning</h2>
                 <p>Here's what's happening with your store today.</p>
               </div>
               <div class="page-header-actions">
@@ -518,7 +598,7 @@
                   class="btn btn-primary"
                   onclick="Modals.openCreateOrder()"
                 >
-                  ➕ New Order
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:6px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Order
                 </button>
               </div>
             </div>
@@ -533,7 +613,7 @@
               <div class="stat-card">
                 <div class="stat-top">
                   <span class="stat-label">Monthly Revenue</span>
-                  <div class="stat-icon indigo">💰</div>
+                  <div class="stat-icon indigo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
                 </div>
                 <div class="stat-value" id="stat-revenue">₹0</div>
                 <div class="stat-change up">↑ +18.2% vs last month</div>
@@ -541,7 +621,7 @@
               <div class="stat-card">
                 <div class="stat-top">
                   <span class="stat-label">Orders (This Month)</span>
-                  <div class="stat-icon cyan">📦</div>
+                  <div class="stat-icon cyan"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
                 </div>
                 <div class="stat-value" id="stat-orders">0</div>
                 <div class="stat-change up">↑ +12 new this month</div>
@@ -549,7 +629,7 @@
               <div class="stat-card">
                 <div class="stat-top">
                   <span class="stat-label">Pending Payments</span>
-                  <div class="stat-icon amber">⏳</div>
+                  <div class="stat-icon amber"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
                 </div>
                 <div class="stat-value" id="stat-pending">0</div>
                 <div class="stat-change neutral">Requires follow-up</div>
@@ -557,11 +637,11 @@
               <div class="stat-card">
                 <div class="stat-top">
                   <span class="stat-label">Total Customers</span>
-                  <div class="stat-icon green">👥</div>
+                  <div class="stat-icon green"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
                 </div>
                 <div class="stat-value" id="stat-customers">0</div>
                 <div class="stat-change up">
-                  ⭐ <span id="stat-repeat">0</span> repeat buyers
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;vertical-align:middle;margin-right:3px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> <span id="stat-repeat">0</span> repeat buyers
                 </div>
               </div>
             </div>
@@ -617,23 +697,23 @@
                   </div>
                   <div class="quick-actions">
                     <button class="quick-action-btn" id="qa-new-order">
-                      <span class="qa-icon">➕</span>New Order
+                      <span class="qa-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>New Order
                     </button>
                     <button class="quick-action-btn" id="qa-add-product">
-                      <span class="qa-icon">📦</span>Add Product
+                      <span class="qa-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>Add Product
                     </button>
                     <button class="quick-action-btn" id="qa-invoices">
-                      <span class="qa-icon">🧾</span>Invoices
+                      <span class="qa-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>Invoices
                     </button>
                     <button class="quick-action-btn" id="qa-customers">
-                      <span class="qa-icon">👥</span>Customers
+                      <span class="qa-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Customers
                     </button>
                   </div>
                 </div>
                 <div class="card">
                   <div class="card-header">
                     <div>
-                      <div class="card-title">⚠️ Low Stock Alerts</div>
+                      <div class="card-title" style="display:flex;align-items:center;gap:6px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--warn)"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Low Stock Alerts</div>
                       <div class="card-subtitle">Items needing restocking</div>
                     </div>
                     <button
@@ -659,14 +739,14 @@
               </div>
               <div class="page-header-actions">
                 <button class="btn btn-primary" id="add-product-btn">
-                  ➕ Add Product
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:6px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Product
                 </button>
               </div>
             </div>
             <div class="card">
               <div class="products-header-row">
                 <div class="products-search">
-                  <span class="products-search-icon">🔍</span>
+                  <span class="products-search-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
                   <input
                     type="text"
                     id="product-search"
@@ -693,7 +773,7 @@
                     <tr>
                       <td colspan="6">
                         <div class="empty-state">
-                          <div class="empty-icon">📦</div>
+                          <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;opacity:0.4"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
                           <div class="empty-title">Loading…</div>
                         </div>
                       </td>
@@ -714,7 +794,7 @@
               </div>
               <div class="page-header-actions">
                 <button class="btn btn-primary" id="create-order-btn">
-                  ➕ Create Order
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:6px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Create Order
                 </button>
               </div>
             </div>
@@ -723,17 +803,17 @@
                 All Orders
               </button>
               <button class="filter-tab" data-filter="pending">
-                ⏳ Pending Payment
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:4px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Pending Payment
               </button>
-              <button class="filter-tab" data-filter="paid">✅ Paid</button>
+              <button class="filter-tab" data-filter="paid"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>Paid</button>
               <button class="filter-tab" data-filter="shipped">
-                🚚 Shipped
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:4px"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Shipped
               </button>
               <button class="filter-tab" data-filter="delivered">
-                📬 Delivered
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:4px"><path d="M22 17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5C2 7 4 5 6.5 5H18c2.2 0 4 1.8 4 4v8z"/><polyline points="15,9 18,9 18,11"/><path d="M6.5 5C9 5 11 7 11 9.5V17a2 2 0 0 1-2 2v0"/><line x1="6" y1="10" x2="7" y2="10"/></svg>Delivered
               </button>
               <button class="filter-tab" data-filter="cancelled">
-                ❌ Cancelled
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Cancelled
               </button>
             </div>
             <div class="card">
@@ -768,7 +848,7 @@
             <div class="card">
               <div class="products-header-row" style="margin-bottom: 16px">
                 <div class="products-search">
-                  <span class="products-search-icon">🔍</span>
+                  <span class="products-search-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
                   <input
                     type="text"
                     id="customer-search"
@@ -812,7 +892,7 @@
               <div class="stat-card">
                 <div class="stat-top">
                   <span class="stat-label">Total Invoices</span>
-                  <div class="stat-icon indigo">🧾</div>
+                  <div class="stat-icon indigo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
                 </div>
                 <div class="stat-value" id="billing-total-invoices">0</div>
                 <div class="stat-change neutral">All time</div>
@@ -820,7 +900,7 @@
               <div class="stat-card">
                 <div class="stat-top">
                   <span class="stat-label">Revenue Collected</span>
-                  <div class="stat-icon green">✅</div>
+                  <div class="stat-icon green"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><polyline points="20 6 9 17 4 12"/></svg></div>
                 </div>
                 <div class="stat-value" id="billing-paid-total">₹0</div>
                 <div class="stat-change up">Paid orders</div>
@@ -828,7 +908,7 @@
               <div class="stat-card">
                 <div class="stat-top">
                   <span class="stat-label">Pending Collection</span>
-                  <div class="stat-icon amber">⏳</div>
+                  <div class="stat-icon amber"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
                 </div>
                 <div class="stat-value" id="billing-pending-total">₹0</div>
                 <div class="stat-change neutral">Awaiting payment</div>
@@ -857,13 +937,13 @@
               </div>
               <div class="page-header-actions">
                 <button class="btn btn-primary" id="save-settings-btn">
-                  💾 Save Changes
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:6px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Changes
                 </button>
               </div>
             </div>
             <div class="settings-grid">
               <div class="settings-section">
-                <h3><span>🏪</span> Store Profile</h3>
+                <h3><span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span> Store Profile</h3>
                 <div class="form-group">
                   <label class="form-label">Your Name</label
                   ><input
@@ -954,9 +1034,7 @@
                 </div>
               </div>
               <div class="settings-section">
-                <h3><span>🔔</span> Notifications</h3>
-                <div id="theme-toggle-container"></div>
-                <div id="theme-toggle-container"></div>
+                <h3><span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span> Notifications</h3>
                 <div class="toggle-row">
                   <div class="toggle-info">
                     <div class="toggle-label">
@@ -1011,7 +1089,7 @@
                 </div>
               </div>
               <div class="settings-section">
-                <h3><span>⚙️</span> Preferences</h3>
+                <h3><span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span> Preferences</h3>
                 <div class="toggle-row">
                   <div class="toggle-info">
                     <div class="toggle-label">Auto-generate Invoice ID</div>
@@ -1061,14 +1139,14 @@
                       margin-bottom: 10px;
                     "
                   >
-                    ⚠️ This only clears local UI state — your cloud data remains
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;vertical-align:middle;margin-right:3px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> This only clears local UI state — your cloud data remains
                     safe.
                   </p>
                   <button
                     class="btn btn-danger btn-sm"
                     onclick="window.location.reload()"
                   >
-                    🔄 Reload App
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:5px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Reload App
                   </button>
                 </div>
               </div>
@@ -1083,7 +1161,7 @@
               </div>
 
               <div class="settings-section danger-zone-section">
-                <h3><span>⚠️</span> Danger Zone</h3>
+                <h3><span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span> Danger Zone</h3>
 
                 <!-- Reset Account -->
                 <div class="danger-zone-row">
@@ -1096,7 +1174,7 @@
                     </div>
                   </div>
                   <button class="btn btn-danger" id="reset-account-btn">
-                    🗑️ Reset Data
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:5px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Reset Data
                   </button>
                 </div>
 
@@ -1113,7 +1191,7 @@
                     </div>
                   </div>
                   <button class="btn btn-danger-solid" id="delete-account-btn">
-                    💀 Delete Account
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:5px"><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M8 20v2h8v-2"/><path d="M12.5 17l-.5-1-.5 1"/><path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"/></svg>Delete Account
                   </button>
                 </div>
               </div>
@@ -1130,7 +1208,7 @@
               </div>
               <div class="page-header-actions">
                 <button class="btn btn-secondary btn-sm" id="analytics-refresh-btn">
-                  🔄 Refresh
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:5px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Refresh
                 </button>
               </div>
             </div>
@@ -1242,7 +1320,7 @@
             Cancel
           </button>
           <button class="btn btn-primary" id="save-product-btn">
-            💾 Save Product
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Product
           </button>
         </div>
       </div>
@@ -1475,8 +1553,8 @@
             <div class="form-group">
               <label class="form-label">Payment Status</label>
               <select class="form-select" id="order-payment-status">
-                <option value="pending">⏳ Pending</option>
-                <option value="paid">✅ Paid</option>
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
               </select>
             </div>
           </div>
@@ -1494,7 +1572,7 @@
             Cancel
           </button>
           <button class="btn btn-primary" id="save-order-btn">
-            ✅ Create Order
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Create Order
           </button>
         </div>
       </div>
@@ -1515,10 +1593,10 @@
             Close
           </button>
           <button class="btn btn-secondary" id="view-order-invoice-btn">
-            🧾 Preview Invoice
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Preview Invoice
           </button>
           <button class="btn btn-primary" id="view-order-update-btn">
-            💾 Update Order
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Update Order
           </button>
         </div>
       </div>
@@ -1547,7 +1625,7 @@
             id="invoice-copy-msg-btn"
             title="Copy invoice message"
           >
-            📋 Copy Msg
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy Msg
           </button>
           <button
             class="btn"
@@ -1558,17 +1636,17 @@
               box-shadow: 0 4px 16px rgba(37, 211, 102, 0.35);
             "
           >
-            🟢 WhatsApp
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;margin-right:5px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>WhatsApp
           </button>
           <button class="btn" id="invoice-toggle-payment">
-            ✅ Mark as Paid
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Mark as Paid
           </button>
           <button
             class="btn download-btn"
             id="invoice-download-btn"
             title="Download invoice as PDF"
           >
-            ⬇️ Download PDF
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download PDF
           </button>
         </div>
       </div>
@@ -1612,17 +1690,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <!-- ══ Scripts (load order matters) ════════════════════════ -->
+    <script src="js/theme.js"></script>       <!-- Theme manager (dark/light) -->
+    <script src="js/icons.js"></script>
     <script src="js/supabase.js"></script>   <!-- Auth + _supabase client  -->
     <script src="js/data.js"></script>        <!-- SF.* async data layer    -->
     <script src="js/components.js"></script>  <!-- Pure HTML renderers      -->
     <script src="js/ui.js"></script>          <!-- UI utilities             -->
     <script src="js/billing.js"></script>     <!-- Subscription system      -->
     <script src="js/analytics.js"></script>   <!-- Analytics engine         -->
-    <script src="js/notifications.js"></script> <!-- Notification service -->
+    <script src="js/notifications.js"></script> <!-- Notification service 
     <script src="js/profile-reminder.js"></script> <!-- Profile completion reminder -->
     <script src="js/pages.js"></script>       <!-- Async page renderers     -->
     <script src="js/modals.js"></script>      <!-- Async modal handlers     -->
-    <script src="js/theme.js"></script>
     <script src="js/app.js"></script>         <!-- Entry point              -->
   </body>
 </html>
