@@ -278,24 +278,24 @@ const Analytics = (() => {
     // Revenue projection
     if (d.dayOfMonth >= 5 && d.monthPrediction > 0) {
       const fmt = SF.formatCurrency(Math.round(d.monthPrediction / 100) * 100);
-      tips.push({ icon: '🎯', color: '#6366F1',
+      tips.push({ icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`, color: '#6366F1',
         text: `At your current pace, you're on track to earn <strong>${fmt}</strong> this month.` });
     }
 
     // Growth
     if (d.revGrowth !== null) {
       if (d.revGrowth > 20) {
-        tips.push({ icon: '🚀', color: '#10B981',
+        tips.push({ icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>`, color: '#10B981',
           text: `Revenue is up <strong>${Math.abs(d.revGrowth).toFixed(0)}%</strong> vs last month. Keep the momentum!` });
       } else if (d.revGrowth < -15) {
-        tips.push({ icon: '📉', color: '#EF4444',
+        tips.push({ icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>`, color: '#EF4444',
           text: `Revenue dropped <strong>${Math.abs(d.revGrowth).toFixed(0)}%</strong> vs last month. Consider running a promotion.` });
       }
     }
 
     // Top city
     if (d.topRevCity) {
-      tips.push({ icon: '🌍', color: '#22D3EE',
+      tips.push({ icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`, color: '#22D3EE',
         text: `<strong>${d.topRevCity[0]}</strong> is your highest-revenue city. Consider exclusive offers there.` });
     }
 
@@ -304,38 +304,38 @@ const Analytics = (() => {
       const top = d.top5ByRev[0];
       const prod = d.products.find(p => p.name === top.name);
       if (prod && prod.stock <= (prod.lowStockThreshold || 5)) {
-        tips.push({ icon: '⚠️', color: '#F59E0B',
+        tips.push({ icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`, color: '#F59E0B',
           text: `Your best-seller <strong>${top.name}</strong> is running low on stock. Restock before you lose sales.` });
       }
     }
 
     // Dead stock
     if (d.deadStock.length) {
-      tips.push({ icon: '📦', color: '#8B5CF6',
+      tips.push({ icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`, color: '#8B5CF6',
         text: `<strong>${d.deadStock[0].name}</strong> hasn't sold in 30 days. Consider a discount to clear stock.` });
     }
 
     // Inactive repeats
     if (d.inactiveRepeats.length) {
-      tips.push({ icon: '💌', color: '#EC4899',
+      tips.push({ icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`, color: '#EC4899',
         text: `<strong>${d.inactiveRepeats[0].name}</strong> is a repeat buyer who hasn't ordered in 30+ days. A personal outreach could bring them back.` });
     }
 
     // Pending revenue
     if (d.pendingRev > 0) {
-      tips.push({ icon: '⏳', color: '#F59E0B',
+      tips.push({ icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`, color: '#F59E0B',
         text: `You have <strong>${SF.formatCurrency(d.pendingRev)}</strong> in pending payments. Send reminders to close these quickly.` });
     }
 
     // Low city diversity
     if (d.topCities.length === 1) {
-      tips.push({ icon: '🗺️', color: '#22D3EE',
+      tips.push({ icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>`, color: '#22D3EE',
         text: `All your orders are from one city. Share your store link in new Instagram markets to diversify.` });
     }
 
     // No suggestions
     if (tips.length === 0) {
-      tips.push({ icon: '✅', color: '#10B981',
+      tips.push({ icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><polyline points="20 6 9 17 4 12"/></svg>`, color: '#10B981',
         text: `Your store looks healthy! Add more products and share your catalogue to grow faster.` });
     }
 
@@ -388,7 +388,7 @@ const Analytics = (() => {
     } catch (err) {
       console.error('[Analytics] render failed:', err);
       container.innerHTML = `<div class="an-error">
-        <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+        <div style="margin-bottom:12px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
         <div style="font-size:15px;font-weight:600;margin-bottom:6px">Failed to load analytics</div>
         <div style="font-size:13px;color:var(--text-muted)">${err.message}</div>
       </div>`;
@@ -399,7 +399,7 @@ const Analytics = (() => {
   function _renderUpgradeWall() {
     return `
       <div class="an-upgrade-wall">
-        <div class="an-upgrade-icon">📊</div>
+        <div class="an-upgrade-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
         <div class="an-upgrade-title">Advanced Analytics</div>
         <div class="an-upgrade-sub">
           Unlock your business growth cockpit.<br>
@@ -585,7 +585,7 @@ const Analytics = (() => {
         </div>
       ` : `
         <div class="an-empty-section" style="margin-bottom:32px">
-          <div class="empty-icon" style="font-size:32px;opacity:0.4">🌍</div>
+          <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px;opacity:0.4"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
           <div class="empty-title">No location data yet</div>
           <div class="empty-desc">Add city and state when creating customers to unlock location insights.</div>
         </div>`}
