@@ -331,5 +331,9 @@ const Pages = (() => {
     }
   }
 
-  return { dashboard, products, orders, customers, billing, settings, analytics };
+     async function invoiceTemplates() {
+      InvoiceTemplates.renderPage();
+    }
+ 
+    return { dashboard, products, orders, customers, billing, settings, analytics, 'invoice-templates': invoiceTemplates };
 })();
