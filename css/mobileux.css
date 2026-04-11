@@ -365,105 +365,11 @@ button,
   }
 }
 
-/* ── 5b. Phone (≤ 480px): stacked card layout for Orders ─────── */
-/*
-   On very small screens the orders and products tables are replaced
-   by native-feeling cards. We hide the <thead> and repaint each
-   <tr> as a flex card using data attributes set in Components.
-   Products table stays scrollable (fewer columns needed at a glance).
-*/
+/* ── 5b. Orders — replaced by .ord-card div layout (see end of file) ── */
 
 @media (max-width: 480px) {
-  /* ─── ORDERS table → card stack ──────────────────────────── */
-
-  #orders-tbody .table-row-card,
-  #orders-tbody tr {
-    display: block;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 14px 16px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: var(--transition);
-  }
-
-  #orders-tbody tr:hover {
-    border-color: var(--border-active);
-    background: var(--bg-card-hover);
-  }
-
-  /* Hide table header row entirely — cards are self-labelled */
-  #page-orders .table thead {
-    display: none;
-  }
-
-  /* Each <td> becomes a block; we use data-label for labelling */
-  #orders-tbody td {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 5px 0;
-    border: none;
-    font-size: 13px;
-    /* Prevent the bottom-border from appearing between card cells */
-    border-bottom: none !important;
-  }
-
-  /* Label column (set via CSS attr() from data-label on <td>) */
-  #orders-tbody td::before {
-    content: attr(data-label);
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    flex-shrink: 0;
-    margin-right: 10px;
-    min-width: 72px;
-  }
-
-  /* The first cell (Order ID + Customer) spans full width as header */
-  #orders-tbody td:first-child {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border) !important;
-    margin-bottom: 8px;
-  }
-
-  #orders-tbody td:first-child::before {
-    display: none; /* no label for the header cell */
-  }
-
-  /* Actions cell: full-width, centred buttons */
-  #orders-tbody td:last-child {
-    justify-content: flex-end;
-    padding-top: 10px;
-    border-top: 1px solid var(--border) !important;
-    margin-top: 6px;
-    gap: 8px;
-  }
-
-  #orders-tbody td:last-child::before {
-    display: none;
-  }
-
-  /* Action buttons inside card — bigger on mobile */
-  #orders-tbody .action-btn {
-    padding: 8px 14px;
-    font-size: 12.5px;
-    min-height: 36px;
-  }
-
-  /* Items column: allow wrapping */
-  #orders-tbody td[data-label="Items"] {
-    flex-wrap: wrap;
-    align-items: flex-start;
-  }
-
   /* ─── PRODUCTS table → card stack ─────────────────────────── */
+
 
   #products-tbody tr {
     display: block;
@@ -1358,4 +1264,181 @@ button,
   .an-rank-name { font-size: 12px; }
   .an-rank-val { font-size: 12px; }
   .an-sug-text { font-size: 12px; }
+}
+/* ══════════════════════════════════════════════════════════════
+   5b. ORDER CARDS — mobile-only div layout
+   .ord-desktop hidden on mobile, .ord-mobile shown on mobile.
+   Pure div card — no table CSS fighting needed.
+══════════════════════════════════════════════════════════════ */
+
+/* Desktop default: show table cells, hide mobile card td */
+.ord-mobile  { display: none !important; }
+.ord-desktop { display: table-cell; }
+
+@media (max-width: 768px) {
+
+  /* Flip visibility */
+  .ord-desktop { display: none !important; }
+  .ord-mobile  { display: table-cell !important; }
+
+  /* The mobile td itself is borderless/paddingless — just a shell */
+  .ord-mobile {
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  /* The <tr> wrapping it needs no table styling */
+  #orders-tbody tr.ord-row {
+    display: block !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin-bottom: 12px;
+  }
+
+  /* Remove table-level min-width + scroll for orders page */
+  #page-orders .table-wrapper {
+    overflow-x: visible !important;
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
+  }
+  #page-orders .table {
+    display: block !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    border: none !important;
+    background: transparent !important;
+  }
+  #page-orders .table thead { display: none !important; }
+  #page-orders .table tbody { display: block !important; width: 100% !important; }
+
+  /* ── The actual card ───────────────────────────────────────── */
+  .ord-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    cursor: pointer;
+    transition: var(--transition);
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .ord-card:hover {
+    border-color: var(--border-active);
+    background: var(--bg-card-hover);
+  }
+
+  /* Header: order ID left, customer right */
+  .ord-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px 10px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .ord-card-id {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-accent);
+    word-break: break-all;
+  }
+
+  .ord-card-customer {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+  }
+
+  .ord-card-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* Body: rows of label + value */
+  .ord-card-body {
+    padding: 8px 14px;
+  }
+
+  .ord-card-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+
+  .ord-card-row:last-child {
+    border-bottom: none;
+  }
+
+  .ord-card-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    min-width: 64px;
+  }
+
+  .ord-card-value {
+    font-size: 13px;
+    color: var(--text-primary);
+    text-align: right;
+    word-break: break-word;
+  }
+
+  .ord-card-total {
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .ord-card-date {
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  /* Footer: action buttons */
+  .ord-card-footer {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 10px 14px 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .ord-card-footer .action-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    font-size: 12.5px;
+    min-height: 36px;
+  }
+
+  /* Filter tabs scrollable strip */
+  #page-orders .order-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  #page-orders .order-filters::-webkit-scrollbar { display: none; }
+
+  /* Orders search input */
+  #order-search {
+    font-size: 16px;
+    min-height: 44px;
+  }
 }
