@@ -13,6 +13,17 @@
         } catch (e) {}
       })();
     </script>
+    <!-- Theme-aware favicon: dark = green logo, light = pink logo -->
+    <link id="favicon" rel="icon" type="image/png" href="/images/favicon-light.png" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("sf-theme") || "light";
+          document.getElementById("favicon").href =
+            t === "dark" ? "/images/favicon-light.png" : "/images/favicon-dark.png";
+        } catch (e) {}
+      })();
+    </script>
     <link rel="stylesheet" href="/css/notif-panel.css">
     <link rel="stylesheet" href="/css/invoice-templates.css" />
     <link rel="stylesheet" href="/css/styles.css" />
@@ -462,22 +473,21 @@
       <div class="login-card">
         <div class="login-logo">
           <div class="login-logo-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              style="width: 28px; height: 28px"
-            >
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 0 1-8 0" />
-            </svg>
+            <img
+              id="login-logo-img"
+              src="/images/logo-dark.png"
+              alt="Hisaab Mitra"
+              style="width: 48px; height: 48px; object-fit: contain; display: block;"
+            />
+            <script>
+              (function(){
+                var t=localStorage.getItem("sf-theme")||"dark";
+                document.currentScript.previousElementSibling.src=
+                  t==="light"?"/images/logo-light.png":"/images/logo-dark.png";
+              })();
+            </script>
           </div>
-          <div class="login-logo-text">SellerFlow</div>
+          <div class="login-logo-text">Hisaab Mitra</div>
         </div>
 
         <!-- Auth Tabs (hidden on verify/forgot/reset screens) -->
@@ -815,7 +825,7 @@
           ></span>
           <div class="auth-screen-title">Set a new password</div>
           <div class="auth-screen-subtitle">
-            Choose a strong password for your SellerFlow account.
+            Choose a strong password for your Hisaab Mitra account.
           </div>
 
           <!-- Form area -->
@@ -979,22 +989,21 @@
       <aside class="sidebar">
         <div class="sidebar-header">
           <div class="sidebar-logo-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              style="width: 22px; height: 22px"
-            >
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 0 1-8 0" />
-            </svg>
+            <img
+              id="sidebar-logo-img"
+              src="/images/logo-dark.png"
+              alt="Hisaab Mitra"
+              style="width: 36px; height: 36px; object-fit: contain; display: block;"
+            />
+            <script>
+              (function(){
+                var t=localStorage.getItem("sf-theme")||"dark";
+                document.currentScript.previousElementSibling.src=
+                  t==="light"?"/images/logo-light.png":"/images/logo-dark.png";
+              })();
+            </script>
           </div>
-          <div class="sidebar-logo-text">SellerFlow</div>
+          <div class="sidebar-logo-text">Hisaab Mitra</div>
         </div>
 
         <nav class="sidebar-nav">
@@ -3139,6 +3148,46 @@
     <!-- ══ Scripts (load order matters) ════════════════════════ -->
     <script src="js/theme.js"></script>
     <!-- Theme manager (dark/light) -->
+
+    <!-- ── Logo & favicon swap on theme change ───────────────── -->
+    <script>
+      (function () {
+        var LOGO_DARK  = "/images/logo-dark.png";   // green  — shown in dark mode
+        var LOGO_LIGHT = "/images/logo-light.png";  // pink   — shown in light mode
+        var FAV_DARK   = "/images/favicon-dark.png";
+        var FAV_LIGHT  = "/images/favicon-light.png";
+
+        function applyLogos(theme) {
+          var src = theme === "light" ? LOGO_LIGHT : LOGO_DARK;
+          var fav = theme === "light" ? FAV_LIGHT  : FAV_DARK;
+
+          ["login-logo-img", "sidebar-logo-img"].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.src = src;
+          });
+
+          var favicon = document.getElementById("favicon");
+          if (favicon) favicon.href = fav;
+        }
+
+        // Apply on initial load
+        var initial = document.documentElement.getAttribute("data-theme") || "dark";
+        document.addEventListener("DOMContentLoaded", function () {
+          applyLogos(initial);
+        });
+
+        // Watch for theme changes via MutationObserver
+        var observer = new MutationObserver(function (mutations) {
+          mutations.forEach(function (m) {
+            if (m.attributeName === "data-theme") {
+              applyLogos(document.documentElement.getAttribute("data-theme") || "dark");
+            }
+          });
+        });
+        observer.observe(document.documentElement, { attributes: true });
+      })();
+    </script>
+    <!-- ─────────────────────────────────────────────────────── -->
     <script src="js/icons.js"></script>
     <script src="js/supabase.js"></script>
     <!-- Auth + _supabase client  -->
