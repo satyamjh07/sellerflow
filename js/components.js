@@ -41,13 +41,13 @@ const Components = (() => {
             </div>
           </div>
         </td>
-        <td><span class="badge badge-muted">${p.category || "Uncategorized"}</span></td>
-        <td class="fw-700">${formatCurrency(p.price)}</td>
-        <td>
+        <td data-label="Category"><span class="badge badge-muted">${p.category || "Uncategorized"}</span></td>
+        <td data-label="Price" class="fw-700">${formatCurrency(p.price)}</td>
+        <td data-label="Stock">
           <span class="stock-number ${stockClass}">${p.stock}</span>
           ${stockBadge}
         </td>
-        <td class="text-muted" style="font-size:12px">${p.lowStockThreshold || 5}</td>
+        <td data-label="Low Stock Alert" class="text-muted" style="font-size:12px">${p.lowStockThreshold || 5}</td>
         <td>
           <div class="action-btns">
             <button class="action-btn action-btn-edit" onclick="Modals.editProduct('${p.id}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>
@@ -64,85 +64,31 @@ const Components = (() => {
     const sourceBadge = o.source
       ? `<span class="badge badge-muted" style="margin-top:4px;font-size:10px">${o.source}</span>`
       : "";
-
-    // ── Desktop: standard table row (hidden on mobile via CSS) ──
-    const desktopRow = `
-      <td class="fw-700 text-accent ord-desktop">
-        <div>${o.id}</div>
-        ${sourceBadge}
-      </td>
-      <td class="ord-desktop">
-        <div class="customer-name-cell">
-          <div class="customer-avatar" style="width:30px;height:30px;font-size:11px">${initials(o.customerName)}</div>
-          <span>${o.customerName}</span>
-        </div>
-      </td>
-      <td class="ord-desktop" style="font-size:12px;color:var(--text-secondary)">
-        ${o.items.map((i) => i.name).join(", ")}
-      </td>
-      <td class="fw-700 ord-desktop">${formatCurrency(o.total)}</td>
-      <td class="ord-desktop">${UI.orderStatusBadge(o.status)}</td>
-      <td class="ord-desktop">${UI.paymentBadge(o.payment)}</td>
-      <td class="ord-desktop">${formatDate(o.date)}</td>
-      <td class="ord-desktop">
-        <div class="action-btns">
-          <button class="action-btn action-btn-edit" onclick="Modals.viewOrder('${o.id}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View</button>
-          <button class="action-btn action-btn-edit" onclick="Modals.showInvoice('${o.id}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button>
-        </div>
-      </td>`;
-
-    // ── Mobile: pure div card (hidden on desktop via CSS) ────────
-    const mobileCard = `
-      <td class="ord-mobile" colspan="8" style="padding:0;border:none;">
-        <div class="ord-card" onclick="Modals.viewOrder('${o.id}')">
-
-          <div class="ord-card-header">
-            <div>
-              <div class="ord-card-id">${o.id}</div>
-              ${sourceBadge}
+    return `
+      <tr>
+        <td>
+          <div class="order-id-cell">
+            <div class="fw-700 text-accent">${o.id}</div>
+            <div class="customer-name-cell" style="margin-top:4px">
+              <div class="customer-avatar" style="width:22px;height:22px;font-size:9px">${initials(o.customerName)}</div>
+              <span style="font-size:12px;color:var(--text-secondary)">${o.customerName}</span>
             </div>
-            <div class="ord-card-customer">
-              <div class="customer-avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0;">${initials(o.customerName)}</div>
-              <span class="ord-card-name">${o.customerName}</span>
-            </div>
+            ${sourceBadge}
           </div>
-
-          <div class="ord-card-body">
-            <div class="ord-card-row">
-              <span class="ord-card-label">Items</span>
-              <span class="ord-card-value">${o.items.map((i) => i.name).join(", ")}</span>
-            </div>
-            <div class="ord-card-row">
-              <span class="ord-card-label">Total</span>
-              <span class="ord-card-value ord-card-total">${formatCurrency(o.total)}</span>
-            </div>
-            <div class="ord-card-row">
-              <span class="ord-card-label">Delivery</span>
-              <span class="ord-card-value">${UI.orderStatusBadge(o.status)}</span>
-            </div>
-            <div class="ord-card-row">
-              <span class="ord-card-label">Payment</span>
-              <span class="ord-card-value">${UI.paymentBadge(o.payment)}</span>
-            </div>
-            <div class="ord-card-row">
-              <span class="ord-card-label">Date</span>
-              <span class="ord-card-value ord-card-date">${formatDate(o.date)}</span>
-            </div>
+        </td>
+        <td data-label="Items" style="font-size:12px;color:var(--text-secondary)">${o.items.map((i) => i.name).join(", ")}</td>
+        <td data-label="Total" class="fw-700">${formatCurrency(o.total)}</td>
+        <td data-label="Delivery">${UI.orderStatusBadge(o.status)}</td>
+        <td data-label="Payment">${UI.paymentBadge(o.payment)}</td>
+        <td data-label="Date" style="font-size:12px;color:var(--text-secondary)">${formatDate(o.date)}</td>
+        <td>
+          <div class="action-btns">
+            <button class="action-btn action-btn-edit" onclick="Modals.viewOrder('${o.id}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View</button>
+            <button class="action-btn action-btn-edit" onclick="Modals.showInvoice('${o.id}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button>
           </div>
-
-          <div class="ord-card-footer">
-            <button class="action-btn action-btn-edit" onclick="event.stopPropagation();Modals.viewOrder('${o.id}')">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:4px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View
-            </button>
-            <button class="action-btn action-btn-edit" onclick="event.stopPropagation();Modals.showInvoice('${o.id}')">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Invoice
-            </button>
-          </div>
-
-        </div>
-      </td>`;
-
-    return `<tr class="ord-row">${desktopRow}${mobileCard}</tr>`;
+        </td>
+      </tr>
+    `;
   }
 
   // ─── ViewOrderContent ───────────────────────────────────────────
@@ -351,11 +297,11 @@ const Components = (() => {
             </div>
           </div>
         </td>
-        <td>${c.city || "—"}</td>
-        <td class="fw-700">${c.totalOrders || 0}</td>
-        <td class="fw-700 text-accent">${formatCurrency(c.totalSpent || 0)}</td>
-        <td>${formatDate(c.lastOrder)}</td>
-        <td>${typeBadge}</td>
+        <td data-label="City">${c.city || "—"}</td>
+        <td data-label="Orders" class="fw-700">${c.totalOrders || 0}</td>
+        <td data-label="Spent" class="fw-700 text-accent">${formatCurrency(c.totalSpent || 0)}</td>
+        <td data-label="Last Order">${formatDate(c.lastOrder)}</td>
+        <td data-label="Type">${typeBadge}</td>
       </tr>
     `;
   }
