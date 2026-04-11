@@ -45,32 +45,41 @@ const Analytics = (() => {
   }
 
   // ── Shared Chart.js defaults (matches SellerFlow dark theme) ─
-  const CHART_DEFAULTS = {
-    color: {
-      accent:   '#6366F1',
-      cyan:     '#22D3EE',
-      success:  '#10B981',
-      warn:     '#F59E0B',
-      danger:   '#EF4444',
-      purple:   '#8B5CF6',
-      pink:     '#EC4899',
-      grid:     'rgba(255,255,255,0.04)',
-      textMuted:'#475569',
-    },
-    tooltip: {
-      backgroundColor: '#111827',
-      titleColor: '#94A3B8',
-      bodyColor: '#F1F5F9',
-      borderColor: 'rgba(99,102,241,0.3)',
-      borderWidth: 1,
-      padding: 10,
-    },
-  };
+  // ── Shared Chart.js defaults ───────────────────────
+const CHART_DEFAULTS = {
+  color: {
+    accent:    '#D02752',
+    cyan:      '#8A244B',
+    success:   '#D02752',
+    warn:      '#111F35',
+    danger:    '#F63049',
+    purple:    '#8A244B',
+    pink:      '#F63049',
+    grid:      'rgba(17,31,53,0.06)',
+    textMuted: '#9a6070',
+  },
+  tooltip: {
+    backgroundColor: '#111F35',
+    titleColor:  '#fde8eb',
+    bodyColor:   '#ffffff',
+    borderColor: 'rgba(208,39,82,0.25)',
+    borderWidth: 1,
+    padding: 12,
+    cornerRadius: 8,
+    displayColors: true,
+  },
+};
 
-  const PALETTE = [
-    '#6366F1','#22D3EE','#10B981','#F59E0B',
-    '#EF4444','#8B5CF6','#EC4899','#14B8A6',
-  ];
+const PALETTE = [
+  '#D02752',   // deep rose — primary
+  '#111F35',   // navy — secondary
+  '#8A244B',   // burgundy — tertiary
+  '#F63049',   // bright red — highlight
+  '#4a2030',   // dark wine
+  '#7a1535',   // claret
+  '#c45c6a',   // muted rose
+  '#1e3a5f',   // deep navy
+];
 
   // ════════════════════════════════════════════════════════════
   //  DATA COMPUTATION — pure functions, no DOM
@@ -703,7 +712,7 @@ const Analytics = (() => {
           labels: ['Paid', 'Pending'],
           datasets: [{ data: [d.revThisMonth, d.pendingRev],
             backgroundColor: [C.success, C.warn],
-            borderColor: '#111827', borderWidth: 3, hoverBorderWidth: 0 }],
+            borderColor: 'var(--bg-card)', borderWidth: 4, hoverOffset: 6 }],
         },
         options: {
           responsive: true, maintainAspectRatio: false, cutout: '72%',
@@ -780,7 +789,7 @@ const Analytics = (() => {
           datasets: [{
             data: catEntries.map(([, v]) => v),
             backgroundColor: PALETTE,
-            borderColor: '#111827', borderWidth: 3, hoverBorderWidth: 0,
+           borderColor: 'var(--bg-card)', borderWidth: 4, hoverOffset: 6,
           }],
         },
         options: {
@@ -828,7 +837,7 @@ const Analytics = (() => {
           datasets: [{
             data: d.topStates.map(([, v]) => v.orders),
             backgroundColor: PALETTE,
-            borderColor: '#111827', borderWidth: 3, hoverBorderWidth: 0,
+            borderColor: 'var(--bg-card)', borderWidth: 4, hoverOffset: 6,
           }],
         },
         options: {
