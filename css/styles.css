@@ -870,6 +870,7 @@ img {
 .table td {
   padding: 13px 14px;
   font-size: 13.5px;
+  color: var(--text-primary);
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   vertical-align: middle;
 }
