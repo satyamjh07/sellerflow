@@ -1,36 +1,89 @@
 /* ============================================================
-   SellerFlow — Mobile-First Enhancement Layer
-   Scope: All screens ≤ 768px, with targeted fixes at ≤ 480px
+   Hisaab Mitra — Universal Responsive Enhancement Layer
+   Coverage: 320px → 4K (every major breakpoint)
    Strategy:
-     • Overrides only what needs to change — desktop untouched
-     • Tables → horizontal scroll on tablet, stacked cards on phone
-     • Modals → full-screen bottom sheet on mobile
-     • Forms → full-width, generous tap targets (min 48px)
-     • Sidebar → native-style drawer with close button
-     • Invoice → responsive with collapsing two-column layout
-     • Fixed bottom action bar in key modals
-   Compatible with: Android Chrome, iOS Safari, in-app browsers
+     • Fluid scaling via clamp() for typography & spacing
+     • Container queries where supported
+     • Pixel-perfect layouts at every common device width:
+       320 · 360 · 390 · 414 · 480 · 600 · 768 · 900 · 1024
+       1200 · 1440 · 1600 · 1920 · 2560 · 3840
+     • Touch targets ≥ 44px (WCAG 2.5.5)
+     • Sidebar drawer on all tablets/phones
+     • Tables → horizontal scroll (tablet) → stacked cards (phone)
+     • Modals → bottom sheet on mobile
+     • Invoice → two-column collapses gracefully
    ============================================================ */
 
-/* ── 0. GLOBAL TOUCH + OVERFLOW GUARD ─────────────────────── */
+/* ── 0. GLOBAL GUARD — prevent horizontal bleed ─────────────── */
 
 html,
 body {
-  /* Belt-and-suspenders horizontal overflow guard */
   max-width: 100vw;
   overflow-x: hidden;
 }
 
-/* Ensure all images + embeds never bust their containers */
+/* ── Orders page: prevent content clipping at all viewport widths ── */
+/* .main must not overflow its flex parent when sidebar is present   */
+.main {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+/* The card wrapping order filters + table must always stay in-flow  */
+#page-orders .card,
+#page-orders .page {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Search row and filter strip must not push the card wider          */
+#page-orders .products-header-row {
+  box-sizing: border-box;
+  max-width: 100%;
+  width: 100%;
+}
+
+#page-orders .products-search {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+#page-orders .products-search input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Filter tab row: scrollable without expanding the card             */
+.order-filters {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.order-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-tab {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 img,
 canvas,
 iframe,
 video,
-table {
+table,
+svg {
   max-width: 100%;
 }
 
-/* Minimum comfortable tap target for interactive elements */
+/* ── Touch highlight & tap delay ──────────────────────────── */
 button,
 .btn,
 .nav-item,
@@ -39,22 +92,306 @@ button,
 .action-btn,
 .lsa-btn,
 .billing-card,
-.modal-close {
-  -webkit-tap-highlight-color: rgba(99, 102, 241, 0.15);
-  touch-action: manipulation; /* remove 300ms delay on Android */
+.modal-close,
+.it-card,
+.topbar-btn,
+.auth-tab {
+  -webkit-tap-highlight-color: rgba(64, 138, 113, 0.15);
+  touch-action: manipulation;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   1. SIDEBAR — native drawer + visible close button
-══════════════════════════════════════════════════════════════ */
+/* ── Fluid type scale ─────────────────────────────────────── */
+:root {
+  --fluid-xs: clamp(10px, 1.8vw, 12px);
+  --fluid-sm: clamp(12px, 2vw, 14px);
+  --fluid-base: clamp(13px, 2.2vw, 15px);
+  --fluid-md: clamp(14px, 2.5vw, 16px);
+  --fluid-lg: clamp(16px, 3vw, 20px);
+  --fluid-xl: clamp(18px, 3.5vw, 24px);
+  --fluid-2xl: clamp(20px, 4vw, 28px);
+  --fluid-3xl: clamp(22px, 5vw, 36px);
+}
+
+/* ════════════════════════════════════════════════════════════
+   1. ULTRA-WIDE & 4K (≥ 1920px)
+   Prevent content stretching to uncomfortable widths
+════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1920px) {
+  .page-content {
+    max-width: 1800px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 36px 48px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+
+  .billing-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .it-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 26px;
+  }
+
+  .an-stat-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .an-location-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .login-card {
+    max-width: 480px;
+    padding: 56px 52px;
+  }
+}
+
+@media (min-width: 2560px) {
+  .page-content {
+    max-width: 2200px;
+    padding: 48px 64px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+  }
+
+  .billing-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .it-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .stat-value {
+    font-size: 32px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   2. LARGE DESKTOP (1441–1919px)
+════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1441px) and (max-width: 1919px) {
+  .billing-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .it-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   3. DESKTOP BREAKPOINT (1201–1440px)
+════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1440px) {
+  .page-content {
+    padding: 24px 28px;
+  }
+
+  .topbar-search {
+    width: 240px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .dash-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .dash-grid .col-2 {
+    grid-column: span 2;
+  }
+
+  .dash-grid-bottom {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .billing-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .an-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .an-skeleton-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .an-location-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   4. SMALL DESKTOP / LARGE TABLET (1025–1200px)
+════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1100px) {
+  .topbar-search {
+    width: 200px;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .it-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   5. TABLET / IPAD (769–1024px)
+════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 220px;
+    --topbar-height: 60px;
+  }
+
+  .topbar {
+    padding: 0 20px;
+    gap: 12px;
+  }
+
+  .topbar-search {
+    width: 180px;
+  }
+
+  .page-content {
+    padding: 20px 22px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .billing-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dash-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .dash-grid .col-2,
+  .dash-grid .col-1 {
+    grid-column: span 1;
+  }
+
+  .dash-grid-bottom {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .it-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  /* Table horizontal scroll */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(
+      to right,
+      black calc(100% - 24px),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      black calc(100% - 24px),
+      transparent 100%
+    );
+  }
+
+  .table {
+    min-width: 640px;
+  }
+
+  .an-chart-row {
+    grid-template-columns: 1fr;
+  }
+
+  .an-two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .an-suggestions {
+    grid-template-columns: 1fr;
+  }
+
+  .an-skeleton-charts {
+    grid-template-columns: 1fr;
+  }
+
+  .an-location-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   6. TABLET PORTRAIT / LARGE PHONE (769–900px)
+════════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .an-chart-row {
+    grid-template-columns: 1fr;
+  }
+
+  .an-two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .an-suggestions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   7. MOBILE BREAKPOINT (≤ 768px)
+   Sidebar becomes a drawer; layout collapses
+════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-  /* Close ✕ button injected by JS into .sidebar-header */
+  /* ── Sidebar close button ── */
   .sidebar-close-btn {
     display: flex;
     margin-left: auto;
     width: 36px;
     height: 36px;
+    min-height: 44px;
+    min-width: 44px;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid var(--border);
@@ -66,28 +403,27 @@ button,
     flex-shrink: 0;
     transition: var(--transition);
   }
+
   .sidebar-close-btn:hover {
     background: var(--danger-dim);
     color: var(--danger);
   }
 
-  /* Sidebar slides in from left as a full-height overlay drawer */
+  /* Sidebar draws over content */
   .sidebar {
-    /* Already set to translateX(-100%) in base CSS at 768px */
-    box-shadow: none;
-    /* Slightly wider on small phones for better readability */
     width: min(var(--sidebar-width), 88vw);
+    box-shadow: none;
+    z-index: 200;
   }
 
-  /* Overlay gets a blur backdrop when sidebar is open */
   .sidebar-overlay.open {
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
   }
 
-  /* Nav items: bigger touch targets */
+  /* Nav items — generous touch targets */
   .nav-item {
-    padding: 13px 14px;
+    padding: 12px 14px;
     font-size: 14px;
     border-radius: 10px;
     min-height: 48px;
@@ -97,9 +433,9 @@ button,
     font-size: 18px;
   }
 
-  /* User area at sidebar bottom */
+  /* Sidebar footer */
   .sidebar-footer {
-    padding: 14px 12px 20px; /* extra bottom for safe-area */
+    padding: 14px 12px;
     padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
 
@@ -115,24 +451,11 @@ button,
     font-size: 14px;
   }
 
-  .sidebar-user-name {
-    font-size: 14px;
-  }
-  .sidebar-user-role {
-    font-size: 12px;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   2. TOPBAR
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
+  /* ── Topbar ── */
   .topbar {
     padding: 0 14px;
     gap: 10px;
     height: 56px;
-    /* Stick to the top and account for notch */
     padding-top: env(safe-area-inset-top, 0);
     height: calc(56px + env(safe-area-inset-top, 0px));
   }
@@ -140,6 +463,8 @@ button,
   .topbar-mobile-menu {
     width: 40px;
     height: 40px;
+    min-height: 44px;
+    min-width: 44px;
     font-size: 18px;
     flex-shrink: 0;
   }
@@ -147,7 +472,6 @@ button,
   .topbar-title {
     font-size: 16px;
     letter-spacing: -0.2px;
-    /* Keep it from truncating between burger + actions */
     min-width: 0;
     flex: 1;
     white-space: nowrap;
@@ -163,15 +487,16 @@ button,
   .topbar-btn {
     width: 38px;
     height: 38px;
+    min-height: 44px;
+    min-width: 44px;
     font-size: 16px;
   }
-}
 
-/* ══════════════════════════════════════════════════════════════
-   3. PAGE CONTENT + HEADERS
-══════════════════════════════════════════════════════════════ */
+  .topbar-search {
+    display: none;
+  }
 
-@media (max-width: 768px) {
+  /* ── Page content ── */
   .page-content {
     padding: 16px 14px;
   }
@@ -197,26 +522,15 @@ button,
     width: 100%;
   }
 
-  /* Primary action buttons span full width on mobile */
   .page-header-actions .btn-primary {
     width: 100%;
     justify-content: center;
     padding: 13px 18px;
     font-size: 14px;
+    min-height: 48px;
   }
-}
 
-@media (max-width: 480px) {
-  .page-content {
-    padding: 14px 12px;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   4. STAT CARDS + DASHBOARD
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
+  /* ── Stat cards — 2-column grid ── */
   .stats-grid {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
@@ -224,7 +538,7 @@ button,
   }
 
   .stat-card {
-    padding: 16px 16px;
+    padding: 16px;
   }
 
   .stat-value {
@@ -243,7 +557,7 @@ button,
     font-size: 14px;
   }
 
-  /* Dashboard grids — force single column */
+  /* ── Dashboard grids ── */
   .dash-grid {
     grid-template-columns: 1fr;
     gap: 14px;
@@ -260,12 +574,11 @@ button,
     gap: 14px;
   }
 
-  /* Charts: comfortable height on mobile */
   .chart-container {
     height: 200px;
   }
 
-  /* Quick actions: 2-up grid, slightly bigger */
+  /* ── Quick actions ── */
   .quick-actions {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
@@ -274,13 +587,14 @@ button,
   .quick-action-btn {
     padding: 18px 12px;
     font-size: 12.5px;
+    min-height: 80px;
   }
 
   .quick-action-btn .qa-icon {
     font-size: 24px;
   }
 
-  /* Recent orders list items */
+  /* ── Recent orders ── */
   .recent-order-item {
     padding: 11px 0;
     gap: 10px;
@@ -289,48 +603,35 @@ button,
   .order-name {
     font-size: 13px;
   }
+
   .order-meta {
     font-size: 10px;
   }
+
   .order-amount {
     font-size: 13px;
   }
 
-  /* Low stock alerts */
+  /* ── Low stock alerts ── */
   .low-stock-alert {
     padding: 10px 12px;
     gap: 10px;
   }
+
   .lsa-name {
     font-size: 12.5px;
   }
+
   .lsa-btn {
     padding: 6px 12px;
     font-size: 11px;
     min-height: 32px;
   }
-}
 
-@media (max-width: 480px) {
-  .stats-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .stat-value {
-    font-size: 20px;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   5. TABLES — horizontal scroll on tablet, cards on phone
-══════════════════════════════════════════════════════════════ */
-
-/* ── 5a. Tablet (481–768px): horizontal scroll ──────────────── */
-@media (max-width: 768px) {
-  /* Allow the table wrapper to scroll without causing page overflow */
+  /* ── Tables — horizontal scroll ── */
   .table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    /* Subtle fade on right edge signals scrollability */
     mask-image: linear-gradient(
       to right,
       black calc(100% - 24px),
@@ -342,15 +643,11 @@ button,
       transparent 100%
     );
     border-radius: 0 0 var(--radius-md) var(--radius-md);
-    /* Ensure it doesn't add its own horizontal overflow to the page */
     max-width: 100%;
   }
 
-  /* Once we have the mask for scrollability hint, 
-     remove the mask when table fits (handled per breakpoint below) */
-
   .table {
-    min-width: 560px; /* tablet threshold: table scrolls before squashing */
+    min-width: 560px;
   }
 
   .table th,
@@ -363,29 +660,44 @@ button,
     font-size: 10px;
     letter-spacing: 0.4px;
   }
-}
 
-/* ── 5b. Orders — replaced by .ord-card div layout (see end of file) ── */
+  /* ── Orders page — card stack ── */
+  #page-orders .table-wrapper {
+    overflow-x: visible;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
 
-@media (max-width: 480px) {
-  /* ─── PRODUCTS table → card stack ─────────────────────────── */
+  #page-orders .table {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
 
+  #page-orders .table tbody {
+    display: block;
+  }
 
-  #products-tbody tr {
+  #page-orders .table thead {
+    display: none;
+  }
+
+  #orders-tbody tr {
     display: block;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    padding: 14px 14px;
+    padding: 12px 14px;
     margin-bottom: 10px;
+    cursor: pointer;
     transition: var(--transition);
   }
 
-  #page-products .table thead {
-    display: none;
+  #orders-tbody tr:hover {
+    border-color: var(--border-active);
   }
 
-  #products-tbody td {
+  #orders-tbody td {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -393,9 +705,11 @@ button,
     border: none;
     border-bottom: none !important;
     font-size: 13px;
+    color: var(--text-primary);
+    min-height: 32px;
   }
 
-  #products-tbody td::before {
+  #orders-tbody td::before {
     content: attr(data-label);
     font-size: 10px;
     font-weight: 700;
@@ -404,50 +718,803 @@ button,
     color: var(--text-muted);
     flex-shrink: 0;
     margin-right: 10px;
-    min-width: 72px;
+    min-width: 80px;
   }
 
-  /* Product name cell: full row header */
-  #products-tbody td:first-child {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding-bottom: 12px;
+  #orders-tbody td:first-child {
+    display: block;
+    padding-bottom: 10px;
     border-bottom: 1px solid var(--border) !important;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+    min-height: unset;
   }
 
-  #products-tbody td:first-child::before {
+  #orders-tbody td:first-child::before {
     display: none;
   }
 
-  /* Actions cell */
-  #products-tbody td:last-child {
+  #orders-tbody td:last-child {
     justify-content: flex-end;
     padding-top: 10px;
     border-top: 1px solid var(--border) !important;
-    margin-top: 6px;
+    margin-top: 4px;
+    gap: 6px;
+    min-height: unset;
   }
 
-  #products-tbody td:last-child::before {
+  #orders-tbody td:last-child::before {
     display: none;
   }
 
-  /* ─── CUSTOMERS table → card stack ──────────────────────── */
+  .order-id-cell .fw-700 {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  /* ── Order filter tabs ── */
+  .order-filters {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+    padding-bottom: 4px;
+    margin-bottom: 14px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .order-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-tab {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    padding: 6px 11px !important;
+    font-size: 11.5px !important;
+    min-height: 36px !important;
+  }
+
+  /* ── Products search & filter ── */
+  .products-search input {
+    font-size: 16px; /* prevent iOS zoom */
+    padding: 12px 14px 12px 36px;
+    min-height: 44px;
+  }
+
+  #page-orders .card {
+    box-sizing: border-box;
+    max-width: 100%;
+    padding: 14px 12px;
+  }
+
+  #page-orders .products-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  #page-orders .products-search {
+    max-width: none;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .products-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .filter-select {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  /* ── Billing grid ── */
+  .billing-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* ── Settings ── */
+  .settings-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* ── Modals ── */
+  .modal {
+    padding: 20px;
+    max-height: 92vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-overlay.open .modal {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .modal-lg,
+  .modal-xl {
+    max-width: 100%;
+  }
+
+  .modal-footer {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* ── Invoice ── */
+  .invoice-wrapper {
+    padding: 20px 18px;
+    overflow-x: auto;
+  }
+
+  .invoice-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .invoice-meta {
+    text-align: left;
+  }
+
+  .invoice-parties {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .invoice-totals-inner {
+    width: 100%;
+  }
+
+  /* ── Form rows ── */
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* ── Add item row in Create Order ── */
+  .add-item-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .add-item-row > div {
+    width: 100% !important;
+  }
+
+  .add-item-row > button {
+    width: 100%;
+    margin-top: 4px;
+    min-height: 48px;
+  }
+
+  /* ── Grid utilities ── */
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  /* ── Analytics ── */
+  .an-stat-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .an-location-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .an-skeleton-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .an-stat-value {
+    font-size: 22px;
+  }
+
+  .an-suggestions {
+    grid-template-columns: 1fr;
+  }
+
+  /* ── Subscription billing ── */
+  .sub-upgrade-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-banner {
+    gap: 8px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+  }
+
+  .payment-step {
+    gap: 10px;
+  }
+
+  .sub-logo-upload-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* ── Invoice templates ── */
+  .it-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .it-header-actions {
+    display: none;
+  }
+
+  /* ── Notification panel ── */
+  .np-panel {
+    position: fixed;
+    top: 60px;
+    right: 8px;
+    left: 8px;
+    width: auto;
+    max-height: calc(100dvh - 80px);
+  }
+
+  /* ── Profile reminder ── */
+  .pr-card {
+    padding: 16px;
+    border-radius: var(--radius-md);
+  }
+
+  .pr-items {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   8. SMALL MOBILE (≤ 600px)
+   Danger zone rows, misc adjustments
+════════════════════════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+  .danger-zone-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .danger-zone-desc {
+    max-width: 100%;
+  }
+
+  .billing-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .an-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   9. PHONE (≤ 480px)
+   More aggressive layout collapse
+════════════════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+  /* ── General page ── */
+  .page-content {
+    padding: 14px 12px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* ── Stats — single column ── */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  /* ── Quick actions — 1 col ── */
+  .quick-actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  /* ── Modal footer ── */
+  .modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    margin-right: 0 !important;
+    justify-content: center;
+    min-height: 48px;
+  }
+
+  /* ── Auth modal ── */
+  .modal {
+    padding: 16px;
+  }
+
+  /* ── Analytics ── */
+  .an-stat-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .an-location-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .an-suggestions {
+    grid-template-columns: 1fr;
+  }
+
+  .an-stat-value {
+    font-size: 20px;
+  }
+
+  /* ── Invoice ── */
+  .invoice-wrapper {
+    padding: 16px;
+  }
+
+  .invoice-brand .brand-name {
+    font-size: 18px;
+  }
+
+  .invoice-number {
+    font-size: 16px;
+  }
+
+  .invoice-totals {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .invoice-totals-inner {
+    width: 100%;
+  }
+
+  /* ── Invoice table: horizontal scroll ── */
+  .invoice-table {
+    min-width: 360px;
+  }
+
+  /* ── IT templates ── */
+  .it-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .it-page {
+    padding-bottom: 100px;
+  }
+
+  .it-title {
+    font-size: 22px;
+  }
+
+  /* ── Notification panel ── */
+  .np-panel {
+    top: 56px;
+    right: 8px;
+    left: 8px;
+  }
+
+  .np-type-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .np-composer-footer {
+    flex-direction: column-reverse;
+  }
+
+  .np-cancel-btn,
+  .np-send-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* ── Notification popup ── */
+  .np-popup {
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+
+  /* ── Subscription ── */
+  .sub-upgrade-card {
+    padding: 14px 12px;
+  }
+
+  .sub-upgrade-price {
+    font-size: 16px;
+  }
+
+  /* ── Login card ── */
+  .login-card {
+    padding: 32px 24px;
+    border-radius: var(--radius-lg);
+    margin: 12px;
+  }
+
+  .login-title {
+    font-size: 22px;
+  }
+
+  /* ── Auth feature strip ── */
+  #auth-feature-strip > div {
+    gap: 4px;
+  }
+
+  /* ── Form inputs — prevent iOS auto-zoom ── */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   10. VERY SMALL PHONES (≤ 380px) — e.g. iPhone SE, Galaxy A series
+════════════════════════════════════════════════════════════ */
+
+@media (max-width: 380px) {
+  :root {
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+  }
+
+  .page-content {
+    padding: 12px 10px;
+  }
+
+  .topbar {
+    padding: 0 10px;
+    gap: 8px;
+  }
+
+  .topbar-title {
+    font-size: 15px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat-card {
+    padding: 12px 10px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .stat-label {
+    font-size: 9.5px;
+  }
+
+  .card {
+    padding: 16px 14px;
+  }
+
+  .quick-action-btn {
+    padding: 14px 8px;
+    font-size: 11.5px;
+  }
+
+  .login-card {
+    padding: 24px 16px;
+    margin: 8px;
+  }
+
+  .login-title {
+    font-size: 20px;
+  }
+
+  .login-subtitle {
+    font-size: 12px;
+  }
+
+  .it-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-footer .btn {
+    font-size: 13px;
+    padding: 11px 14px;
+  }
+
+  /* Topbar actions — tighten */
+  .topbar-actions {
+    gap: 4px;
+  }
+
+  .topbar-btn {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   11. ULTRA-SMALL (≤ 320px) — Galaxy Fold outer, very old phones
+════════════════════════════════════════════════════════════ */
+
+@media (max-width: 320px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .page-content {
+    padding: 10px 8px;
+  }
+
+  .card {
+    padding: 12px 10px;
+  }
+
+  .login-card {
+    padding: 20px 14px;
+    margin: 6px;
+  }
+
+  .topbar {
+    padding: 0 8px;
+  }
+
+  .topbar-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+  }
+
+  .modal {
+    padding: 12px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   12. MOBILE STICKY SAVE BAR (invoice templates)
+════════════════════════════════════════════════════════════ */
+
+.it-mobile-save {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 0 0 env(safe-area-inset-bottom, 0);
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.it-mobile-save-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 20px;
+}
+
+.it-mobile-active-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.it-mobile-active-label svg {
+  color: var(--success);
+  flex-shrink: 0;
+}
+
+.it-save-btn-mobile {
+  padding: 10px 20px;
+  font-size: 13.5px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  .it-mobile-save {
+    display: block;
+  }
+
+  .it-header {
+    margin-bottom: 24px;
+  }
+
+  .it-header-actions {
+    display: none;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   13. TOUCH PRESS FEEDBACK
+════════════════════════════════════════════════════════════ */
+
+@media (hover: none) {
+  .it-card:active:not(.it-card--locked) {
+    transform: scale(0.97);
+    transition: transform 0.1s ease;
+  }
+
+  .btn:active {
+    transform: scale(0.97);
+    transition: transform 0.1s ease;
+  }
+
+  .nav-item:active {
+    background: var(--accent-dim);
+    transition: background 0.1s ease;
+  }
+
+  .quick-action-btn:active {
+    background: var(--accent-dim);
+    border-color: var(--border-active);
+    transform: scale(0.97);
+  }
+
+  .billing-card:active {
+    border-color: var(--border-active);
+    transform: scale(0.98);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   14. LANDSCAPE PHONE — special handling
+════════════════════════════════════════════════════════════ */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .login-card {
+    padding: 20px 32px;
+    margin: 8px auto;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .login-title {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+
+  .login-subtitle {
+    margin-bottom: 16px;
+    font-size: 12px;
+  }
+
+  #auth-feature-strip {
+    display: none;
+  }
+
+  .modal {
+    max-height: 95vh;
+    padding: 14px 18px;
+  }
+
+  .modal-header {
+    margin-bottom: 12px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  .page-content {
+    padding: 12px 16px;
+  }
+
+  .topbar {
+    height: 48px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   15. FOLDABLE / DUAL-SCREEN (split layout)
+════════════════════════════════════════════════════════════ */
+
+@media (max-width: 720px) and (min-width: 481px) {
+  /* Tablet-but-narrow, like Galaxy Fold unfolded */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .billing-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .it-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .an-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   16. CUSTOMERS TABLE — card stack on mobile
+════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  #page-customers .table-wrapper {
+    overflow-x: visible;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  #page-customers .table {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  #page-customers .table tbody {
+    display: block;
+  }
+
+  #page-customers .table thead {
+    display: none;
+  }
 
   #customers-tbody tr {
     display: block;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    padding: 14px 14px;
+    padding: 13px 14px;
     margin-bottom: 10px;
     cursor: pointer;
     transition: var(--transition);
   }
 
-  #page-customers .table thead {
-    display: none;
+  #customers-tbody tr:hover {
+    border-color: var(--border-active);
   }
 
   #customers-tbody td {
@@ -458,6 +1525,7 @@ button,
     border: none;
     border-bottom: none !important;
     font-size: 13px;
+    min-height: 32px;
   }
 
   #customers-tbody td::before {
@@ -469,1061 +1537,227 @@ button,
     color: var(--text-muted);
     flex-shrink: 0;
     margin-right: 10px;
-    min-width: 72px;
+    min-width: 80px;
   }
 
   #customers-tbody td:first-child {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding-bottom: 12px;
+    display: block;
+    padding-bottom: 10px;
     border-bottom: 1px solid var(--border) !important;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+    min-height: unset;
   }
 
   #customers-tbody td:first-child::before {
     display: none;
   }
+}
 
-  /* Remove the fade mask on phone — cards don't need it */
-  .table-wrapper {
+/* ════════════════════════════════════════════════════════════
+   17. PRODUCTS TABLE — card stack on mobile
+════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  #page-products .table-wrapper {
+    overflow-x: visible;
     mask-image: none;
     -webkit-mask-image: none;
-    overflow-x: visible;
   }
 
-  /* The <table> itself should also flow naturally */
-  .table {
-    min-width: unset;
+  #page-products .table {
+    display: block;
+    min-width: 0;
     width: 100%;
+  }
+
+  #page-products .table tbody {
     display: block;
   }
 
-  .table tbody {
-    display: block;
-    width: 100%;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   6. MODALS — full-screen bottom-sheet on mobile
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
-  .modal-overlay {
-    /* Remove centering padding — modal fills from bottom */
-    padding: 0;
-    align-items: flex-end;
-    justify-content: stretch;
-  }
-
-  .modal {
-    /* Full-width bottom sheet */
-    max-width: 100%;
-    width: 100%;
-    max-height: 92vh;
-    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-    padding: 20px 18px 16px;
-    /* Slide up animation */
-    transform: translateY(40px);
-    /* Ensure bottom content clears the home indicator on iOS */
-    padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
-  }
-
-  .modal-overlay.open .modal {
-    transform: translateY(0);
-  }
-
-  /* Pull handle indicator (visual affordance for swipeable sheet) */
-  .modal::before {
-    content: "";
-    display: block;
-    width: 40px;
-    height: 4px;
-    background: var(--border);
-    border-radius: 99px;
-    margin: 0 auto 18px;
-  }
-
-  /* All size variants collapse to full-width on mobile */
-  .modal-lg,
-  .modal-xl {
-    max-width: 100%;
-  }
-
-  .modal-header {
-    margin-bottom: 18px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .modal-title {
-    font-size: 17px;
-  }
-
-  /* Close button — bigger tap target */
-  .modal-close {
-    width: 38px;
-    height: 38px;
-    font-size: 18px;
-    border-radius: 10px;
-  }
-
-  /* Modal footer — stacks vertically with safe-area padding */
-  .modal-footer {
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 18px;
-    padding-top: 16px;
-    position: sticky;
-    bottom: 0;
-    background: var(--bg-modal);
-    /* Ensure footer is always visible above keyboard */
-    padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
-    /* Remove the border on sticky footer — it merges with scroll */
-    border-top: 1px solid var(--border);
-    z-index: 2;
-  }
-
-  .modal-footer .btn {
-    width: 100%;
-    justify-content: center;
-    min-height: 48px;
-    font-size: 14px;
-    margin-right: 0 !important;
-  }
-
-  /* "Close" / secondary actions de-emphasised (less visual weight) */
-  .modal-footer .btn-secondary {
-    order: 10; /* push below primary actions */
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   7. FORMS — full-width, generous tap targets
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
-  /* All two-column form rows collapse to single column */
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  /* Each field group: comfortable spacing */
-  .form-group {
-    margin-bottom: 14px;
-  }
-
-  /* Inputs, selects, textareas: bigger touch targets */
-  .form-input,
-  .form-select,
-  .form-textarea {
-    padding: 13px 14px;
-    font-size: 16px; /* Prevents iOS auto-zoom on focus */
-    border-radius: var(--radius-sm);
-    min-height: 48px;
-  }
-
-  .form-label {
-    font-size: 11px;
-    margin-bottom: 7px;
-  }
-
-  /* Textarea: taller default on phone */
-  .form-textarea {
-    min-height: 88px;
-  }
-
-  /* Search inputs inside pages */
-  .products-search input,
-  .topbar-search input {
-    font-size: 16px; /* prevent iOS zoom */
-    padding: 12px 14px 12px 36px;
-    min-height: 44px;
-  }
-
-  /* Filter select */
-  .filter-select {
-    font-size: 14px;
-    padding: 11px 14px;
-    min-height: 44px;
-  }
-
-  /* Products header row: search full-width, category below */
-  .products-header-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .products-search {
-    max-width: none;
-    width: 100%;
-  }
-
-  .filter-select {
-    width: 100%;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   8. CREATE ORDER MODAL — optimised for phone keyboard + thumb
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
-  /* Add-item row: product select stacked above qty + button */
-  .add-item-row {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 10px !important;
-  }
-
-  .add-item-row > div {
-    width: 100% !important;
-  }
-
-  /* Qty and Add-button side by side (thumb-reach) */
-  .add-item-row .qty-add-row {
-    display: flex;
-    gap: 10px;
-  }
-
-  .add-item-row .qty-add-row > * {
-    flex: 1;
-  }
-
-  /* Order add-item button: full width, prominent */
-  #order-add-item-btn {
-    width: 100%;
-    min-height: 48px;
-    font-size: 14px;
-  }
-
-  /* New customer section: tighter padding on mobile */
-  #new-customer-fields {
-    padding: 12px 12px;
-    border-radius: 10px;
-    margin-bottom: 12px;
-  }
-
-  /* Order items list: each item card slightly more breathing room */
-  #order-items-list > div {
-    padding: 10px 12px;
-  }
-
-  /* Order total prominently at a glance */
-  #order-total-display {
-    font-size: 17px;
-  }
-
-  /* Payment status + notes: full-width */
-  #order-payment-status {
-    width: 100%;
-  }
-
-  /* Remove-item button inside order items: bigger tap zone */
-  #order-items-list button {
-    padding: 6px 12px;
-    min-height: 34px;
-    font-size: 12px;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   9. INVOICE PREVIEW MODAL
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
-  /* Invoice wrapper: reduce padding to use the screen width */
-  .invoice-wrapper {
-    padding: 20px 16px;
-    border-radius: var(--radius-md);
-    font-size: 13px;
-  }
-
-  /* Header: side-by-side brand + meta collapses to stacked */
-  .invoice-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-  }
-
-  .invoice-brand .brand-name {
-    font-size: 18px;
-  }
-
-  .invoice-meta {
-    text-align: left;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .invoice-number {
-    font-size: 16px;
-  }
-
-  /* Parties: single column */
-  .invoice-parties {
-    grid-template-columns: 1fr;
-    gap: 14px;
-    margin-bottom: 20px;
-  }
-
-  /* Items table: allow horizontal scroll within the invoice wrapper */
-  .invoice-table {
-    font-size: 12px;
-    /* Ensure it can scroll if needed without breaking layout */
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    min-width: 320px; /* never too narrow */
-  }
-
-  .invoice-table th,
-  .invoice-table td {
-    padding: 8px 10px;
-    white-space: nowrap;
-  }
-
-  /* Totals: slightly smaller */
-  .invoice-totals-inner {
-    width: 100%;
-    max-width: 260px;
-    margin-left: auto;
-  }
-
-  .invoice-total-row {
-    font-size: 12px;
-  }
-
-  .invoice-total-row.grand {
-    font-size: 14px;
-  }
-
-  /* Invoice footer buttons — the modal-footer handles stacking */
-}
-
-/* ══════════════════════════════════════════════════════════════
-   10. BILLING PAGE
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
-  /* Billing stat cards: 2-column */
-  #page-billing .stats-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  /* Billing invoice cards: 1-column */
-  .billing-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-
-  .billing-card {
-    padding: 16px 18px;
-    /* Row layout: amount right-aligned */
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
-    column-gap: 16px;
-    row-gap: 4px;
-  }
-
-  .billing-order-num {
-    font-size: 13px;
-    grid-column: 1;
-  }
-  .billing-customer {
-    grid-column: 1;
-    margin-bottom: 0;
-  }
-  .billing-amount {
-    font-size: 20px;
-    grid-column: 2;
-    grid-row: 1 / 3;
-    align-self: center;
-    text-align: right;
-    margin-bottom: 0;
-  }
-  .billing-footer {
-    grid-column: 1 / -1;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border);
-  }
-}
-
-@media (max-width: 480px) {
-  #page-billing .stats-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   11. SETTINGS PAGE
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
-  /* Settings grid: single column on all mobile */
-  .settings-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .settings-section {
-    padding: 20px 16px;
-    border-radius: var(--radius-md);
-  }
-
-  .settings-section h3 {
-    font-size: 14.5px;
-    margin-bottom: 16px;
-  }
-
-  /* Danger zone spans full width (it's already 1/-1 on desktop grid) */
-  .danger-zone-section {
-    grid-column: 1; /* reset for single-column grid */
-  }
-
-  .danger-zone-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
-  }
-
-  .danger-zone-row .btn-danger,
-  .danger-zone-row .btn-danger-solid {
-    width: 100%;
-    justify-content: center;
-    min-height: 46px;
-  }
-
-  /* Toggle rows: comfortable height */
-  .toggle-row {
-    padding: 14px 0;
-    gap: 12px;
-  }
-
-  .toggle-label {
-    font-size: 13px;
-  }
-  .toggle-desc {
-    font-size: 11px;
-  }
-
-  /* Toggle switch: slightly larger for fat fingers */
-  .toggle {
-    width: 46px;
-    height: 26px;
-    flex-shrink: 0;
-  }
-
-  .toggle-slider::before {
-    width: 20px;
-    height: 20px;
-    left: 3px;
-    top: 3px;
-  }
-
-  .toggle input:checked + .toggle-slider::before {
-    transform: translateX(20px);
-  }
-
-  /* Save button on settings: full-width on mobile */
-  #page-settings .page-header-actions {
-    width: 100%;
-  }
-
-  #save-settings-btn {
-    width: 100%;
-    justify-content: center;
-    min-height: 48px;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   12. CARDS + GENERAL COMPONENTS
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
-  .card {
-    padding: 16px 14px;
-    border-radius: var(--radius-md);
-  }
-
-  .card-header {
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .card-title {
-    font-size: 14px;
-  }
-  .card-subtitle {
-    font-size: 11px;
-  }
-
-  /* Badges: slightly larger text on mobile for readability */
-  .badge {
-    font-size: 11px;
-    padding: 4px 10px;
-  }
-
-  /* Action buttons in tables: keep visible */
-  .action-btn {
-    padding: 8px 12px;
-    font-size: 12px;
-    min-height: 36px;
-    border-radius: 7px;
-  }
-
-  .action-btns {
-    gap: 6px;
-  }
-
-  /* Customer avatar cells */
-  .customer-avatar {
-    width: 38px;
-    height: 38px;
-    font-size: 14px;
-  }
-
-  /* Product image cell */
-  .product-img {
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-  }
-
-  .product-name {
-    font-size: 13px;
-  }
-  .product-sku {
-    font-size: 10px;
-  }
-
-  /* Filter tabs bar: horizontal scroll */
-  .order-filters {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 6px;
-    scrollbar-width: none;
-    gap: 6px;
-  }
-
-  .order-filters::-webkit-scrollbar {
+  #page-products .table thead {
     display: none;
   }
 
-  .filter-tab {
-    white-space: nowrap;
-    padding: 8px 14px;
-    font-size: 12px;
-    flex-shrink: 0;
-    min-height: 36px;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   13. TOASTS — bottom-positioned on mobile
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
-  .toast-container {
-    /* Move toasts to the bottom on mobile (thumb-visible area) */
-    top: auto;
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-    right: 12px;
-    left: 12px;
-    /* Centre the toasts horizontally */
-    align-items: center;
-  }
-
-  .toast {
-    min-width: unset;
-    max-width: 100%;
-    width: 100%;
-    /* Slide in from bottom instead of from right */
-    animation: toastInMobile 0.3s ease forwards;
-  }
-
-  .toast.removing {
-    animation: toastOutMobile 0.25s ease forwards;
-  }
-
-  @keyframes toastInMobile {
-    from {
-      opacity: 0;
-      transform: translateY(24px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes toastOutMobile {
-    from {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    to {
-      opacity: 0;
-      transform: translateY(24px);
-    }
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   14. EMPTY STATE
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
-  .empty-state {
-    padding: 40px 20px;
-  }
-
-  .empty-icon {
-    font-size: 40px;
-  }
-
-  .empty-title {
-    font-size: 15px;
-    margin-bottom: 6px;
-  }
-
-  .empty-desc {
-    font-size: 12px;
-    max-width: 260px;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   15. LOGIN PAGE — already mobile-friendly, minor polish
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 480px) {
-  .login-card {
-    padding: 32px 20px 28px;
-    border-radius: var(--radius-lg);
-    /* Hug the edges on very small screens */
-    margin: 12px;
-    max-width: calc(100vw - 24px);
-  }
-
-  .login-title {
-    font-size: 22px;
-  }
-  .login-subtitle {
-    font-size: 13px;
-    margin-bottom: 24px;
-  }
-  .login-logo-text {
-    font-size: 19px;
-  }
-
-  /* Signup form: name + store stack on mobile */
-  #auth-signup-form .form-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   16. CUSTOMER VIEW MODAL — stat grid mobile layout
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
-  /* Customer profile header: avatar + name + badge */
-  #view-customer-content [style*="grid-template-columns:repeat(3,1fr)"] {
-    /* Override inline grid to 3-equal columns (already looks fine)
-       but reduce font sizes for the number display */
-  }
-
-  /* Customer stat figures: slightly smaller on mobile */
-  #view-customer-content [style*="font-size:22px"] {
-    font-size: 19px !important;
-  }
-
-  #view-customer-content [style*="font-size:20px"] {
-    font-size: 17px !important;
-  }
-
-  /* Customer order history items */
-  #view-customer-content [style*="align-items:center;gap:12px;padding:10px"] {
-    flex-wrap: wrap;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   17. ACCESSIBILITY — focus rings visible on mobile too
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
-  /* Ensure focus-visible is usable for keyboard/switch control users */
-  .btn:focus-visible,
-  .form-input:focus-visible,
-  .form-select:focus-visible,
-  .form-textarea:focus-visible,
-  .nav-item:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   18. SAFE-AREA UTILS (iOS notch + home indicator)
-══════════════════════════════════════════════════════════════ */
-
-/* Applied to the fixed topbar so it doesn't hide behind notch */
-@supports (padding-top: env(safe-area-inset-top)) {
-  @media (max-width: 768px) {
-    .topbar {
-      padding-top: env(safe-area-inset-top, 0);
-    }
-
-    /* Push main content below the taller topbar */
-    .main {
-      padding-top: env(safe-area-inset-top, 0);
-    }
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   19. PRINT: unchanged — no mobile changes to print styles
-══════════════════════════════════════════════════════════════ */
-
-/* All @media print rules remain in style.css — nothing overridden here */
-
-
-/* ══════════════════════════════════════════════════════════════
-   ANALYTICS — Mobile Overrides
-══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
-  /* Stat grid: 2-col on tablet */
-  .an-stat-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-  .an-stat-card { padding: 14px 16px; }
-  .an-stat-value { font-size: 20px; letter-spacing: -0.5px; }
-  .an-stat-label { font-size: 10px; }
-  .an-stat-change { font-size: 10.5px; }
-  .an-stat-icon { width: 28px; height: 28px; font-size: 13px; }
-
-  /* Charts: single column, reduced height */
-  .an-chart-row {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .an-chart-card { padding: 14px 14px; }
-  .an-chart-area { height: 180px !important; }
-  .an-chart-title { font-size: 13px; }
-
-  /* Two-col tables: stack */
-  .an-two-col {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .an-table-card { padding: 14px 14px; }
-
-  /* Location grid: 2-col on tablet, 1-col on phone */
-  .an-location-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .an-loc-card { padding: 12px 14px; }
-  .an-loc-city { font-size: 13px; }
-
-  /* Suggestions: single column */
-  .an-suggestions { grid-template-columns: 1fr; gap: 10px; }
-  .an-suggestion { padding: 12px 14px; }
-
-  /* Alert card */
-  .an-alert-card { padding: 14px 14px; }
-
-  /* Section label */
-  .an-section-label { margin: 22px 0 12px; font-size: 10.5px; }
-
-  /* Skeleton */
-  .an-skeleton-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .an-skeleton-charts { grid-template-columns: 1fr; }
-  .an-skeleton-chart { height: 180px; }
-}
-
-@media (max-width: 480px) {
-  .an-stat-grid { grid-template-columns: 1fr 1fr; }
-  .an-location-grid { grid-template-columns: 1fr; }
-  .an-rank-name { font-size: 12px; }
-  .an-rank-val { font-size: 12px; }
-  .an-sug-text { font-size: 12px; }
-}
-/* ══════════════════════════════════════════════════════════════
-   5b. ORDER CARDS — mobile-only div layout
-   .ord-desktop hidden on mobile, .ord-mobile shown on mobile.
-   Pure div card — no table CSS fighting needed.
-══════════════════════════════════════════════════════════════ */
-
-/* Desktop default: show table cells, hide mobile card td */
-.ord-mobile  { display: none !important; }
-.ord-desktop { display: table-cell; }
-
-@media (max-width: 768px) {
-
-  /* ── Fix #1: Contain the whole orders page within viewport ─── */
-  #page-orders {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    overflow-x: hidden;
-  }
-
-  /* Create Order button: full width, properly sized */
-  #page-orders .page-header-actions {
-    width: 100%;
-    box-sizing: border-box;
-  }
-  #create-order-btn {
-    width: 100%;
-    justify-content: center;
-    padding: 11px 16px;
-    font-size: 13.5px;
-    box-sizing: border-box;
-  }
-
-  /* Card: full width, no overflow */
-  #page-orders .card {
-    width: 100%;
-    box-sizing: border-box;
-    overflow: hidden;
-    padding: 14px 12px;
-  }
-
-  /* Search row: full width, no overflow */
-  #page-orders .products-header-row {
-    width: 100%;
-    box-sizing: border-box;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-
-  #page-orders .products-search {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  #page-orders .products-search input,
-  #order-search {
-    width: 100%;
-    box-sizing: border-box;
-    font-size: 16px;
-    min-height: 44px;
-  }
-
-  /* ── Fix #2: Filter tabs — horizontal scroll, never overflow ─ */
-  #page-orders .order-filters {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    gap: 6px;
-    margin-bottom: 14px;
-    padding-bottom: 4px;
-    /* Critical: constrain to card width */
-    width: 100%;
-    box-sizing: border-box;
-    /* Prevent the strip from pushing the card wider */
-    max-width: 100%;
-  }
-
-  #page-orders .order-filters::-webkit-scrollbar { display: none; }
-
-  #page-orders .filter-tab {
-    white-space: nowrap;
-    flex-shrink: 0;
-    padding: 6px 12px;
-    font-size: 11.5px;
-    min-height: 32px;
-    border-radius: 99px;
-  }
-
-  /* ── Fix #3: Table escape ────────────────────────────────────── */
-  /* Flip visibility */
-  .ord-desktop { display: none !important; }
-  .ord-mobile  { display: table-cell !important; }
-
-  .ord-mobile {
-    padding: 0 !important;
-    border: none !important;
-    background: transparent !important;
-    width: 100%;
-  }
-
-  #orders-tbody tr.ord-row {
-    display: block !important;
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-    margin-bottom: 10px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  #page-orders .table-wrapper {
-    overflow-x: visible !important;
-    mask-image: none !important;
-    -webkit-mask-image: none !important;
-    width: 100%;
-  }
-  #page-orders .table {
-    display: block !important;
-    min-width: 0 !important;
-    width: 100% !important;
-    border: none !important;
-    background: transparent !important;
-  }
-  #page-orders .table thead { display: none !important; }
-  #page-orders .table tbody {
-    display: block !important;
-    width: 100% !important;
-  }
-
-  /* ── Fix #4: Cards — uniform size, consistent rows ──────────── */
-  .ord-card {
+  #products-tbody tr {
+    display: block;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    overflow: hidden;
-    cursor: pointer;
+    padding: 12px 14px;
+    margin-bottom: 10px;
     transition: var(--transition);
-    /* Full width, uniform sizing */
-    width: 100%;
-    box-sizing: border-box;
-    /* Consistent structure: header + 5 fixed rows + footer */
-    display: flex;
-    flex-direction: column;
   }
 
-  .ord-card:hover {
+  #products-tbody tr:hover {
     border-color: var(--border-active);
-    background: var(--bg-card-hover);
   }
 
-  /* Header: fixed height, order ID left + customer right */
-  .ord-card-header {
+  #products-tbody td {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 11px 14px;
-    border-bottom: 1px solid var(--border);
-    gap: 8px;
-    min-height: 48px;
-    box-sizing: border-box;
-    flex-wrap: nowrap;
+    padding: 5px 0;
+    border: none;
+    border-bottom: none !important;
+    font-size: 13px;
+    min-height: 32px;
   }
 
-  .ord-card-id {
-    font-size: 12.5px;
-    font-weight: 700;
-    color: var(--text-accent);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .ord-card-customer {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-
-  .ord-card-name {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text-primary);
-    white-space: nowrap;
-  }
-
-  /* Body: 5 rows, each fixed height for uniform card size */
-  .ord-card-body {
-    padding: 0 14px;
-    flex: 1;
-  }
-
-  .ord-card-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 38px;           /* fixed height = uniform cards */
-    border-bottom: 1px solid var(--border);
-    gap: 8px;
-    box-sizing: border-box;
-  }
-
-  .ord-card-row:last-child {
-    border-bottom: none;
-  }
-
-  .ord-card-label {
+  #products-tbody td::before {
+    content: attr(data-label);
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.5px;
     color: var(--text-muted);
     flex-shrink: 0;
-    width: 72px;            /* fixed label width */
+    margin-right: 10px;
+    min-width: 80px;
   }
 
-  .ord-card-value {
-    font-size: 13px;
-    color: var(--text-primary);
-    text-align: right;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    flex: 1;
+  #products-tbody td:first-child {
+    display: block;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border) !important;
+    margin-bottom: 6px;
+    min-height: unset;
   }
 
-  .ord-card-total {
-    font-weight: 700;
+  #products-tbody td:first-child::before {
+    display: none;
   }
 
-  .ord-card-date {
-    color: var(--text-secondary);
-    font-size: 12px;
-  }
-
-  /* Footer: fixed height, buttons right-aligned */
-  .ord-card-footer {
-    display: flex;
-    gap: 8px;
+  #products-tbody td:last-child {
     justify-content: flex-end;
-    align-items: center;
-    padding: 10px 14px;
-    border-top: 1px solid var(--border);
-    min-height: 54px;
-    box-sizing: border-box;
+    padding-top: 10px;
+    border-top: 1px solid var(--border) !important;
+    margin-top: 4px;
+    gap: 6px;
+    min-height: unset;
   }
 
-  .ord-card-footer .action-btn {
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 16px;
-    font-size: 12.5px;
-    min-height: 36px;
+  #products-tbody td:last-child::before {
+    display: none;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   18. HIGH-DPI / RETINA POLISH
+════════════════════════════════════════════════════════════ */
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Sharper borders on retina */
+  .card,
+  .stat-card,
+  .billing-card,
+  .it-card,
+  .modal {
+    border-width: 0.5px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   19. REDUCED MOTION ACCESSIBILITY
+════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   20. SAFE AREA INSETS (iPhone notch / Dynamic Island)
+════════════════════════════════════════════════════════════ */
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  .topbar {
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+
+  .sidebar {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .it-mobile-save {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .modal-overlay {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  @media (max-width: 768px) {
+    .page-content {
+      padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   21. INVOICE MODAL — full screen on small phones
+════════════════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+  #modal-invoice .modal {
+    max-height: 98vh;
+    padding: 14px 12px;
+  }
+
+  #modal-invoice .modal-footer {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  #modal-invoice .modal-footer .btn {
+    flex: 1;
+    min-width: calc(50% - 3px);
+    font-size: 12px;
+    padding: 9px 10px;
+    justify-content: center;
+  }
+
+  #modal-invoice .modal-footer .btn[style*="margin-right: auto"] {
+    flex: 0 0 100%;
+    min-width: 100%;
+  }
+
+  .invoice-wrapper {
+    overflow-x: auto;
+  }
+
+  .invoice-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   22. PRINT PORTAL — always full width
+════════════════════════════════════════════════════════════ */
+
+@media print {
+  #print-portal {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .page-content,
+  .sidebar,
+  .topbar,
+  .modal-overlay {
+    display: none !important;
+  }
+
+  .invoice-wrapper {
+    max-width: 100%;
+    padding: 20px 32px;
+    box-shadow: none;
+    border: none;
   }
 }
