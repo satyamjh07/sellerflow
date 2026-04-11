@@ -472,6 +472,7 @@ const Billing = (() => {
       expiresAt: _planExpiresAt,
       trialUsed: _trialUsed,
       isExpired: _planExpiresAt ? new Date(_planExpiresAt) <= new Date() : false,
+        getCurrentPlan,
     };
   }
 
