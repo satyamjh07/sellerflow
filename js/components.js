@@ -65,33 +65,84 @@ const Components = (() => {
       ? `<span class="badge badge-muted" style="margin-top:4px;font-size:10px">${o.source}</span>`
       : "";
 
-    return `
-      <tr>
-        <td class="fw-700 text-accent">
-          <div>${o.id}</div>
-          ${sourceBadge}
-        </td>
-        <td>
-          <div class="customer-name-cell">
-            <div class="customer-avatar" style="width:30px;height:30px;font-size:11px">${initials(o.customerName)}</div>
-            <span>${o.customerName}</span>
+    // ── Desktop: standard table row (hidden on mobile via CSS) ──
+    const desktopRow = `
+      <td class="fw-700 text-accent ord-desktop">
+        <div>${o.id}</div>
+        ${sourceBadge}
+      </td>
+      <td class="ord-desktop">
+        <div class="customer-name-cell">
+          <div class="customer-avatar" style="width:30px;height:30px;font-size:11px">${initials(o.customerName)}</div>
+          <span>${o.customerName}</span>
+        </div>
+      </td>
+      <td class="ord-desktop" style="font-size:12px;color:var(--text-secondary)">
+        ${o.items.map((i) => i.name).join(", ")}
+      </td>
+      <td class="fw-700 ord-desktop">${formatCurrency(o.total)}</td>
+      <td class="ord-desktop">${UI.orderStatusBadge(o.status)}</td>
+      <td class="ord-desktop">${UI.paymentBadge(o.payment)}</td>
+      <td class="ord-desktop">${formatDate(o.date)}</td>
+      <td class="ord-desktop">
+        <div class="action-btns">
+          <button class="action-btn action-btn-edit" onclick="Modals.viewOrder('${o.id}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View</button>
+          <button class="action-btn action-btn-edit" onclick="Modals.showInvoice('${o.id}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button>
+        </div>
+      </td>`;
+
+    // ── Mobile: pure div card (hidden on desktop via CSS) ────────
+    const mobileCard = `
+      <td class="ord-mobile" colspan="8" style="padding:0;border:none;">
+        <div class="ord-card" onclick="Modals.viewOrder('${o.id}')">
+
+          <div class="ord-card-header">
+            <div>
+              <div class="ord-card-id">${o.id}</div>
+              ${sourceBadge}
+            </div>
+            <div class="ord-card-customer">
+              <div class="customer-avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0;">${initials(o.customerName)}</div>
+              <span class="ord-card-name">${o.customerName}</span>
+            </div>
           </div>
-        </td>
-        <td style="font-size:12px;color:var(--text-secondary)">
-          ${o.items.map((i) => i.name).join(", ")}
-        </td>
-        <td class="fw-700">${formatCurrency(o.total)}</td>
-        <td>${UI.orderStatusBadge(o.status)}</td>
-        <td>${UI.paymentBadge(o.payment)}</td>
-        <td>${formatDate(o.date)}</td>
-        <td>
-          <div class="action-btns">
-            <button class="action-btn action-btn-edit" onclick="Modals.viewOrder('${o.id}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View</button>
-            <button class="action-btn action-btn-edit" onclick="Modals.showInvoice('${o.id}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button>
+
+          <div class="ord-card-body">
+            <div class="ord-card-row">
+              <span class="ord-card-label">Items</span>
+              <span class="ord-card-value">${o.items.map((i) => i.name).join(", ")}</span>
+            </div>
+            <div class="ord-card-row">
+              <span class="ord-card-label">Total</span>
+              <span class="ord-card-value ord-card-total">${formatCurrency(o.total)}</span>
+            </div>
+            <div class="ord-card-row">
+              <span class="ord-card-label">Delivery</span>
+              <span class="ord-card-value">${UI.orderStatusBadge(o.status)}</span>
+            </div>
+            <div class="ord-card-row">
+              <span class="ord-card-label">Payment</span>
+              <span class="ord-card-value">${UI.paymentBadge(o.payment)}</span>
+            </div>
+            <div class="ord-card-row">
+              <span class="ord-card-label">Date</span>
+              <span class="ord-card-value ord-card-date">${formatDate(o.date)}</span>
+            </div>
           </div>
-        </td>
-      </tr>
-    `;
+
+          <div class="ord-card-footer">
+            <button class="action-btn action-btn-edit" onclick="event.stopPropagation();Modals.viewOrder('${o.id}')">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:4px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View
+            </button>
+            <button class="action-btn action-btn-edit" onclick="event.stopPropagation();Modals.showInvoice('${o.id}')">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Invoice
+            </button>
+          </div>
+
+        </div>
+      </td>`;
+
+    return `<tr class="ord-row">${desktopRow}${mobileCard}</tr>`;
   }
 
   // ─── ViewOrderContent ───────────────────────────────────────────
