@@ -1277,31 +1277,114 @@ button,
 
 @media (max-width: 768px) {
 
+  /* ── Fix #1: Contain the whole orders page within viewport ─── */
+  #page-orders {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  /* Create Order button: full width, properly sized */
+  #page-orders .page-header-actions {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #create-order-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 11px 16px;
+    font-size: 13.5px;
+    box-sizing: border-box;
+  }
+
+  /* Card: full width, no overflow */
+  #page-orders .card {
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    padding: 14px 12px;
+  }
+
+  /* Search row: full width, no overflow */
+  #page-orders .products-header-row {
+    width: 100%;
+    box-sizing: border-box;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  #page-orders .products-search {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  #page-orders .products-search input,
+  #order-search {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  /* ── Fix #2: Filter tabs — horizontal scroll, never overflow ─ */
+  #page-orders .order-filters {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+    margin-bottom: 14px;
+    padding-bottom: 4px;
+    /* Critical: constrain to card width */
+    width: 100%;
+    box-sizing: border-box;
+    /* Prevent the strip from pushing the card wider */
+    max-width: 100%;
+  }
+
+  #page-orders .order-filters::-webkit-scrollbar { display: none; }
+
+  #page-orders .filter-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 6px 12px;
+    font-size: 11.5px;
+    min-height: 32px;
+    border-radius: 99px;
+  }
+
+  /* ── Fix #3: Table escape ────────────────────────────────────── */
   /* Flip visibility */
   .ord-desktop { display: none !important; }
   .ord-mobile  { display: table-cell !important; }
 
-  /* The mobile td itself is borderless/paddingless — just a shell */
   .ord-mobile {
     padding: 0 !important;
     border: none !important;
     background: transparent !important;
+    width: 100%;
   }
 
-  /* The <tr> wrapping it needs no table styling */
   #orders-tbody tr.ord-row {
     display: block !important;
     background: transparent !important;
     border: none !important;
     padding: 0 !important;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
-  /* Remove table-level min-width + scroll for orders page */
   #page-orders .table-wrapper {
     overflow-x: visible !important;
     mask-image: none !important;
     -webkit-mask-image: none !important;
+    width: 100%;
   }
   #page-orders .table {
     display: block !important;
@@ -1311,9 +1394,12 @@ button,
     background: transparent !important;
   }
   #page-orders .table thead { display: none !important; }
-  #page-orders .table tbody { display: block !important; width: 100% !important; }
+  #page-orders .table tbody {
+    display: block !important;
+    width: 100% !important;
+  }
 
-  /* ── The actual card ───────────────────────────────────────── */
+  /* ── Fix #4: Cards — uniform size, consistent rows ──────────── */
   .ord-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -1321,8 +1407,12 @@ button,
     overflow: hidden;
     cursor: pointer;
     transition: var(--transition);
+    /* Full width, uniform sizing */
     width: 100%;
     box-sizing: border-box;
+    /* Consistent structure: header + 5 fixed rows + footer */
+    display: flex;
+    flex-direction: column;
   }
 
   .ord-card:hover {
@@ -1330,49 +1420,58 @@ button,
     background: var(--bg-card-hover);
   }
 
-  /* Header: order ID left, customer right */
+  /* Header: fixed height, order ID left + customer right */
   .ord-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 14px 10px;
+    padding: 11px 14px;
     border-bottom: 1px solid var(--border);
-    gap: 10px;
-    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 48px;
+    box-sizing: border-box;
+    flex-wrap: nowrap;
   }
 
   .ord-card-id {
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 700;
     color: var(--text-accent);
-    word-break: break-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
   }
 
   .ord-card-customer {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 6px;
     flex-shrink: 0;
   }
 
   .ord-card-name {
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 600;
     color: var(--text-primary);
+    white-space: nowrap;
   }
 
-  /* Body: rows of label + value */
+  /* Body: 5 rows, each fixed height for uniform card size */
   .ord-card-body {
-    padding: 8px 14px;
+    padding: 0 14px;
+    flex: 1;
   }
 
   .ord-card-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 5px 0;
+    height: 38px;           /* fixed height = uniform cards */
     border-bottom: 1px solid var(--border);
     gap: 8px;
+    box-sizing: border-box;
   }
 
   .ord-card-row:last-child {
@@ -1386,19 +1485,21 @@ button,
     letter-spacing: 0.6px;
     color: var(--text-muted);
     flex-shrink: 0;
-    min-width: 64px;
+    width: 72px;            /* fixed label width */
   }
 
   .ord-card-value {
     font-size: 13px;
     color: var(--text-primary);
     text-align: right;
-    word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
   }
 
   .ord-card-total {
     font-weight: 700;
-    color: var(--text-primary);
   }
 
   .ord-card-date {
@@ -1406,39 +1507,23 @@ button,
     font-size: 12px;
   }
 
-  /* Footer: action buttons */
+  /* Footer: fixed height, buttons right-aligned */
   .ord-card-footer {
     display: flex;
     gap: 8px;
     justify-content: flex-end;
-    padding: 10px 14px 12px;
+    align-items: center;
+    padding: 10px 14px;
     border-top: 1px solid var(--border);
+    min-height: 54px;
+    box-sizing: border-box;
   }
 
   .ord-card-footer .action-btn {
     display: inline-flex;
     align-items: center;
-    padding: 8px 14px;
+    padding: 8px 16px;
     font-size: 12.5px;
     min-height: 36px;
-  }
-
-  /* Filter tabs scrollable strip */
-  #page-orders .order-filters {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 6px;
-    scrollbar-width: none;
-    gap: 6px;
-    margin-bottom: 14px;
-  }
-
-  #page-orders .order-filters::-webkit-scrollbar { display: none; }
-
-  /* Orders search input */
-  #order-search {
-    font-size: 16px;
-    min-height: 44px;
   }
 }
