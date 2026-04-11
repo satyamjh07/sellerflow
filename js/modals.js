@@ -558,7 +558,7 @@ const Modals = (() => {
       const cust      = customers.find(c => c.id === o.customerId);
       const isPaid    = o.payment === 'paid';
 
-      document.getElementById('invoice-preview-body').innerHTML = Components.InvoiceTemplate(o, user || {});
+     document.getElementById('invoice-preview-body').innerHTML = InvoiceTemplates.apply(o, user || {});
 
       // ── Toggle payment ─────────────────────────────────────────
       const toggleBtn = document.getElementById('invoice-toggle-payment');
@@ -615,7 +615,7 @@ const Modals = (() => {
 
   // ─── Print Invoice ────────────────────────────────────────────
   function _printInvoice(o, user) {
-    const invoiceHTML = Components.InvoiceTemplate(o, user);
+     const invoiceHTML = InvoiceTemplates.apply(o, user);
 
     const invoiceCSS = `
       @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
