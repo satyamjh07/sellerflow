@@ -30,6 +30,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     _showScreen("login");
   }
 
+  // Show any deferred toast saved before a reload (e.g. deleted account)
+  try {
+    const deferred = sessionStorage.getItem("sf-login-toast");
+    if (deferred) {
+      sessionStorage.removeItem("sf-login-toast");
+      setTimeout(() => UI.toast(deferred, "error"), 300);
+    }
+  } catch (_) {}
+
   // ─── 3. Listen for PASSWORD_RECOVERY event ─────────────────────
   window.addEventListener("sf:password-recovery", () => {
     _showScreen("reset-password");
@@ -621,10 +630,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ══════════════════════════════════════════════════════════════
 
   async function _bootApp(authUser) {
+    // Guard: profile row missing means account was deleted but
+    // Supabase auth session is still alive. Sign out and show login.
+    let _profileCheck;
+    try { _profileCheck = await SF.getUser(); } catch (_) { _profileCheck = null; }
+    if (!_profileCheck) {
+      UI.hideLoading();
+      try { await Auth.signOut(); } catch (_) {}
+      // Save the message BEFORE clearing storage, read it after reload
+      try { sessionStorage.setItem("sf-login-toast", "This account no longer exists. Please sign up again."); } catch (_) {}
+      try { localStorage.clear(); } catch (_) {}
+      window.location.reload();
+      return;
+    }
+
     document.getElementById("login-page").style.display = "none";
     document.getElementById("app").classList.add("active");
 
-    const userForSidebar = await SF.getUser();
+    const userForSidebar = _profileCheck;
     const displayName =
       userForSidebar?.name || authUser?.email?.split("@")[0] || "Seller";
     document.getElementById("sidebar-user-name").textContent = displayName;
@@ -650,7 +673,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.warn("[App] Billing.init non-fatal:", err.message);
     }
 
-    const user = await SF.getUser();
+    const user = _profileCheck;
     await InvoiceTemplates.loadFromProfile();
     if (typeof ProfileReminder !== "undefined" && user) {
       ProfileReminder.render(user);
@@ -900,10 +923,31 @@ document.addEventListener("DOMContentLoaded", async () => {
       try {
         await SF.deleteAccount();
         UI.toast("Account deleted. Goodbye! 👋", "info");
+        setTimeout(() => {
+          try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
+          window.location.reload();
+        }, 1200);
       } catch (err) {
-        UI.toast(err.message || "Deletion failed", "error");
-        btn.disabled = false;
-        btn.textContent = "💀 Delete Account";
+        console.error("[deleteAccount]", err);
+        const msg = err.message || "";
+        const dataAlreadyGone =
+          msg.includes("delete_own_account") ||
+          msg.includes("schema cache") ||
+          msg.includes("Could not find");
+
+        if (dataAlreadyGone) {
+          // Data deleted but RPC missing - sign out and reload cleanly
+          UI.toast("Account data deleted. Signing you out...", "info");
+          try { await Auth.signOut(); } catch (_) {}
+          setTimeout(() => {
+            try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
+            window.location.reload();
+          }, 1200);
+        } else {
+          UI.toast(err.message || "Deletion failed. Please try again.", "error");
+          btn.disabled = false;
+          btn.textContent = "💀 Delete Account";
+        }
       }
     });
 
