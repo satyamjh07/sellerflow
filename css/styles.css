@@ -166,14 +166,16 @@ img {
 
 /* ─── Login Page ─────────────────────────────────── */
 #login-page {
+  width: 100%;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg-base);
-  position: relative;
-  overflow: hidden;
+  padding: 32px;
+  box-sizing: border-box;
 }
+/* Hidden by default via inline style="display:none"; JS sets display:flex to show */
 
 .login-bg-grid {
   position: absolute;
@@ -183,6 +185,7 @@ img {
     linear-gradient(90deg, rgba(64, 138, 113, 0.04) 1px, transparent 1px);
   background-size: 40px 40px;
   pointer-events: none;
+  z-index: 0;
 }
 
 .login-bg-orb {
@@ -216,6 +219,27 @@ img {
   max-width: 420px;
   box-shadow: var(--shadow-modal);
   animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Inside split layout — completely override base card styles */
+.login-split .login-card {
+  position: static;
+  border-radius: 0 !important;
+  border: none !important;
+  max-width: none !important;
+  width: 540px !important;
+  flex-shrink: 0 !important;
+  box-shadow: none !important;
+  animation: none !important;
+  padding: 36px 44px !important;
+  border-left: 1px solid var(--border) !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  background: var(--bg-card) !important;
+  order: 2 !important;
 }
 
 @keyframes slideUp {
