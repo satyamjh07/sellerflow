@@ -1,9 +1,9 @@
-// SellerFlow — Billing & Subscription Module
+// Hisaab Mitra — Billing & Subscription Module
 // Manages plan state, expiry checking, feature gating, logo upload,
 // expiry reminder emails, and dashboard warning banners.
 //
 // PLAN HIERARCHY
-//   free     → basic access, SellerFlow branding, order limits
+//   free     → basic access, Hisaab Mitra branding, order limits
 //   trial    → full Platinum access, 30-minute validity, one-time use
 //   bronze   → ₹49/month core features, branding on invoices
 //   platinum → ₹199/month everything, no branding, custom logo
@@ -98,10 +98,11 @@ const Billing = (() => {
         'Up to 20 orders/month',
         'Customer management',
         'Basic invoices',
-        'SellerFlow branding on invoices',
+        'Basic invoice templates',
+        'Hisaab Mitra branding on invoices',
       ],
       limits: { ordersPerMonth: 20 },
-      branding: true,         // SellerFlow footer on invoices
+      branding: true,         // Hisaab Mitra footer on invoices
       customLogo: false,
       analytics: false,
     },
@@ -110,17 +111,17 @@ const Billing = (() => {
       name:      'Trial',
       badge:     'Trial',
       price:     0,
-      priceText: 'Free · 30 minutes',
+      priceText: 'Free · 24 Hours',
       color:     '#8B5CF6',
       colorDim:  'rgba(139,92,246,0.12)',
-      durationMinutes: 30,
+      durationMinutes: 1440,
       features: [
         'Full Platinum access',
         'Unlimited orders',
         'Custom store logo',
-        'Remove SellerFlow branding',
-        'Advanced analytics',
-        'Valid for 30 minutes only',
+        'Remove Hisaab Mitra branding',
+        'Advanced AI analytics dashboard',
+        'Valid for 24 Hours only',
         'One-time use per account',
       ],
       limits: { ordersPerMonth: Infinity },
@@ -142,7 +143,7 @@ const Billing = (() => {
         'Unlimited orders',
         'Invoices & billing',
         'Basic tracking page',
-        'SellerFlow branding on invoices',
+        'Hisaab Mitra branding on invoices',
       ],
       limits: { ordersPerMonth: Infinity },
       branding: true,
@@ -153,16 +154,17 @@ const Billing = (() => {
       id:        'platinum',
       name:      'Platinum',
       badge:     'Platinum',
-      price:     199,
-      priceText: '₹199 / month',
+      price:     99,
+      priceText: '₹99 / month + 1 Month Free',
       color:     '#6366F1',
       colorDim:  'rgba(99,102,241,0.12)',
       features: [
         'Everything in Bronze',
-        'Remove SellerFlow branding',
+        'Remove Hisaab Mitra branding',
         'Custom store logo on invoices',
         'Premium invoice branding',
-        'Advanced analytics (ready)',
+        'Premium only invoice templates',
+        'Advanced AI analytics (ready)',
         'Low stock email alerts',
         'Premium tracking page',
         'Priority support',
@@ -400,22 +402,22 @@ const Billing = (() => {
       const planMeta = PLANS[planId] || PLANS.free;
 
       const subjects = {
-        '10min':   `Your SellerFlow ${planMeta.name} expires in 10 minutes`,
-        '3days':   `Your SellerFlow ${planMeta.name} renews in 3 days`,
-        'expired': `Your SellerFlow ${planMeta.name} has expired`,
+        '10min':   `Your Hisaab Mitra ${planMeta.name} expires in 10 minutes`,
+        '3days':   `Your Hisaab Mitra ${planMeta.name} renews in 3 days`,
+        'expired': `Your Hisaab Mitra ${planMeta.name} has expired`,
       };
 
       const bodies = {
-        '10min': `Hi ${profile.name || 'Seller'},\n\nYour SellerFlow ${planMeta.name} plan (${planMeta.priceText}) expires in 10 minutes.\n\nTo keep your full access, please renew your plan via Settings → Subscription.\n\nThank you for using SellerFlow!`,
-        '3days': `Hi ${profile.name || 'Seller'},\n\nYour SellerFlow ${planMeta.name} plan expires in 3 days.\n\nRenew now from Settings → Subscription to avoid any interruption.\n\nThank you!`,
-        'expired': `Hi ${profile.name || 'Seller'},\n\nYour SellerFlow ${planMeta.name} plan has expired. You've been moved to the Free plan.\n\nUpgrade any time from Settings → Subscription.\n\nThank you for using SellerFlow!`,
+        '10min': `Hi ${profile.name || 'Seller'},\n\nYour Hisaab Mitra ${planMeta.name} plan (${planMeta.priceText}) expires in 10 minutes.\n\nTo keep your full access, please renew your plan via Settings → Subscription.\n\nThank you for using Hisaab Mitra!`,
+        '3days': `Hi ${profile.name || 'Seller'},\n\nYour Hisaab Mitra ${planMeta.name} plan expires in 3 days.\n\nRenew now from Settings → Subscription to avoid any interruption.\n\nThank you!`,
+        'expired': `Hi ${profile.name || 'Seller'},\n\nYour Hisaab Mitra ${planMeta.name} plan has expired. You've been moved to the Free plan.\n\nUpgrade any time from Settings → Subscription.\n\nThank you for using Hisaab Mitra!`,
       };
 
       await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
         customer_name:  profile.name  || 'Seller',
         customer_email: profile.email,
         order_id:       `PLAN-${eventType.toUpperCase()}`,
-        store_name:     profile.store || 'SellerFlow Store',
+        store_name:     profile.store || 'Hisaab Mitra Store',
         total:          planMeta.priceText,
         payment_status: subjects[eventType] || 'Plan Update',
         invoice_html:   `<p style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#374151">${(bodies[eventType] || '').replace(/\n/g, '<br>')}</p>`,
@@ -439,7 +441,7 @@ const Billing = (() => {
     const uid = Auth.getUserId();
     if (!uid) return false;
 
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 minutes
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
 
     const { error } = await _supabase
       .from('profiles')
@@ -460,7 +462,7 @@ const Billing = (() => {
     _scheduleExpiryReminders();
     _renderPlanBanner();
 
-    UI.toast('Trial activated! You have 30 minutes of full Platinum access.', 'success');
+    UI.toast('Trial activated! You have 24 hours of full Platinum access.', 'success');
     return true;
   }
 
