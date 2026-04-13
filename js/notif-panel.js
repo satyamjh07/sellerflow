@@ -37,7 +37,7 @@ const NotifPanel = (() => {
 
   // ── Config ────────────────────────────────────────────────────
   // Replace with your actual admin Supabase user ID
-  const ADMIN_UID = '64c9dbf4-6d28-4a4b-8532-7ebdad933e5c';
+  const ADMIN_UID = '3def6a27-3f35-4949-872b-6a70b735e92e';
 
   // Low stock threshold override — products with stock <= this show a warning
   const LOW_STOCK_WARN  = 5;
