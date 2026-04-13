@@ -339,159 +339,66 @@
          Desktop/tablet: left form + right brand panel
          Mobile: single column (brand panel hidden)
          ==================================================== */
-      /* ══ AUTH SPLIT LAYOUT ═══════════════════════════════════ */
-      .login-bg-grid, .login-bg-orb { pointer-events: none; }
-
-      .login-split {
+      /* ══ AUTH PAGE — Complete Fresh CSS ════════════════════ */
+      #login-page {
+        width: 100%;
+        min-height: 100vh;
         display: flex;
-        flex-direction: row;
-        width: 860px;
-        height: 560px;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-base);
+        padding: 32px 16px;
+        box-sizing: border-box;
+      }
+      .auth-wrapper {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        width: 100%;
+        max-width: 840px;
+        min-height: 540px;
         border-radius: 20px;
         overflow: hidden;
-        box-shadow: 0 24px 80px rgba(0,0,0,0.55);
-        position: relative;
-        z-index: 1;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
       }
-      .login-brand-panel {
-        width: 320px;
-        flex-shrink: 0;
-        order: 1;
+      .auth-brand {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(150deg, var(--accent-3) 0%, var(--accent) 55%, var(--accent-2) 120%);
+        padding: 44px 32px;
         display: flex;
         align-items: center;
-        justify-content: center;
-        padding: 40px 32px;
-        background: linear-gradient(145deg, var(--accent-3) 0%, var(--accent) 60%, var(--accent-2) 130%);
-        overflow: hidden;
-        position: relative;
         box-sizing: border-box;
       }
-      .login-split .login-card {
-        width: 540px;
-        flex-shrink: 0;
-        order: 2;
-        max-width: 540px;
-        border-radius: 0;
-        box-shadow: none;
-        border: none;
-        border-left: 1px solid var(--border);
-        padding: 36px 44px;
-        overflow-y: auto;
-        animation: none;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        box-sizing: border-box;
-        background: var(--bg-card);
+      [data-theme="light"] .auth-brand {
+        background: linear-gradient(150deg, #8a244b 0%, #d02752 55%, #f63049 120%);
       }
-      [data-theme="light"] .login-brand-panel {
-        background: linear-gradient(145deg, #8a244b 0%, #d02752 55%, #f63049 130%);
+      .auth-brand-orb { position: absolute; border-radius: 50%; pointer-events: none; }
+      .auth-brand-orb-1 { width: 280px; height: 280px; background: rgba(255,255,255,0.07); top: -70px; right: -70px; }
+      .auth-brand-orb-2 { width: 160px; height: 160px; background: rgba(255,255,255,0.05); bottom: -40px; left: -30px; }
+      .auth-brand-content { position: relative; z-index: 1; color: #fff; }
+      .auth-brand-logo { margin-bottom: 24px; }
+      .auth-brand-logo img { width: 48px; height: 48px; object-fit: contain; }
+      .auth-brand-headline { font-family: var(--font-display); font-size: 26px; font-weight: 700; line-height: 1.2; letter-spacing: -0.5px; color: #fff; margin: 0 0 10px; }
+      .auth-brand-tagline { font-size: 12.5px; line-height: 1.6; color: rgba(255,255,255,0.75); margin: 0 0 24px; }
+      .auth-brand-features { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-direction: column; gap: 11px; }
+      .auth-brand-features li { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: rgba(255,255,255,0.88); font-weight: 500; }
+      .auth-brand-feat-icon { width: 28px; height: 28px; background: rgba(255,255,255,0.15); border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+      .auth-brand-feat-icon svg { width: 13px; height: 13px; stroke: #fff; }
+      .auth-brand-badge { display: inline-flex; align-items: center; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 99px; padding: 5px 12px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.9); }
+      .auth-form-panel { background: var(--bg-card); padding: 40px 40px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; box-sizing: border-box; }
+      @media (max-width: 780px) {
+        .auth-wrapper { grid-template-columns: 240px 1fr; }
+        .auth-brand { padding: 32px 24px; }
+        .auth-brand-headline { font-size: 22px; }
+        .auth-form-panel { padding: 32px 28px; }
       }
-      @media (max-width: 920px) {
-        .login-split { width: 96vw; height: auto; min-height: 520px; }
-        .login-brand-panel { width: 280px; padding: 32px 24px; }
-        .login-split .login-card { width: auto; flex: 1; max-width: none; padding: 32px 28px; }
-      }
-      @media (max-width: 600px) {
-        .login-split { width: 100%; border-radius: 0; flex-direction: column; height: auto; min-height: 100vh; }
-        .login-brand-panel { display: none; }
-        .login-split .login-card { width: 100%; max-width: 100%; order: 1; border-left: none; padding: 40px 24px; min-height: 100vh; }
+      @media (max-width: 580px) {
+        #login-page { padding: 0; align-items: stretch; }
+        .auth-wrapper { grid-template-columns: 1fr; border-radius: 0; min-height: 100vh; box-shadow: none; }
+        .auth-brand { display: none; }
+        .auth-form-panel { padding: 48px 24px; justify-content: center; min-height: 100vh; }
       }
       /* ════════════════════════════════════════════════════════ */
-      .lbp-orb {
-        position: absolute;
-        border-radius: 50%;
-        pointer-events: none;
-      }
-      .lbp-orb-1 {
-        width: 320px; height: 320px;
-        background: rgba(255,255,255,0.07);
-        top: -80px; right: -80px;
-      }
-      .lbp-orb-2 {
-        width: 200px; height: 200px;
-        background: rgba(255,255,255,0.05);
-        bottom: -60px; left: -40px;
-      }
-      .lbp-content {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        flex-direction: column;
-        color: #fff;
-      }
-      .lbp-logo {
-        margin-bottom: 32px;
-      }
-      .lbp-logo img {
-        width: 52px; height: 52px;
-        object-fit: contain;
-        filter: brightness(0) invert(1);
-        opacity: 0.95;
-      }
-      .lbp-headline {
-        font-family: var(--font-display);
-        font-size: 28px;
-        font-weight: 700;
-        line-height: 1.15;
-        letter-spacing: -0.8px;
-        color: #fff;
-        margin-bottom: 14px;
-      }
-      .lbp-tagline {
-        font-size: 13.5px;
-        line-height: 1.65;
-        color: rgba(255,255,255,0.75);
-        margin-bottom: 36px;
-        max-width: 300px;
-      }
-      .lbp-features {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        margin-bottom: 36px;
-      }
-      .lbp-feature {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-size: 13px;
-        color: rgba(255,255,255,0.88);
-        font-weight: 500;
-      }
-      .lbp-feat-icon {
-        width: 32px; height: 32px;
-        background: rgba(255,255,255,0.15);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-      }
-      .lbp-feat-icon svg {
-        width: 15px; height: 15px;
-        stroke: #fff;
-      }
-      .lbp-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(255,255,255,0.12);
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 99px;
-        padding: 7px 16px;
-        font-size: 12px;
-        font-weight: 600;
-        color: rgba(255,255,255,0.9);
-        letter-spacing: 0.1px;
-        width: fit-content;
-      }
-      [data-theme="light"] .login-brand-panel {
-        background: linear-gradient(145deg, #8a244b 0%, #d02752 55%, #f63049 130%) !important;
-      }
-      [data-theme="light"] .login-split {
-        box-shadow: 0 8px 48px rgba(90, 40, 60, 0.2) !important;
-      }
 
             .settings-provider-badge {
         display: inline-flex;
@@ -1389,184 +1296,104 @@
      AUTH SCREENS (login-page wrapper)
 ══════════════════════════════════════════════ -->
     <div id="login-page" style="display:none">
-      <div class="login-bg-grid"></div>
-      <div class="login-bg-orb orb-1"></div>
-      <div class="login-bg-orb orb-2"></div>
 
-      <!-- Split layout: left = form, right = brand panel -->
-      <div class="login-split">
-        <!-- LEFT: form card (unchanged inner content) -->
-        <div class="login-card">
-        <div class="login-logo">
-          <div class="login-logo-icon">
-            <img
-              id="login-logo-img"
-              src="/images/logo-dark.png"
-              alt="Hisaab Mitra"
-              style="width: 48px; height: 48px; object-fit: contain; display: block;"
-            />
-            <script>
-              (function(){
-                var t=localStorage.getItem("sf-theme")||"dark";
-                document.currentScript.previousElementSibling.src=
-                  t==="light"?"/images/logo-light.png":"/images/logo-dark.png";
-              })();
-            </script>
+      <!-- ══ NEW CLEAN LAYOUT ══ -->
+      <div class="auth-wrapper">
+
+        <!-- LEFT: Brand Panel -->
+        <div class="auth-brand" aria-hidden="true">
+          <div class="auth-brand-orb auth-brand-orb-1"></div>
+          <div class="auth-brand-orb auth-brand-orb-2"></div>
+          <div class="auth-brand-content">
+            <div class="auth-brand-logo">
+              <img id="lbp-logo-img" src="images/favicon-dark.png" alt="Hisaab Mitra"
+                style="width:52px;height:52px;object-fit:contain;filter:brightness(0) invert(1);opacity:.95"/>
+              <script>(function(){var t=localStorage.getItem("sf-theme")||"dark";document.currentScript.previousElementSibling.src=t==="light"?"/images/logo-light.png":"/images/logo-dark.png";})();</script>
+            </div>
+            <h2 class="auth-brand-headline">Manage your<br>store smarter.</h2>
+            <p class="auth-brand-tagline">Everything you need to run your online business — orders, invoices, analytics, and more.</p>
+            <ul class="auth-brand-features">
+              <li><span class="auth-brand-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>Track orders &amp; inventory in real time</li>
+              <li><span class="auth-brand-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>Auto-generate GST invoices instantly</li>
+              <li><span class="auth-brand-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Deep AI analytics &amp; revenue insights</li>
+              <li><span class="auth-brand-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Customer management &amp; repeat buyers</li>
+            </ul>
+            <div class="auth-brand-badge">Trusted by many online sellers across India 🇮🇳</div>
           </div>
-          <div class="login-logo-text">Hisaab Mitra</div>
         </div>
 
-        <!-- Auth Tabs (hidden on verify/forgot/reset screens) -->
-        <div class="auth-tabs">
-          <button class="auth-tab active" id="auth-login-tab">Sign In</button>
-          <button class="auth-tab" id="auth-signup-tab">Create Account</button>
-        </div>
-
-        <!-- ══ LOGIN FORM ══════════════════════════════════════════ -->
-        <div id="auth-login-form">
-          <h1 class="login-title">Welcome back</h1>
-          <p class="login-subtitle">Sign in to manage your Instagram store</p>
-
-          <!-- Google OAuth -->
-          <button class="btn-google" type="button">
-            <img
-              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-              class="google-icon"
-              alt="Google"
-            />
-            Continue with Google
-          </button>
-
-          <div class="auth-or-divider">or continue with email</div>
-
-          <div class="form-group">
-            <label class="form-label" for="login-email">Email</label>
-            <input
-              class="form-input"
-              type="email"
-              id="login-email"
-              placeholder="you@store.com"
-              autocomplete="email"
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="login-password">Password</label>
-            <input
-              class="form-input"
-              type="password"
-              id="login-password"
-              placeholder="Enter password"
-              autocomplete="current-password"
-            />
-            <span class="forgot-link" id="forgot-password-link"
-              >Forgot password?</span
-            >
+        <!-- RIGHT: Form Panel -->
+        <div class="auth-form-panel">
+          <div class="login-logo">
+            <div class="login-logo-icon">
+              <img id="login-logo-img" src="/images/logo-dark.png" alt="Hisaab Mitra"
+                style="width:48px;height:48px;object-fit:contain;display:block;"/>
+              <script>(function(){var t=localStorage.getItem("sf-theme")||"dark";document.currentScript.previousElementSibling.src=t==="light"?"/images/logo-light.png":"/images/logo-dark.png";})();</script>
+            </div>
+            <div class="login-logo-text">Hisaab Mitra</div>
           </div>
 
-          <button
-            class="btn btn-primary btn-full"
-            id="login-btn"
-            style="margin-top: 4px"
-          >
-            Sign In →
-          </button>
+          <!-- Auth Tabs -->
+          <div class="auth-tabs">
+            <button class="auth-tab active" id="auth-login-tab">Sign In</button>
+            <button class="auth-tab" id="auth-signup-tab">Create Account</button>
+          </div>
 
-          <p class="login-hint" style="margin-top: 12px">
-            Just exploring? <span id="demo-login">Use demo account</span>
-          </p>
-          <p class="login-hint" style="margin-top: 6px">
-            New here?
-            <span
-              id="switch-to-signup"
-              style="color: var(--text-accent); cursor: pointer"
-              >Create a free account</span
-            >
-          </p>
-        </div>
-        <!-- /auth-login-form -->
-
-        <!-- ══ SIGNUP FORM ══════════════════════════════════════════ -->
-        <div id="auth-signup-form" style="display: none">
-          <h1 class="login-title">Start for free</h1>
-          <p class="login-subtitle">Your seller dashboard, ready in seconds</p>
-
-          <!-- Google OAuth -->
-          <button class="btn-google" type="button">
-            <img
-              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-              class="google-icon"
-              alt="Google"
-            />
-            Sign up with Google
-          </button>
-
-          <div class="auth-or-divider">or sign up with email</div>
-
-          <div class="form-row">
+          <!-- ══ LOGIN FORM ══ -->
+          <div id="auth-login-form">
+            <h1 class="login-title">Welcome back</h1>
+            <p class="login-subtitle">Sign in to manage your Instagram store</p>
+            <button class="btn-google" type="button">
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="google-icon" alt="Google"/>
+              Continue with Google
+            </button>
+            <div class="auth-or-divider">or continue with email</div>
             <div class="form-group">
-              <label class="form-label" for="signup-name">Your Name *</label>
-              <input
-                class="form-input"
-                type="text"
-                id="signup-name"
-                placeholder="e.g. Priya Sharma"
-                autocomplete="name"
-              />
+              <label class="form-label" for="login-email">Email</label>
+              <input class="form-input" type="email" id="login-email" placeholder="you@store.com" autocomplete="email"/>
             </div>
             <div class="form-group">
-              <label class="form-label" for="signup-store">Store Name *</label>
-              <input
-                class="form-input"
-                type="text"
-                id="signup-store"
-                placeholder="e.g. Priya Boutique"
-              />
+              <label class="form-label" for="login-password">Password</label>
+              <input class="form-input" type="password" id="login-password" placeholder="Enter password" autocomplete="current-password"/>
+              <span class="forgot-link" id="forgot-password-link" style="margin: 2px;">Forgot password?</span>
             </div>
+            <button class="btn btn-primary btn-full" id="login-btn" style="margin-top:4px">Sign In →</button>
+            <p class="login-hint" style="margin-top:12px">Just exploring? <span id="demo-login">Use demo account</span></p>
+            <p class="login-hint" style="margin-top:6px">New here? <span id="switch-to-signup" style="color:var(--text-accent);cursor:pointer">Create a free account</span></p>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="signup-email">Email *</label>
-            <input
-              class="form-input"
-              type="email"
-              id="signup-email"
-              placeholder="you@store.com"
-              autocomplete="email"
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signup-password"
-              >Password *
-              <span style="font-weight: 400; color: var(--text-muted)"
-                >(min 8 chars)</span
-              ></label
-            >
-            <input
-              class="form-input"
-              type="password"
-              id="signup-password"
-              placeholder="Create a strong password"
-              autocomplete="new-password"
-            />
-          </div>
+          <!-- /auth-login-form -->
 
-          <button
-            class="btn btn-primary btn-full"
-            id="signup-btn"
-            style="margin-top: 8px"
-          >
-            Create Account →
-          </button>
-
-          <p class="login-hint" style="margin-top: 12px">
-            Already have an account?
-            <span
-              id="switch-to-login"
-              style="color: var(--text-accent); cursor: pointer"
-              >Sign in</span
-            >
-          </p>
-        </div>
-        <!-- /auth-signup-form -->
+          <!-- ══ SIGNUP FORM ══ -->
+          <div id="auth-signup-form" style="display:none">
+            <h1 class="login-title">Start for free</h1>
+            <p class="login-subtitle">Your seller dashboard, ready in seconds</p>
+            <button class="btn-google" type="button">
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="google-icon" alt="Google"/>
+              Sign up with Google
+            </button>
+            <div class="auth-or-divider">or sign up with email</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="signup-name">Your Name *</label>
+                <input class="form-input" type="text" id="signup-name" placeholder="e.g. Priya Sharma" autocomplete="name"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="signup-store">Store Name *</label>
+                <input class="form-input" type="text" id="signup-store" placeholder="e.g. Priya Boutique"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="signup-email">Email *</label>
+              <input class="form-input" type="email" id="signup-email" placeholder="you@store.com" autocomplete="email"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="signup-password">Password * <span style="font-weight:400;color:var(--text-muted)">(min 8 chars)</span></label>
+              <input class="form-input" type="password" id="signup-password" placeholder="Create a strong password" autocomplete="new-password"/>
+            </div>
+            <button class="btn btn-primary btn-full" id="signup-btn" style="margin-top:8px">Create Account →</button>
+            <p class="login-hint" style="margin-top:12px">Already have an account? <span id="switch-to-login" style="color:var(--text-accent);cursor:pointer">Sign in</span></p>
+          </div>
+          <!-- /auth-signup-form -->
 
         <!-- ══ EMAIL VERIFICATION PENDING ══════════════════════════ -->
         <div id="auth-verify-email-screen" style="display: none">
@@ -1830,131 +1657,18 @@
         </div>
         <!-- /auth-reset-password-screen -->
 
-        <!-- Feature strip (shown on login/signup only via display:none on the strip via JS when on other screens) -->
+        <!-- Feature strip -->
         <div id="auth-feature-strip">
-          <div class="divider" style="margin: 20px 0 14px"></div>
-          <div
-            style="
-              display: grid;
-              grid-template-columns: 1fr 1fr 1fr;
-              gap: 8px;
-              text-align: center;
-            "
-          >
-            <div style="font-size: 11px; color: var(--text-muted)">
-              <div style="margin-bottom: 6px">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  style="width: 20px; height: 20px"
-                >
-                  <path
-                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
-                  />
-                </svg>
-              </div>
-              Manage Orders
-            </div>
-            <div style="font-size: 11px; color: var(--text-muted)">
-              <div style="margin-bottom: 6px">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  style="width: 20px; height: 20px"
-                >
-                  <path
-                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                  />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
-              </div>
-              Auto Invoices
-            </div>
-            <div style="font-size: 11px; color: var(--text-muted)">
-              <div style="margin-bottom: 6px">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  style="width: 20px; height: 20px"
-                >
-                  <line x1="18" y1="20" x2="18" y2="10" />
-                  <line x1="12" y1="20" x2="12" y2="4" />
-                  <line x1="6" y1="20" x2="6" y2="14" />
-                </svg>
-              </div>
-              Analytics
-            </div>
+          <div class="divider" style="margin:20px 0 14px"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+            <div style="font-size:11px;color:var(--text-muted)"><div style="margin-bottom:6px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>Manage Orders</div>
+            <div style="font-size:11px;color:var(--text-muted)"><div style="margin-bottom:6px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>Auto Invoices</div>
+            <div style="font-size:11px;color:var(--text-muted)"><div style="margin-bottom:6px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>Analytics</div>
           </div>
         </div>
-      </div>
-        </div><!-- /login-card -->
 
-        <!-- RIGHT: brand panel (hidden on mobile) -->
-        <div class="login-brand-panel" aria-hidden="true">
-          <div class="lbp-orb lbp-orb-1"></div>
-          <div class="lbp-orb lbp-orb-2"></div>
-          <div class="lbp-content">
-            <div class="lbp-logo">
-              <img id="lbp-logo-img" src="/images/logo-dark.png" alt="Hisaab Mitra" />
-              <script>
-                (function(){
-                  var t=localStorage.getItem("sf-theme")||"dark";
-                  document.currentScript.previousElementSibling.src=
-                    t==="light"?"/images/logo-light.png":"/images/logo-dark.png";
-                })();
-              </script>
-            </div>
-            <h2 class="lbp-headline">Manage your<br/>store smarter.</h2>
-            <p class="lbp-tagline">Everything you need to run your Instagram business — orders, invoices, analytics, and more.</p>
-            <div class="lbp-features">
-              <div class="lbp-feature">
-                <span class="lbp-feat-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                </span>
-                <span>Track orders & inventory in real time</span>
-              </div>
-              <div class="lbp-feature">
-                <span class="lbp-feat-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                </span>
-                <span>Auto-generate GST invoices instantly</span>
-              </div>
-              <div class="lbp-feature">
-                <span class="lbp-feat-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                </span>
-                <span>Deep analytics & revenue insights</span>
-              </div>
-              <div class="lbp-feature">
-                <span class="lbp-feat-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </span>
-                <span>Customer management & repeat buyers</span>
-              </div>
-            </div>
-            <div class="lbp-badge">Trusted by Instagram sellers across India 🇮🇳</div>
-          </div>
-        </div>
-        <!-- /login-brand-panel -->
-
-      </div><!-- /login-split -->
+        </div><!-- /auth-form-panel -->
+      </div><!-- /auth-wrapper -->
     </div>
     <!-- /login-page -->
 
