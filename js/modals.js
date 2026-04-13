@@ -229,7 +229,10 @@ const Modals = (() => {
         const state    = document.getElementById('new-customer-state').value.trim();
         const pincode  = document.getElementById('new-customer-pincode').value.trim();
 
-        if (!name) { UI.toast('Please enter customer name', 'error'); return; }
+        if (!name)    { UI.toast('Please enter customer name', 'error'); return; }
+        if (!phone)   { UI.toast('Phone number is required for new customers', 'error'); return; }
+        if (!email)   { UI.toast('Email address is required for new customers', 'error'); return; }
+        if (!address) { UI.toast('Shipping address is required for new customers', 'error'); return; }
 
         const nc = await SF.findOrCreateCustomer(name, insta);
         const updates = {};
@@ -680,8 +683,15 @@ const Modals = (() => {
     document.body.removeChild(ta);
   }
 
+  // ─── Close button visibility helper ──────────────────────────
+  function _setCustomerModalCloseBtn(visible) {
+    const btn = document.querySelector('#modal-view-customer .modal-close');
+    if (btn) btn.style.display = visible ? '' : 'none';
+  }
+
   // ─── View Customer ────────────────────────────────────────────
   async function viewCustomer(id) {
+    _setCustomerModalCloseBtn(true); // restore close button when viewing
     document.getElementById('view-customer-content').innerHTML = `
       <div style="display:flex;align-items:center;justify-content:center;padding:60px">
         <div class="sf-spinner"></div>
@@ -705,11 +715,158 @@ const Modals = (() => {
     }
   }
 
+  // ─── Edit Customer ────────────────────────────────────────────
+  // Opens an edit form pre-filled with the customer's existing data.
+  // Replaces the view modal content with an inline editable form so
+  // the modal ID and close button remain the same — no new HTML needed.
+  async function editCustomer(id) {
+    const customers = await SF.getCustomers();
+    const c = customers.find(x => x.id === id);
+    if (!c) { UI.toast('Customer not found', 'error'); return; }
+
+    _setCustomerModalCloseBtn(false); // hide close button — Cancel button serves this role
+
+    document.getElementById('view-customer-content').innerHTML = `
+      <div style="margin-bottom:20px;display:flex;align-items:center;gap:10px">
+        <button onclick="Modals.viewCustomer('${c.id}')" class="btn btn-secondary" style="padding:6px 14px;font-size:13px">
+          ← Back
+        </button>
+        <div style="font-family:var(--font-display);font-size:18px;font-weight:700">Edit Customer</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input class="form-input" type="text" id="edit-cust-name" value="${_esc(c.name)}" placeholder="Customer name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Instagram Handle</label>
+          <input class="form-input" type="text" id="edit-cust-insta" value="${_esc(c.instagram)}" placeholder="@handle" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Phone Number *</label>
+          <input class="form-input" type="tel" id="edit-cust-phone" value="${_esc(c.phone)}" placeholder="+91 98765 43210" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input class="form-input" type="email" id="edit-cust-email" value="${_esc(c.email)}" placeholder="customer@email.com" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">WhatsApp Number</label>
+        <input class="form-input" type="tel" id="edit-cust-whatsapp" value="${_esc(c.whatsapp)}" placeholder="+91 98765 43210" />
+      </div>
+
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin:16px 0 12px">
+        Delivery Address *
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Street Address *</label>
+        <input class="form-input" type="text" id="edit-cust-address" value="${_esc(c.address)}" placeholder="Flat, House no., Building" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Landmark / Area</label>
+        <input class="form-input" type="text" id="edit-cust-landmark" value="${_esc(c.landmark)}" placeholder="e.g. Near Metro Station" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">City</label>
+          <input class="form-input" type="text" id="edit-cust-city" value="${_esc(c.city)}" placeholder="e.g. Mumbai" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">State</label>
+          <input class="form-input" type="text" id="edit-cust-state" value="${_esc(c.state)}" placeholder="e.g. Maharashtra" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pincode</label>
+        <input class="form-input" type="text" id="edit-cust-pincode" value="${_esc(c.pincode)}" placeholder="400001" style="max-width:50%" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-input" id="edit-cust-notes" rows="2" placeholder="Any notes about this customer">${_esc(c.notes)}</textarea>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button
+          id="save-edit-customer-btn"
+          class="btn btn-primary"
+          style="flex:1"
+          onclick="Modals.saveEditCustomer('${c.id}')"
+        >
+          💾 Save Changes
+        </button>
+        <button
+          class="btn btn-secondary"
+          onclick="Modals.viewCustomer('${c.id}')"
+        >
+          Cancel
+        </button>
+      </div>
+    `;
+  }
+
+  // Saves the edited customer data back to Supabase and refreshes the view.
+  async function saveEditCustomer(id) {
+    const name     = (document.getElementById('edit-cust-name')?.value     || '').trim();
+    const phone    = (document.getElementById('edit-cust-phone')?.value    || '').trim();
+    const email    = (document.getElementById('edit-cust-email')?.value    || '').trim();
+    const address  = (document.getElementById('edit-cust-address')?.value  || '').trim();
+    const insta    = (document.getElementById('edit-cust-insta')?.value    || '').trim();
+    const whatsapp = (document.getElementById('edit-cust-whatsapp')?.value || '').trim();
+    const landmark = (document.getElementById('edit-cust-landmark')?.value || '').trim();
+    const city     = (document.getElementById('edit-cust-city')?.value     || '').trim();
+    const state    = (document.getElementById('edit-cust-state')?.value    || '').trim();
+    const pincode  = (document.getElementById('edit-cust-pincode')?.value  || '').trim();
+    const notes    = (document.getElementById('edit-cust-notes')?.value    || '').trim();
+
+    if (!name)    { UI.toast('Customer name is required', 'error'); return; }
+    if (!phone)   { UI.toast('Phone number is required', 'error'); return; }
+    if (!email)   { UI.toast('Email address is required', 'error'); return; }
+    if (!address) { UI.toast('Street address is required', 'error'); return; }
+
+    const btn = document.getElementById('save-edit-customer-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+    try {
+      const customers = await SF.getCustomers();
+      const existing  = customers.find(x => x.id === id);
+      if (!existing) { UI.toast('Customer not found', 'error'); return; }
+
+      await SF.updateCustomer(id, {
+        ...existing,
+        name, instagram: insta, phone, email, whatsapp,
+        address, landmark, city, state, pincode, notes,
+      });
+
+      UI.toast(`${name} updated successfully`, 'success');
+      // Refresh customers table in background (non-blocking)
+      Pages.customers().catch(() => {});
+      // Re-open the view modal with fresh data
+      await viewCustomer(id);
+    } catch (err) {
+      UI.toast(err.message || 'Failed to save customer', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '💾 Save Changes'; }
+    }
+  }
+
+  // ─── HTML escape helper ───────────────────────────────────────
+  // Used when injecting customer values into HTML attribute values.
+  function _esc(str) {
+    return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
   // Public API
   return {
     openAddProduct, editProduct, saveProduct, deleteProduct,
     openCreateOrder, handleCustomerSelectChange, addOrderItem, removeOrderItem, saveOrder,
-    viewOrder, showInvoice, viewCustomer,
+    viewOrder, showInvoice, viewCustomer, editCustomer, saveEditCustomer,
     sendFollowupEmail,   // ← new: called from follow-up button onclick
   };
 })();
