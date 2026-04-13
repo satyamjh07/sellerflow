@@ -317,7 +317,17 @@ const Components = (() => {
           <div style="font-size:13px;color:var(--text-secondary)">${c.instagram || ""} · ${c.city || ""}</div>
           ${c.whatsapp ? `<div style="font-size:12px;color:#10B981;margin-top:2px">WhatsApp: ${c.whatsapp}</div>` : ""}
         </div>
-        ${c.totalOrders >= 2 ? `<span class="badge badge-success" style="margin-left:auto;text-align:right"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Repeat Customer<br><small style="font-weight:normal;opacity:0.8">Score: ${c.repeatScore || "Good"}</small></span>` : ""}
+        <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+          ${c.totalOrders >= 2 ? `<span class="badge badge-success"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Repeat Customer<br><small style="font-weight:normal;opacity:0.8">Score: ${c.repeatScore || "Good"}</small></span>` : ""}
+          <button
+            onclick="Modals.editCustomer('${c.id}')"
+            class="btn btn-secondary"
+            style="padding:6px 14px;font-size:12px;display:inline-flex;align-items:center;gap:5px"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+        </div>
       </div>
 
       <div class="mobile-grid-1" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
