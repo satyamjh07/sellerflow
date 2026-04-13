@@ -221,13 +221,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   //  SIGN UP
   //
   //  ARCHITECTURE: Supabase email confirmation stays ON (bot protection).
-  //  However Supabase's SMTP is unreliable, so we:
+  //  Supabase sends the verification email directly (custom template set in
+  //  Supabase Dashboard → Authentication → Email Templates → Confirm signup).
+  //  We no longer send a duplicate via EmailJS — saves tokens, no confusion.
   //    1. Call Auth.signUp() — creates the user in auth.users
-  //    2. If Supabase throws a sending error (500), we catch it gracefully
-  //       because the user WAS created — Supabase errors after DB insert
-  //    3. We immediately send our own verification email via EmailJS
-  //    4. We trigger resendVerification() as a backup (uses Supabase OTP)
-  //    5. Show the verify-email screen — UX is identical to before
+  //    2. Supabase sends the branded verification email automatically
+  //    3. Show the verify-email screen so user knows to check their inbox
   // ══════════════════════════════════════════════════════════════
 
   document
@@ -298,7 +297,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           // User was created — SMTP just failed on Supabase's side
           smtpFailed = true;
           console.warn(
-            "[SignUp] Supabase SMTP failed, will send via EmailJS:",
+            "[SignUp] Supabase SMTP failed (user was still created):",
             signUpErr.message,
           );
         } else {
@@ -327,28 +326,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("resend-email-input").value = email;
       _showScreen("verify-email");
 
-      // ── Send verification email via EmailJS (our reliable path) ─
-      // This runs async — we don't await it so the screen shows instantly
-      _sendVerificationEmailViaEmailJS(email, name, store).catch((e) => {
-        console.warn("[SignUp] EmailJS verification send failed:", e);
-      });
-
-      // ── Also trigger Supabase resend as backup (if SMTP failed) ─
-      // Supabase's resend uses OTP magic link — different code path
-      // from initial signup, sometimes works even when signup send fails.
-      if (smtpFailed) {
-        setTimeout(async () => {
-          try {
-            await Auth.resendVerification(email);
-            console.info("[SignUp] Supabase resend backup succeeded");
-          } catch (e) {
-            console.warn(
-              "[SignUp] Supabase resend backup also failed:",
-              e.message,
-            );
-          }
-        }, 2000);
-      }
+      // Supabase sends the branded verification email automatically.
+      // No EmailJS call needed here — saves tokens.
     } catch (err) {
       const msg = err?.message || "";
       if (
@@ -370,53 +349,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ── Send verification email via EmailJS ─────────────────────────
-  // Uses the existing EmailJS service + template already configured.
-  // Sends a welcome + "please verify" message with the Supabase
-  // magic link (obtained by triggering resendVerification first).
-  async function _sendVerificationEmailViaEmailJS(email, name, store) {
-    if (typeof emailjs === "undefined") return;
-
-    // Build a clean branded verification email
-    const invoiceHtml = `
-      <div style="padding:30px;background:#0b1120;font-family:Arial,sans-serif;">
-        <div style="max-width:560px;margin:auto;background:#111827;border-radius:16px;padding:32px;">
-          <div style="text-align:center;margin-bottom:24px;">
-            <div style="font-size:48px;">🛍️</div>
-            <h1 style="color:#ffffff;font-size:24px;margin-top:12px;">Welcome to Hisaab Mitra!</h1>
-          </div>
-          <p style="color:#cbd5e1;font-size:16px;line-height:1.6;">
-            Hi ${name} 👋<br><br>
-            Your account for <strong style="color:#6366f1">${store}</strong> has been created successfully!
-          </p>
-          <p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-top:16px;">
-            📧 <strong>Check your inbox</strong> for a verification link from Supabase (sender: <em>no-reply@mail.app.supabase.io</em>).
-            Click that link to activate your account and start managing your store.
-          </p>
-          <p style="color:#94a3b8;font-size:13px;margin-top:20px;line-height:1.6;">
-            Didn't get it? Check your spam folder, or go back to the sign-in page and click 
-            <strong>"Resend Verification Email"</strong>.
-          </p>
-          <div style="margin-top:24px;padding-top:20px;border-top:1px solid #1e293b;text-align:center;">
-            <p style="color:#475569;font-size:12px;">Hisaab Mitra · Your Instagram Seller Dashboard</p>
-          </div>
-        </div>
-      </div>`;
-
-    await emailjs.send("service_5k8qt0o", "template_x6h0iqc", {
-      to_email: email,
-      to_name: name,
-      customer_name: name,
-      customer_email: email,
-      order_id: "WELCOME",
-      store_name: store || "Hisaab Mitra",
-      total: "Account Created",
-      payment_status: "Please verify your email to get started",
-      invoice_html: invoiceHtml,
-    });
-
-    console.info("[SignUp] Welcome + verify email sent via EmailJS to:", email);
-  }
 
   // ══════════════════════════════════════════════════════════════
   //  EMAIL VERIFICATION SCREEN
@@ -468,7 +400,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.textContent = "Checking…";
 
       try {
-        const { data, error } = await _supabase.auth.getSession();
+        // refreshSession() hits Supabase's server for the latest state.
+        // getSession() only reads stale in-memory data — so when the user
+        // verifies in a different tab, the original tab still shows
+        // "not verified". refreshSession() always fetches fresh from server.
+        const { data, error } = await _supabase.auth.refreshSession();
         if (error) throw error;
 
         if (data?.session?.user?.email_confirmed_at) {
@@ -482,10 +418,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           );
         }
       } catch (err) {
+        // refreshSession throws when there's no active session at all.
+        // Guide the user to log in normally with their verified account.
         UI.toast(
-          "Could not check verification status. Try signing in again.",
-          "error",
+          "Session expired — please sign in with your verified account.",
+          "warn",
         );
+        _showScreen("login");
       } finally {
         btn.disabled = false;
         btn.textContent = "✅ I've Verified — Open Dashboard";
@@ -681,6 +620,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     await NotifPanel.init();
     UI.updateBadges();
     await UI.navigate("dashboard");
+    // Render again after navigate so the reminder is guaranteed to be
+    // visible on screen once the dashboard finishes loading. Without this,
+    // new users whose profile is missing phone/UPI/GST don't see it.
+    if (typeof ProfileReminder !== "undefined" && user) {
+      ProfileReminder.render(user);
+    }
   }
 
   // ══════════════════════════════════════════════════════════════
