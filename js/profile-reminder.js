@@ -74,6 +74,12 @@ const ProfileReminder = (() => {
   // ── Public: render ────────────────────────────────────────────
   // Accepts a plain user object from SF.getUser() or the settings
   // save handler. Idempotent — safe to call multiple times.
+  //
+  // ROOT CAUSE NOTE (fixed in app.js):
+  //   render() was called once before UI.navigate('dashboard').
+  //   Pages.dashboard() does NOT clear the reminder container, but
+  //   app.js now also calls render() AFTER navigate() so the reminder
+  //   is guaranteed to show on-screen for new users on first boot.
   function render(user) {
     const container = document.getElementById("profile-reminder-container");
     if (!container) return;
